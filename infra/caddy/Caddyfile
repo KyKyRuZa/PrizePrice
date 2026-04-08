@@ -1,0 +1,60 @@
+# === Local testing (remove in production) ===
+localhost:443 {
+	tls internal
+	encode gzip zstd
+
+	@api path /api/* /health /ready /metrics
+	handle @api {
+		reverse_proxy server:3001
+	}
+
+	root * /srv/static
+	file_server
+
+	@spa {
+		not path /api/* /health /ready /metrics
+		not file
+		path /*
+	}
+	rewrite @spa /index.html
+}
+
+# === Production: www → apex redirect ===
+{$SITE_HOST_WWW} {
+	redir https://{$SITE_HOST}{uri}
+}
+
+# === Production: main site ===
+{$SITE_HOST} {
+	# API and health — reverse proxy to server (first priority)
+	@api path /api/* /health /ready /metrics
+	handle @api {
+		reverse_proxy server:3001
+	}
+
+	# Static files + SPA fallback
+	root * /srv/static
+	encode gzip zstd
+	file_server
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		X-Permitted-Cross-Domain-Policies "none"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		X-XSS-Protection "0"
+		Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: wss:; font-src 'self' data: https:; form-action 'self'; upgrade-insecure-requests"
+	}
+
+	# SPA fallback
+	@spa {
+		not path /api/* /health /ready /metrics
+		not file
+		path /*
+	}
+	rewrite @spa /index.html
+}

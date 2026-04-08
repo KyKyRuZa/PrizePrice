@@ -1,0 +1,3 @@
+export const DEFAULT_NOTIFICATIONS_LIMIT = 50;
+export const UNREAD_POLL_LIMIT = 1;
+export const UNREAD_POLL_INTERVAL_MS = 20 * 1000;

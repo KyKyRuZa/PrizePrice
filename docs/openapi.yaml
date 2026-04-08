@@ -1,0 +1,1784 @@
+﻿openapi: 3.0.3
+info:
+  title: PrizePrice API
+  version: 1.1.0
+  description: |
+    API contract for PrizePrice.
+
+    Auth model:
+    - Primary: httpOnly cookie auth (`pp_access_token`, configurable by env)
+    - Compatibility: bearer JWT in Authorization header.
+
+    Metrics endpoint uses a separate bearer token (`METRICS_TOKEN`).
+servers:
+  - url: https://prizeprise.ru
+    description: Production
+  - url: http://localhost:3001
+    description: Local development
+tags:
+  - name: system
+  - name: auth
+  - name: products
+  - name: me
+  - name: debug
+paths:
+  /health:
+    get:
+      tags: [system]
+      summary: Liveness check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /ready:
+    get:
+      tags: [system]
+      summary: Readiness check
+      responses:
+        "200":
+          description: Ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: Not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessError"
+
+  /metrics:
+    get:
+      tags: [system]
+      summary: Prometheus metrics
+      security:
+        - metricsTokenAuth: []
+      responses:
+        "200":
+          description: Metrics payload
+          content:
+            text/plain:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/auth/request-code:
+    post:
+      tags: [auth]
+      summary: Request OTP by phone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhoneInput"
+      responses:
+        "200":
+          description: OTP requested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpRequested"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/auth/verify-code:
+    post:
+      tags: [auth]
+      summary: Verify phone OTP and sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpInput"
+      responses:
+        "200":
+          description: Authenticated
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: Access and refresh cookies.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccess"
+        "400":
+          description: Validation or invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/auth/request-login-code:
+    post:
+      tags: [auth]
+      summary: Request OTP for login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Request accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpRequested"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/auth/verify-login-with-otp:
+    post:
+      tags: [auth]
+      summary: Verify login OTP and sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyLoginOtpInput"
+      responses:
+        "200":
+          description: Authenticated
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccess"
+        "400":
+          description: Validation or invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/auth/login-password:
+    post:
+      tags: [auth]
+      summary: Login by identifier and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginPasswordInput"
+      responses:
+        "200":
+          description: Authenticated
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccess"
+        "400":
+          description: Validation or invalid auth flow
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/auth/request-registration-code:
+    post:
+      tags: [auth]
+      summary: Request registration code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "200":
+          description: Requested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpRequested"
+        "400":
+          description: Validation/policy error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/auth/register-with-code:
+    post:
+      tags: [auth]
+      summary: Complete registration by OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterWithCodeInput"
+      responses:
+        "200":
+          description: Registered and authenticated
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccess"
+        "400":
+          description: Validation/invalid OTP/expired data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/auth/register:
+    post:
+      tags: [auth]
+      summary: Register by username, phone, and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "200":
+          description: Registered and authenticated
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccess"
+        "400":
+          description: Validation/policy error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/auth/refresh:
+    post:
+      tags: [auth]
+      summary: Refresh session by refresh cookie
+      responses:
+        "200":
+          description: Session refreshed
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/auth/logout:
+    post:
+      tags: [auth]
+      summary: Logout and clear auth cookies
+      responses:
+        "200":
+          description: Session cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /api/auth/user-data:
+    get:
+      tags: [auth]
+      summary: Get synchronized user data
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataPayload"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [auth]
+      summary: Update synchronized user data
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserDataUpdateInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/auth/request-reset:
+    post:
+      tags: [auth]
+      summary: Request password reset OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhoneInput"
+      responses:
+        "200":
+          description: Request accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpRequested"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/auth/reset-password:
+    post:
+      tags: [auth]
+      summary: Reset password with OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordInput"
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetPasswordSuccess"
+        "400":
+          description: Validation/policy/invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/products/categories:
+    get:
+      tags: [products]
+      summary: List categories
+      responses:
+        "200":
+          description: Category list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoriesResponse"
+
+  /api/products/recommended:
+    get:
+      tags: [products]
+      summary: Get recommended products
+      responses:
+        "200":
+          description: Product list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+
+  /api/products/search:
+    get:
+      tags: [products]
+      summary: Search products
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+            maxLength: 120
+        - in: query
+          name: category
+          schema:
+            type: string
+            maxLength: 80
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [popularity, price_asc, price_desc, rating, discount]
+            default: popularity
+      responses:
+        "200":
+          description: Product list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+
+  /api/products/{id}:
+    get:
+      tags: [products]
+      summary: Product details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductItemResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/products/{id}/price-history:
+    get:
+      tags: [products]
+      summary: Product price history
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 365
+            default: 30
+        - in: query
+          name: marketplace
+          schema:
+            type: string
+            default: best
+      responses:
+        "200":
+          description: Price history list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceHistoryListResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/me:
+    get:
+      tags: [me]
+      summary: Current user profile
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/password:
+    post:
+      tags: [me]
+      summary: Set or rotate password
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetPasswordInput"
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkUserResponse"
+        "400":
+          description: Validation/policy/credentials error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/me/email:
+    post:
+      tags: [me]
+      summary: Set email
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetEmailInput"
+      responses:
+        "200":
+          description: Email updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/me/name:
+    post:
+      tags: [me]
+      summary: Set display name
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetNameInput"
+      responses:
+        "200":
+          description: Name updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/me/history:
+    get:
+      tags: [me]
+      summary: Get search history
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Search history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchHistoryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [me]
+      summary: Clear search history
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/history/import:
+    post:
+      tags: [me]
+      summary: Import history queries
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HistoryImportInput"
+      responses:
+        "200":
+          description: Imported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkSearchHistoryResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/history/{id}:
+    delete:
+      tags: [me]
+      summary: Delete history item
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/favorites:
+    get:
+      tags: [me]
+      summary: Favorite products
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Favorites list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [me]
+      summary: Clear favorites
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/favorites/{productId}:
+    post:
+      tags: [me]
+      summary: Add favorite product
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [me]
+      summary: Remove favorite product
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/cart:
+    get:
+      tags: [me]
+      summary: Cart products
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Cart list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/cart/{productId}:
+    post:
+      tags: [me]
+      summary: Add cart product
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [me]
+      summary: Remove cart product
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/price-watch:
+    get:
+      tags: [me]
+      summary: Price watches
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Price watch list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceWatchListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [me]
+      summary: Upsert watch
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceWatchUpsertInput"
+      responses:
+        "200":
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceWatchUpsertResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/price-watch/import:
+    post:
+      tags: [me]
+      summary: Import watches
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceWatchImportInput"
+      responses:
+        "200":
+          description: Imported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkPriceWatchListResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/price-watch/{productId}:
+    delete:
+      tags: [me]
+      summary: Remove watch
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/notifications:
+    get:
+      tags: [me]
+      summary: Notifications list
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - in: query
+          name: unreadOnly
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Notifications payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/notifications/{id}/read:
+    post:
+      tags: [me]
+      summary: Mark notification as read
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/notifications/read-all:
+    post:
+      tags: [me]
+      summary: Mark all notifications as read
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/notifications/{id}:
+    delete:
+      tags: [me]
+      summary: Delete notification
+      security:
+        - accessCookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/debug/set-offer-price:
+    post:
+      tags: [debug]
+      summary: Set offer price in debug mode
+      description: Returns 404 when debug mode is disabled.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DebugSetOfferPriceInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Backward-compatible bearer access token auth.
+    accessCookieAuth:
+      type: apiKey
+      in: cookie
+      name: pp_access_token
+      description: |
+        Primary auth method. Cookie name can be overridden by AUTH_COOKIE_ACCESS_NAME.
+    metricsTokenAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token from METRICS_TOKEN for /metrics endpoint.
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    TooManyRequests:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/TooManyRequestsError"
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServiceUnavailable:
+      description: Dependency unavailable (OTP/rate limit)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    HealthResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+          example: true
+
+    ReadinessError:
+      type: object
+      required: [ok, reason]
+      properties:
+        ok:
+          type: boolean
+          example: false
+        reason:
+          type: string
+          example: BOOTING
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+          nullable: true
+        requestId:
+          type: string
+          nullable: true
+
+    TooManyRequestsError:
+      allOf:
+        - $ref: "#/components/schemas/ErrorResponse"
+        - type: object
+          required: [retryAfterSeconds]
+          properties:
+            retryAfterSeconds:
+              type: integer
+              minimum: 0
+
+    OkResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+          example: true
+
+    PhoneInput:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          example: +79991234567
+
+    VerifyOtpInput:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+
+    LoginInput:
+      type: object
+      required: [login]
+      properties:
+        login:
+          type: string
+          minLength: 1
+          maxLength: 256
+
+    VerifyLoginOtpInput:
+      type: object
+      required: [login, code]
+      properties:
+        login:
+          type: string
+          minLength: 1
+          maxLength: 256
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+
+    LoginPasswordInput:
+      type: object
+      required: [login, password]
+      properties:
+        login:
+          type: string
+          minLength: 1
+          maxLength: 256
+        password:
+          type: string
+          minLength: 1
+          maxLength: 256
+
+    RegisterInput:
+      type: object
+      required: [username, phone, password, passwordConfirmation]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+        phone:
+          type: string
+        password:
+          type: string
+          minLength: 1
+          maxLength: 256
+        passwordConfirmation:
+          type: string
+          minLength: 1
+          maxLength: 256
+
+    RegisterWithCodeInput:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+
+    ResetPasswordInput:
+      type: object
+      required: [phone, code, newPassword]
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+        newPassword:
+          type: string
+          minLength: 1
+          maxLength: 256
+
+    OtpRequested:
+      type: object
+      required: [ok, cooldownSeconds]
+      properties:
+        ok:
+          type: boolean
+          example: true
+        message:
+          type: string
+          nullable: true
+        cooldownSeconds:
+          type: integer
+        debugCode:
+          type: string
+          minLength: 6
+          maxLength: 6
+          nullable: true
+
+    User:
+      type: object
+      required: [id, phone, hasPassword]
+      properties:
+        id:
+          type: integer
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        hasPassword:
+          type: boolean
+        passwordUpdatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    AuthSuccess:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+
+    UserResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+
+    OkUserResponse:
+      type: object
+      required: [ok, user]
+      properties:
+        ok:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/User"
+
+    CategoriesResponse:
+      type: object
+      required: [categories]
+      properties:
+        categories:
+          type: array
+          items:
+            type: string
+
+    PriceEntry:
+      type: object
+      required: [marketplace, price, link]
+      properties:
+        marketplace:
+          type: string
+        price:
+          type: integer
+        oldPrice:
+          type: integer
+          nullable: true
+        discount:
+          type: integer
+          nullable: true
+        link:
+          type: string
+
+    Product:
+      type: object
+      required: [id, name, category, prices, bestPrice]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        image:
+          type: string
+        rating:
+          type: number
+        reviews:
+          type: integer
+        isBestPrice:
+          type: boolean
+        prices:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceEntry"
+        bestPrice:
+          allOf:
+            - $ref: "#/components/schemas/PriceEntry"
+          nullable: true
+
+    ProductListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+
+    ProductItemResponse:
+      type: object
+      required: [item]
+      properties:
+        item:
+          $ref: "#/components/schemas/Product"
+
+    PriceHistoryItem:
+      type: object
+      required: [id, product_id, marketplace, price, created_at]
+      properties:
+        id:
+          type: integer
+        product_id:
+          type: integer
+        marketplace:
+          type: string
+        price:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    PriceHistoryListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceHistoryItem"
+
+    UserDataPayload:
+      type: object
+      required: [favorites, cart, searchHistory, browsingHistory]
+      properties:
+        favorites:
+          type: array
+          items:
+            type: integer
+        cart:
+          type: array
+          items:
+            type: integer
+        searchHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchHistoryItem"
+        browsingHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/BrowsingHistoryItem"
+
+    UserDataUpdateInput:
+      type: object
+      properties:
+        favorites:
+          type: array
+          items:
+            type: integer
+        cart:
+          type: array
+          items:
+            type: integer
+        searchHistory:
+          type: array
+          items:
+            oneOf:
+              - type: string
+              - type: object
+                properties:
+                  query:
+                    type: string
+        browsingHistory:
+          type: array
+          items:
+            oneOf:
+              - type: integer
+              - type: object
+                properties:
+                  productId:
+                    type: integer
+
+    SetPasswordInput:
+      type: object
+      required: [newPassword]
+      properties:
+        newPassword:
+          type: string
+          minLength: 1
+          maxLength: 256
+        currentPassword:
+          type: string
+          minLength: 1
+          maxLength: 256
+
+    SetEmailInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+
+    SetNameInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+    SearchHistoryItem:
+      type: object
+      required: [id, query, created_at]
+      properties:
+        id:
+          type: integer
+        query:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    SearchHistoryResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchHistoryItem"
+
+    OkSearchHistoryResponse:
+      type: object
+      required: [ok, items]
+      properties:
+        ok:
+          type: boolean
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchHistoryItem"
+
+    HistoryImportInput:
+      type: object
+      required: [queries]
+      properties:
+        queries:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+
+    PriceWatchRecord:
+      type: object
+      required: [productId, active]
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        targetPrice:
+          type: integer
+          nullable: true
+        dropPercent:
+          type: integer
+          minimum: 1
+          maximum: 90
+          nullable: true
+        active:
+          type: boolean
+        lastSeenPrice:
+          type: integer
+          nullable: true
+        lastCheckedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastNotifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastNotifiedPrice:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    BestOffer:
+      type: object
+      required: [marketplace, price, link]
+      properties:
+        marketplace:
+          type: string
+        price:
+          type: integer
+        link:
+          type: string
+
+    PriceWatchProduct:
+      type: object
+      required: [id, name, category, bestOffer]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        image:
+          type: string
+        rating:
+          type: number
+        reviews:
+          type: integer
+        isBestPrice:
+          type: boolean
+        bestOffer:
+          allOf:
+            - $ref: "#/components/schemas/BestOffer"
+          nullable: true
+
+    PriceWatchListItem:
+      type: object
+      required: [watch, product]
+      properties:
+        watch:
+          $ref: "#/components/schemas/PriceWatchRecord"
+        product:
+          $ref: "#/components/schemas/PriceWatchProduct"
+
+    PriceWatchListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceWatchListItem"
+
+    PriceWatchUpsertInput:
+      type: object
+      required: [productId]
+      properties:
+        productId:
+          type: integer
+        targetPrice:
+          type: integer
+          nullable: true
+        dropPercent:
+          type: integer
+          minimum: 1
+          maximum: 90
+          nullable: true
+        active:
+          type: boolean
+
+    PriceWatchUpsertResponse:
+      type: object
+      required: [ok, watch]
+      properties:
+        ok:
+          type: boolean
+        watch:
+          $ref: "#/components/schemas/PriceWatchRecord"
+
+    PriceWatchImportInput:
+      type: object
+      required: [watches]
+      properties:
+        watches:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/PriceWatchUpsertInput"
+
+    OkPriceWatchListResponse:
+      type: object
+      required: [ok, items]
+      properties:
+        ok:
+          type: boolean
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceWatchListItem"
+
+    NotificationItem:
+      type: object
+      required: [id, type, title, body, link, read, created_at]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        product_id:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        body:
+          type: string
+        link:
+          type: string
+        read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    NotificationsResponse:
+      type: object
+      required: [items, unreadCount]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationItem"
+        unreadCount:
+          type: integer
+
+    BrowsingHistoryItem:
+      type: object
+      required: [id, productId, viewed_at]
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        viewed_at:
+          type: string
+          format: date-time
+
+    ResetPasswordSuccess:
+      type: object
+      required: [ok, user]
+      properties:
+        ok:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/User"
+
+    DebugSetOfferPriceInput:
+      type: object
+      required: [productId, marketplace, price]
+      properties:
+        productId:
+          type: number
+        marketplace:
+          type: string
+          minLength: 1
+        price:
+          type: integer
+          minimum: 1

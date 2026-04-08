@@ -1,0 +1,97 @@
+.footer {
+  background-color: #002870;
+  color: white;
+  padding: 40px 0 20px;
+  margin-top: auto;
+}
+
+.footerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.footerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 40px;
+  margin-bottom: 30px;
+}
+
+.footerSection h3 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.footerSection ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footerSection li {
+  margin-bottom: 10px;
+}
+
+.footerSection a {
+  color: #999;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footerSection a:hover {
+  color: white;
+}
+
+.supportSection {
+  margin-top: 30px;
+}
+
+.supportSection p {
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 15px;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 15px;
+}
+
+@media (max-width: 640px) {
+  .brandRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.brandName {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.logosRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.logoCard {
+  background: white;
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoImage {
+  max-height: 38px;
+  width: auto;
+  display: block;
+}

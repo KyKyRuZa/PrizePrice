@@ -1,0 +1,25 @@
+.git
+.github
+.qwen
+node_modules
+client/node_modules
+server/node_modules
+e2e
+docs
+scripts
+*.md
+!infra/caddy/Caddyfile
+
+# Env
+infra/env/.env.*
+server/.env
+*.local
+
+# Artifacts
+client/dist
+server/dist
+test-results
+playwright-report
+coverage
+npm-debug.log*
+stats.html

@@ -1,0 +1,81 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 30px;
+  padding: 20px 0;
+}
+
+.pageButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  border-color: #002870;
+  color: #002870;
+  background: #f5f7fa;
+}
+
+.pageButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageButton.active {
+  background: #002870;
+  border-color: #002870;
+  color: white;
+}
+
+.pageButton:focus-visible {
+  outline: 2px solid #002870;
+  outline-offset: 2px;
+}
+
+.dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  color: #999;
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .pagination {
+    gap: 4px;
+  }
+
+  .pageButton {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+
+  /* Скрываем некоторые кнопки на мобильных */
+  .pageButton:not(.active):not(:first-child):not(:last-child) {
+    display: none;
+  }
+
+  .dots {
+    display: none;
+  }
+}

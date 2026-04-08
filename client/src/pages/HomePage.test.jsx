@@ -1,0 +1,168 @@
+import React from 'react';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../context/AuthContext';
+import { CartProvider } from '../context/CartContext';
+import { FavoritesProvider } from '../context/FavoritesContext';
+import { PriceWatchProvider } from '../context/PriceWatchContext';
+import { SearchHistoryProvider } from '../context/SearchHistoryContext';
+import { mockProducts } from '../utils/mockData';
+import { apiGet } from '../utils/apiClient';
+import HomePage from './HomePage';
+
+vi.mock('../utils/apiClient', () => ({
+  apiGet: vi.fn(),
+}));
+
+vi.mock('../components/products/ProductCardMain', () => ({
+  default: ({ product }) => <div data-testid="product-card">{product?.name || 'Mock Product Card'}</div>
+}));
+
+vi.mock('../components/products/Filters', () => ({
+  default: () => <div data-testid="filters">Mock Filters</div>
+}));
+
+vi.mock('../components/products/SortOptions', () => ({
+  default: () => <div data-testid="sort-options">Mock Sort Options</div>
+}));
+
+vi.mock('../context/AuthContext', async () => {
+  const actual = await vi.importActual('../context/AuthContext');
+  return {
+    ...actual,
+    AuthProvider: ({ children }) => <>{children}</>,
+    useAuth: () => ({
+      user: null,
+      token: null,
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+      isAuthenticated: false,
+    }),
+  };
+});
+
+vi.mock('../context/CartContext', async () => {
+  const actual = await vi.importActual('../context/CartContext');
+  return {
+    ...actual,
+    CartProvider: ({ children }) => <>{children}</>,
+    useCart: () => ({
+      items: [],
+      addItem: vi.fn(),
+      removeItem: vi.fn(),
+      clearAll: vi.fn(),
+      isInCart: vi.fn(() => false),
+    }),
+  };
+});
+
+vi.mock('../context/FavoritesContext', async () => {
+  const actual = await vi.importActual('../context/FavoritesContext');
+  return {
+    ...actual,
+    FavoritesProvider: ({ children }) => <>{children}</>,
+    useFavorites: () => ({
+      items: [],
+      addItem: vi.fn(),
+      removeItem: vi.fn(),
+      toggleFavorite: vi.fn(),
+      isFavorite: vi.fn(),
+      isInFavorites: vi.fn(),
+    }),
+  };
+});
+
+vi.mock('../context/PriceWatchContext', async () => {
+  const actual = await vi.importActual('../context/PriceWatchContext');
+  return {
+    ...actual,
+    PriceWatchProvider: ({ children }) => <>{children}</>,
+    usePriceWatch: () => ({
+      items: [],
+      addItem: vi.fn(),
+      removeItem: vi.fn(),
+      isWatching: vi.fn(),
+      getWatch: vi.fn(),
+    }),
+  };
+});
+
+vi.mock('../context/SearchHistoryContext', async () => {
+  const actual = await vi.importActual('../context/SearchHistoryContext');
+  return {
+    ...actual,
+    SearchHistoryProvider: ({ children }) => <>{children}</>,
+    useSearchHistory: () => ({
+      items: [],
+      addQuery: vi.fn(),
+      addItem: vi.fn(),
+      removeItem: vi.fn(),
+      clearAll: vi.fn(),
+    }),
+  };
+});
+
+describe('HomePage Component', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    apiGet.mockImplementation((path) => {
+      if (path === '/products/categories') {
+        return Promise.resolve({ categories: ['electronics'] });
+      }
+      if (path === '/products/recommended') {
+        return Promise.resolve({ items: mockProducts });
+      }
+      if (String(path).startsWith('/products/search')) {
+        return Promise.resolve({ items: mockProducts });
+      }
+      return Promise.resolve({});
+    });
+  });
+
+  const renderWithProviders = (component) => {
+    return render(
+      <MemoryRouter>
+        <AuthProvider>
+          <CartProvider>
+            <FavoritesProvider>
+              <PriceWatchProvider>
+                <SearchHistoryProvider>
+                  {component}
+                </SearchHistoryProvider>
+              </PriceWatchProvider>
+            </FavoritesProvider>
+          </CartProvider>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+  };
+
+  const renderHomePage = async () => {
+    renderWithProviders(<HomePage />);
+    await screen.findAllByTestId('product-card');
+  };
+
+  it('renders welcome section', async () => {
+    await renderHomePage();
+    expect(screen.getByRole('heading', { level: 1, name: /PrizePrice/i })).toBeInTheDocument();
+  });
+
+  it('renders filters section', async () => {
+    await renderHomePage();
+    expect(screen.getByTestId('filters')).toBeInTheDocument();
+  });
+
+  it('renders sort options', async () => {
+    await renderHomePage();
+    expect(screen.getByTestId('sort-options')).toBeInTheDocument();
+  });
+
+  it('renders product cards', async () => {
+    await renderHomePage();
+    const cards = screen.getAllByTestId('product-card');
+    expect(cards).toHaveLength(mockProducts.length);
+  });
+});

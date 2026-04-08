@@ -1,0 +1,111 @@
+name: prizeprice-dev
+
+services:
+  postgres:
+    image: postgres:17.7-alpine
+    container_name: prizeprice-dev-postgres
+    restart: unless-stopped
+    env_file:
+      - ../env/.env.dev
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-prizeprice}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-prizeprice}
+      POSTGRES_DB: ${POSTGRES_DB:-prizeprice}
+    ports:
+      - "${POSTGRES_PORT_HOST:-5442}:5432"
+    volumes:
+      - prizeprice_dev_pgdata:/var/lib/postgresql/data
+    networks:
+      - prizeprice-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-prizeprice} -d ${POSTGRES_DB:-prizeprice}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:8.2-alpine
+    container_name: prizeprice-dev-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT_HOST:-6389}:6379"
+    volumes:
+      - prizeprice_dev_redis_data:/data
+    networks:
+      - prizeprice-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  server:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.dev
+    container_name: prizeprice-dev-server
+    restart: unless-stopped
+    env_file:
+      - ../env/.env.dev
+    ports:
+      - "${SERVER_PORT_HOST:-3001}:${PORT:-3001}"
+    volumes:
+      - ../../server:/app/server
+      - /app/server/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - prizeprice-dev
+    command: npm run dev
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  client:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.dev
+      target: client
+    container_name: prizeprice-dev-client
+    restart: unless-stopped
+    env_file:
+      - ../env/.env.dev
+    ports:
+      - "${CLIENT_PORT_HOST:-5173}:${CLIENT_PORT:-5173}"
+    volumes:
+      - ../../client:/app/client
+      - /app/client/node_modules
+    depends_on:
+      - server
+    networks:
+      - prizeprice-dev
+    command: npm run dev
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  prizeprice_dev_pgdata:
+  prizeprice_dev_redis_data:
+
+networks:
+  prizeprice-dev:
+    driver: bridge

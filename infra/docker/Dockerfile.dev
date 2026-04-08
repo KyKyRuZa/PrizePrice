@@ -1,0 +1,33 @@
+# Multi-stage Dockerfile для локальной разработки
+# Позволяет запускать client и server раздельно с hot-reload
+
+# ==================== Client stage ====================
+FROM node:22-alpine AS client
+
+WORKDIR /app/client
+
+COPY client/package*.json ./
+RUN npm ci
+
+COPY client ./
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev"]
+
+# ==================== Server stage ====================
+FROM node:22-alpine AS server
+
+WORKDIR /app/server
+
+COPY server/package*.json ./
+RUN npm ci
+
+COPY server ./
+
+EXPOSE 3001
+
+CMD ["npm", "run", "dev"]
+
+# ==================== Default (server) ====================
+FROM server

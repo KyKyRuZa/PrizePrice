@@ -1,0 +1,165 @@
+﻿import React, { useEffect, useMemo, useState } from 'react';
+
+import { useAuth } from './AuthContext';
+import { apiGet } from '../utils/apiClient';
+import { getProductRefId, hydrateProductRefs } from '../utils/productHydration';
+import { productItemResponseSchema, userDataPayloadSchema } from '../contracts/apiSchemas';
+import { createStrictContext } from './createStrictContext';
+import {
+  loadStoredArray,
+  mergeUniqueIds,
+  normalizeIdList,
+  persistStoredJson,
+  syncLocalChangesIfAuthenticated,
+  useSyncedRef,
+} from './shared/contextUtils';
+
+export const [CartContext, useCart] = createStrictContext({
+  name: 'CartProvider',
+  hookName: 'useCart',
+});
+
+const STORAGE_KEY = 'prizeprice_cart';
+
+const needsProductHydration = (item) => {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
+  const id = Number(item.id);
+  if (!Number.isFinite(id)) return false;
+
+  const hasName = typeof item.name === 'string' && item.name.trim().length > 0;
+  const hasOffers = Array.isArray(item.prices) || Array.isArray(item.offers);
+  return !hasName || !hasOffers;
+};
+
+export const CartProvider = ({ children }) => {
+  const [cart, setCart] = useState([]);
+  const { isAuthenticated, token } = useAuth();
+  const cartRef = useSyncedRef(cart);
+
+  useEffect(() => {
+    const parsed = loadStoredArray(STORAGE_KEY);
+    if (parsed.length) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCart(hydrateProductRefs(parsed));
+    }
+  }, []);
+
+  useEffect(() => {
+    persistStoredJson(STORAGE_KEY, cart);
+  }, [cart]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!isAuthenticated || !token) return undefined;
+
+    (async () => {
+      try {
+        const userData = await apiGet('/auth/user-data', { token, schema: userDataPayloadSchema });
+        const serverCart = Array.isArray(userData?.cart) ? userData.cart : [];
+
+        const localItems = normalizeIdList(cartRef.current, (item) => getProductRefId(item));
+        const serverItems = normalizeIdList(serverCart, (item) => getProductRefId(item));
+        const allCart = mergeUniqueIds({ primary: localItems, secondary: serverItems });
+
+        if (!cancelled) {
+          setCart(hydrateProductRefs(allCart, cartRef.current));
+        }
+      } catch {
+        // ignore sync errors
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, token, cartRef]);
+
+  useEffect(() => {
+    const targets = Array.isArray(cart) ? cart.filter(needsProductHydration) : [];
+    if (!targets.length) return undefined;
+
+    let cancelled = false;
+    const ids = [...new Set(targets.map((item) => Number(item.id)).filter((id) => Number.isFinite(id)))];
+    if (!ids.length) return undefined;
+
+    (async () => {
+      const entries = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const data = await apiGet(`/products/${id}`, { schema: productItemResponseSchema });
+            if (!data?.item || typeof data.item !== 'object') return null;
+            return [id, data.item];
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      if (cancelled) return;
+
+      const byId = new Map(entries.filter(Boolean));
+      if (!byId.size) return;
+
+      setCart((prev) =>
+        prev.map((item) => {
+          const id = getProductRefId(item);
+          const hydrated = byId.get(id);
+          if (id == null || !hydrated) return item;
+
+          const base = item && typeof item === 'object' && !Array.isArray(item) ? item : { id };
+          return {
+            ...base,
+            ...hydrated,
+            id,
+            addedAt: base.addedAt || hydrated.addedAt,
+          };
+        })
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cart]);
+
+  const addToCart = (product) => {
+    if (!product?.id) return;
+
+    setCart((prev) => {
+      if (prev.some((p) => p.id === product.id)) return prev;
+      return [...prev, { ...product, addedAt: new Date().toISOString() }];
+    });
+
+    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'cart' });
+  };
+
+  const removeFromCart = (productId) => {
+    setCart((prev) => prev.filter((p) => p.id !== productId));
+    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'cart' });
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'cart' });
+  };
+
+  const isInCart = (productId) => {
+    const normalizedId = Number(productId);
+    if (!Number.isFinite(normalizedId)) return false;
+    return cart.some((p) => Number(p?.id) === normalizedId);
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const value = useMemo(() => ({
+    cart,
+    cartCount: cart.length,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    isInCart,
+  }), [cart, isAuthenticated, token, addToCart, removeFromCart, clearCart, isInCart]);
+
+  return React.createElement(CartContext.Provider, { value }, children);
+};
+
+export default { CartProvider, useCart, CartContext };
