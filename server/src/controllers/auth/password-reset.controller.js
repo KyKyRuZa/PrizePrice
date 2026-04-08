@@ -41,14 +41,15 @@ export const requestPasswordReset = async (req, res) => {
   await setSendCooldown(resetOtpKey);
 
   const user = await User.findOne({ where: { phone } });
-  const code = user
-    ? await issueOtpCode(resetOtpKey)
-    : await maybeIssueDebugOtp(resetOtpKey);
+  const { code, smsSent } = user
+    ? await issueOtpCode(resetOtpKey, phone)
+    : await maybeIssueDebugOtp(resetOtpKey) || { code: null, smsSent: false };
 
   return res.json(
     buildOtpSuccessPayload({
       message: "If account exists, reset code sent",
       code,
+      smsSent,
     })
   );
 };

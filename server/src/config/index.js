@@ -166,6 +166,11 @@ export const config = {
   // Debug/admin endpoints (dev only)
   debugAdmin: !isProduction && debugAdminEnabled,
 
+  // SMS provider (SmsAero)
+  smsaeroEmail: String(process.env.SMSAERO_EMAIL || "").trim(),
+  smsaeroApiKey: String(process.env.SMSAERO_API_KEY || "").trim(),
+  smsaeroSign: String(process.env.SMSAERO_SIGN || "PrizePrice").trim(),
+
   // Logging
   debugLogging: parseBool(process.env.DEBUG_LOGGING, !isProduction && !isTest),
   logFilePath: String(process.env.LOG_FILE_PATH || "").trim(),

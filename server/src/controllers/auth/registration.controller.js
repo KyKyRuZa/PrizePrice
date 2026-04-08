@@ -114,7 +114,7 @@ export const requestCodeForRegistration = async (req, res) => {
       return sendTooManyRequests(res, req, allowed.retryAfter);
     }
 
-    const code = await issueOtpCode(registrationOtpKey);
+    const { code, smsSent } = await issueOtpCode(registrationOtpKey, normalizedPhone);
 
     const passwordHash = await hashPassword(password);
     await saveRegistrationData(
@@ -130,6 +130,7 @@ export const requestCodeForRegistration = async (req, res) => {
       buildOtpSuccessPayload({
         message: "Registration code sent",
         code,
+        smsSent,
       })
     );
   } catch (error) {

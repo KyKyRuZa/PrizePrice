@@ -55,8 +55,8 @@ export const requestCode = async (req, res) => {
     return sendTooManyRequests(res, req, allowed.retryAfter);
   }
 
-  const code = await issueOtpCode(phone);
-  return res.json(buildOtpSuccessPayload({ code }));
+  const { code, smsSent } = await issueOtpCode(phone, phone);
+  return res.json(buildOtpSuccessPayload({ code, smsSent }));
 };
 
 export const verifyOtp = async (req, res) => {
@@ -93,12 +93,15 @@ export const requestCodeForLogin = async (req, res) => {
   const userRec = await findUserByLoginInput(sanitizedInput);
   const phone = userRec?.phone;
   const shouldIssueOtp = userRec && isValidPhone(phone);
-  const code = shouldIssueOtp ? await issueOtpCode(`login_${phone}`) : null;
+  const { code, smsSent } = shouldIssueOtp
+    ? await issueOtpCode(`login_${phone}`, phone)
+    : { code: null, smsSent: false };
 
   return res.json(
     buildOtpSuccessPayload({
       message: "If account exists, login code sent",
       code,
+      smsSent,
     })
   );
 };
