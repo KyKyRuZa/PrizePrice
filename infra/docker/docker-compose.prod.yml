@@ -11,6 +11,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-prizeprice}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-prizeprice}
       POSTGRES_DB: ${POSTGRES_DB:-prizeprice}
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - prizeprice_pgdata:/var/lib/postgresql/data
     networks:
