@@ -1,0 +1,177 @@
+.sectionTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sectionHeading {
+  margin: 0;
+}
+
+.actionGroup {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.smallBtn {
+  border: 1px solid #999;
+  background: white;
+  color: #333;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.smallBtn:hover {
+  border-color: #002870;
+  color: #002870;
+}
+
+.compareList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.compareItem {
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.compareProductInfo {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.compareProductImage {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #e8e8e8;
+}
+
+.compareProductImagePlaceholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 14px;
+}
+
+.compareProductMeta {
+  flex: 1;
+}
+
+.compareProductName {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: #002870;
+}
+
+.compareBestPrice {
+  margin: 0;
+  font-size: 14px;
+  color: #999;
+}
+
+.compareOffers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compareOffer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 8px;
+}
+
+.offerMarketplace {
+  font-weight: 600;
+  color: #333;
+  min-width: 120px;
+}
+
+.offerPrice {
+  font-weight: 700;
+  color: #002870;
+  font-size: 16px;
+}
+
+.offerDiscount {
+  color: #00a650;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.offerLinkBtn,
+.removeOfferBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.offerLinkBtn {
+  color: #002870;
+}
+
+.offerLinkBtn:hover {
+  background: rgba(0, 40, 112, 0.1);
+}
+
+.removeOfferBtn {
+  color: #ff4444;
+}
+
+.removeOfferBtn:hover {
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.noOffers {
+  color: #999;
+  font-size: 14px;
+  text-align: center;
+  padding: 10px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.emptyState svg {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.emptyState h3 {
+  margin: 15px 0 8px;
+  color: #333;
+}
+
+.emptyState p {
+  font-size: 16px;
+}

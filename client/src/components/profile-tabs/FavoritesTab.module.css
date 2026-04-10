@@ -1,0 +1,59 @@
+.favoritesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.removeFavoriteButton {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #ff4444;
+  z-index: 10;
+  transition: all 0.3s;
+}
+
+.removeFavoriteButton:hover {
+  background: #ff4444;
+  color: white;
+  transform: scale(1.1);
+}
+
+.endAlignedRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.relativeCard {
+  position: relative;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.emptyState svg {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.emptyState h3 {
+  margin: 15px 0 8px;
+  color: #333;
+}
+
+.emptyState p {
+  font-size: 16px;
+}

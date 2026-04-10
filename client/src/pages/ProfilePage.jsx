@@ -1,10 +1,13 @@
 ﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Heart, History, LogOut, Search, TrendingUp, User, X } from 'lucide-react';
-import ProductCardMain from '../components/products/ProductCardMain';
+import { LogOut, User } from 'lucide-react';
 import WatchPriceModal from '../components/watch/WatchPriceModal';
+import HistoryTab from '../components/profile-tabs/HistoryTab';
+import FavoritesTab from '../components/profile-tabs/FavoritesTab';
+import CompareTab from '../components/profile-tabs/CompareTab';
+import WatchTab from '../components/profile-tabs/WatchTab';
+import NotificationsTab from '../components/profile-tabs/NotificationsTab';
 import { useProfilePageState } from '../hooks/useProfilePageState';
-import { theme } from '../styles/theme';
 import { INPUT_LIMITS } from '../utils/inputSanitizers';
 import styles from './ProfilePage.module.css';
 
@@ -17,14 +20,16 @@ const ProfilePage = () => {
     favorites,
     favoritesCount,
     clearFavorites,
+    cart,
     cartCount,
+    removeFromCart,
+    clearCart,
     historyCount,
     clearHistory,
     watches,
     watchesCount,
     removeWatch,
     notifications,
-    unreadCount,
     refreshNotifications,
     markNotificationRead,
     markAllNotifications,
@@ -32,16 +37,16 @@ const ProfilePage = () => {
     activeTab,
     setActiveTab,
     watchModalProduct,
-    searchTerm,
     editingName,
     newName,
-    filteredHistory,
+    paginatedHistory,
+    historyPagesCount,
+    historyPage,
+    goToHistoryPage,
     handleNameInputChange,
     handleNameUpdate,
     startNameEditing,
     cancelNameEditing,
-    clearSearchTerm,
-    handleSearchTermChange,
     handleHistorySearch,
     handleProductClick,
     formatHistoryDate,
@@ -49,7 +54,6 @@ const ProfilePage = () => {
     handleRemoveFavorite,
     openWatchModal,
     closeWatchModal,
-    goToCompare,
     openExternalLink,
   } = useProfilePageState();
 
@@ -76,52 +80,10 @@ const ProfilePage = () => {
   // eslint-disable-next-line react-hooks/purity
   const registrationDate = new Date(user.created_at || user.createdAt || Date.now()).toLocaleDateString('ru-RU');
 
-  const stats = [
-    {
-      key: 'history',
-      title: 'История поиска',
-      value: historyCount,
-      icon: <History />,
-      color: theme.colors.primary,
-      onClick: () => setActiveTab('history'),
-    },
-    {
-      key: 'favorites',
-      title: 'Избранное',
-      value: favoritesCount,
-      icon: <Heart />,
-      color: '#00a650',
-      onClick: () => setActiveTab('favorites'),
-    },
-    {
-      key: 'compare',
-      title: 'Сравнение',
-      value: cartCount,
-      icon: <TrendingUp />,
-      color: theme.colors.secondary,
-      onClick: goToCompare,
-    },
-    {
-      key: 'watch',
-      title: 'Отслеживание',
-      value: watchesCount,
-      icon: <Bell />,
-      color: theme.colors.primary,
-      onClick: () => setActiveTab('watch'),
-    },
-    {
-      key: 'notifications',
-      title: 'Уведомления',
-      value: unreadCount,
-      icon: <Bell />,
-      color: '#00a650',
-      onClick: () => setActiveTab('notifications'),
-    },
-  ];
-
   const tabs = [
     { key: 'history', label: 'История поиска' },
     { key: 'favorites', label: 'Избранное' },
+    { key: 'compare', label: 'Сравнение' },
     { key: 'watch', label: 'Отслеживание' },
     { key: 'notifications', label: 'Уведомления' },
   ];
@@ -165,18 +127,6 @@ const ProfilePage = () => {
           </button>
         </header>
 
-        <div className={styles.statsGrid}>
-          {stats.map((stat) => (
-            <div key={stat.key} className={styles.statCard} onClick={stat.onClick}>
-              <div className={styles.statIcon} style={{ color: stat.color }}>{stat.icon}</div>
-              <div className={styles.statContent}>
-                <h3 className={styles.statTitle}>{stat.title}</h3>
-                <div className={styles.statValue}>{stat.value}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
         <div className={styles.tabsContainer}>
           <div className={styles.tabsHeader}>
             {tabs.map((tab) => (
@@ -193,169 +143,59 @@ const ProfilePage = () => {
 
           <div className={styles.tabContent}>
             {activeTab === 'history' && (
-              <>
-                <div className={styles.historySearch}>
-                  <input
-                    className={styles.searchInput}
-                    type="text"
-                    placeholder="Поиск в истории..."
-                    value={searchTerm}
-                    maxLength={INPUT_LIMITS.SEARCH_QUERY}
-                    onChange={(e) => handleSearchTermChange(e.target.value)}
-                  />
-                  {searchTerm ? (
-                    <button className={styles.clearButton} onClick={clearSearchTerm}>
-                      <X size={20} />
-                    </button>
-                  ) : null}
-                  <Search size={20} color={theme.colors.gray} />
-                  {historyCount > 0 ? (
-                    <button className={styles.clearAllButton} onClick={clearHistory} title="Очистить историю">
-                      Очистить
-                    </button>
-                  ) : null}
-                </div>
-
-                {filteredHistory.length > 0 ? (
-                  <div className={styles.historyList}>
-                    {filteredHistory.map((item) => (
-                      <div key={item.id} className={styles.historyItem} onClick={() => handleHistorySearch(item.query)}>
-                        <span className={styles.historyQuery}>{item.query}</span>
-                        <div className={styles.historyMetaRow}>
-                          <span className={styles.historyDate}>{formatHistoryDate(item)}</span>
-                          <button className={styles.clearButton} onClick={(e) => handleRemoveHistory(e, item.id)} title="Удалить из истории">
-                            <X size={18} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={styles.emptyState}>
-                    <Search size={64} />
-                    <h3>История поиска пуста</h3>
-                    <p>Начните искать товары, чтобы увидеть их здесь</p>
-                  </div>
-                )}
-              </>
+              <HistoryTab
+                historyCount={historyCount}
+                paginatedHistory={paginatedHistory}
+                historyPagesCount={historyPagesCount}
+                historyPage={historyPage}
+                goToHistoryPage={goToHistoryPage}
+                clearHistory={clearHistory}
+                handleHistorySearch={handleHistorySearch}
+                formatHistoryDate={formatHistoryDate}
+                handleRemoveHistory={handleRemoveHistory}
+              />
             )}
 
-            {activeTab === 'favorites' &&
-              (favoritesCount > 0 ? (
-                <>
-                  <div className={styles.endAlignedRow}>
-                    <button className={styles.clearAllButton} onClick={clearFavorites} title="Очистить избранное">
-                      Очистить избранное
-                    </button>
-                  </div>
-                  <div className={styles.favoritesGrid}>
-                    {favorites.map((product) => (
-                      <div key={product.id} className={styles.relativeCard}>
-                        <button
-                          className={styles.removeFavoriteButton}
-                          onClick={(e) => handleRemoveFavorite(e, product.id)}
-                          title="Удалить из избранного"
-                        >
-                          <X size={18} />
-                        </button>
-                        <ProductCardMain product={product} onClick={handleProductClick} />
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className={styles.emptyState}>
-                  <Heart size={64} />
-                  <h3>Избранное пусто</h3>
-                  <p>Добавляйте товары в избранное, чтобы видеть их здесь</p>
-                </div>
-              ))}
+            {activeTab === 'favorites' && (
+              <FavoritesTab
+                favoritesCount={favoritesCount}
+                favorites={favorites}
+                clearFavorites={clearFavorites}
+                handleRemoveFavorite={handleRemoveFavorite}
+                handleProductClick={handleProductClick}
+              />
+            )}
 
-            {activeTab === 'watch' &&
-              (watchesCount > 0 ? (
-                <>
-                  <div className={styles.sectionTopRow}>
-                    <h3 className={styles.sectionHeading}>Отслеживание цены</h3>
-                    <div className={styles.actionGroup}>
-                      <button className={styles.smallBtn} onClick={() => setActiveTab('notifications')}>Уведомления</button>
-                    </div>
-                  </div>
+            {activeTab === 'compare' && (
+              <CompareTab
+                cartCount={cartCount}
+                cart={cart}
+                removeFromCart={removeFromCart}
+                clearCart={clearCart}
+                openExternalLink={openExternalLink}
+              />
+            )}
 
-                  <div className={styles.favoritesGrid}>
-                    {watches.map((it) => {
-                      const product = it?.product;
-                      const watch = it?.watch;
-                      if (!product?.id) return null;
-
-                      return (
-                        <div key={product.id} className={styles.relativeCard}>
-                          <ProductCardMain product={product} onClick={handleProductClick} />
-                          <div className={styles.watchMeta}>
-                            {watch?.targetPrice != null ? (
-                              <span className={styles.metaBadge}>Цель: {Number(watch.targetPrice)}₽</span>
-                            ) : null}
-                            {watch?.dropPercent != null ? (
-                              <span className={styles.metaBadge}>Падение: {Number(watch.dropPercent)}%</span>
-                            ) : null}
-                            <span className={styles.metaBadge}>{watch?.active ? 'Активно' : 'Пауза'}</span>
-                            <span className={styles.watchActions}>
-                              <button className={styles.smallBtn} onClick={() => openWatchModal(product, watch)}>Настроить</button>
-                              <button className={styles.smallBtn} onClick={() => removeWatch(product.id)}>Удалить</button>
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              ) : (
-                <div className={styles.emptyState}>
-                  <Bell size={64} />
-                  <h3>Отслеживание не настроено</h3>
-                  <p>Нажмите «Следить» на карточке товара — и вы увидите подписки здесь</p>
-                </div>
-              ))}
+            {activeTab === 'watch' && (
+              <WatchTab
+                watchesCount={watchesCount}
+                watches={watches}
+                setActiveTab={setActiveTab}
+                handleProductClick={handleProductClick}
+                openWatchModal={openWatchModal}
+                removeWatch={removeWatch}
+              />
+            )}
 
             {activeTab === 'notifications' && (
-              <>
-                <div className={styles.sectionTopRow}>
-                  <h3 className={styles.sectionHeading}>Уведомления</h3>
-                  <div className={styles.actionGroup}>
-                    <button className={styles.smallBtn} onClick={() => refreshNotifications({ limit: 100, unreadOnly: false })}>
-                      Обновить
-                    </button>
-                    <button className={styles.smallBtn} onClick={markAllNotifications}>Прочитать все</button>
-                  </div>
-                </div>
-
-                {!notifications || notifications.length === 0 ? (
-                  <div className={styles.emptyState}>
-                    <Bell size={64} />
-                    <h3>Пока нет уведомлений</h3>
-                    <p>Добавьте товары в «Отслеживание цены» — и уведомления появятся здесь</p>
-                  </div>
-                ) : (
-                  <div className={styles.notificationsList}>
-                    {notifications.map((notification) => (
-                      <div key={notification.id} className={styles.notificationItem} data-unread={!notification.read}>
-                        <div className={styles.notificationTitle}>{notification.title}</div>
-                        <div className={styles.notificationBody}>{notification.body}</div>
-                        <div className={styles.notificationFooter}>
-                          <span className={styles.notificationActions}>
-                            {!notification.read ? (
-                              <button className={styles.smallBtn} onClick={() => markNotificationRead(notification.id)}>Прочитано</button>
-                            ) : null}
-                            {notification.link ? (
-                              <button className={styles.smallBtn} onClick={() => openExternalLink(notification.link)}>Открыть</button>
-                            ) : null}
-                            <button className={styles.smallBtn} onClick={() => removeNotification(notification.id)}>Удалить</button>
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
+              <NotificationsTab
+                notifications={notifications}
+                refreshNotifications={refreshNotifications}
+                markNotificationRead={markNotificationRead}
+                markAllNotifications={markAllNotifications}
+                removeNotification={removeNotification}
+                openExternalLink={openExternalLink}
+              />
             )}
           </div>
         </div>

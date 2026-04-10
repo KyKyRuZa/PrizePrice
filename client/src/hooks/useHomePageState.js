@@ -40,9 +40,12 @@ export function useHomePageState() {
         // Загружаем количество товаров по категориям
         const counts = await fetchCategoryCounts();
         if (isMounted && counts) {
-          // Считаем общее количество
-          const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-          setCategoryCounts({ [ALL_CATEGORY]: total, ...counts });
+          // Считаем общее количество и максимальную цену
+          const total = Object.values(counts).reduce((sum, entry) => sum + (entry.count || 0), 0);
+          const overallMax = Object.values(counts).reduce((max, entry) => {
+            return Math.max(max, entry.maxPrice || 0);
+          }, 0);
+          setCategoryCounts({ [ALL_CATEGORY]: { count: total, maxPrice: overallMax || null }, ...counts });
         }
       } catch {
         if (!isMounted) return;
@@ -96,7 +99,7 @@ export function useHomePageState() {
     return () => {
       isMounted = false;
     };
-  }, [searchQuery, filters, sortBy, availableCategories, currentPage]);
+  }, [searchQuery, filters, sortBy, currentPage]);
 
   useEffect(() => {
     // Синхронизируем searchQuery только если URL изменился и searchQuery пуст

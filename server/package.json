@@ -7,11 +7,6 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "docker-start": "node src/index.js",
-    "docker-build": "docker build -t prizeprice-server .",
-    "docker-up": "docker compose up -d",
-    "docker-down": "docker compose down",
-    "docker-restart": "docker compose down && docker compose up -d --build",
     "watcher:start": "node src/scripts/start-price-watcher.js",
     "db:migrate": "node src/scripts/migrate.js",
     "preflight:ci": "node src/scripts/preflight-ci.js",

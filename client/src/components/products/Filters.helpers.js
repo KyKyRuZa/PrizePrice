@@ -1,4 +1,4 @@
-﻿import { ALL_CATEGORY, MAX_PRICE_VALUE } from '../../constants/filters';
+﻿import { ALL_CATEGORY, DEFAULT_MAX_PRICE } from '../../constants/filters';
 
 export const DEFAULT_EXPANDED_SECTIONS = Object.freeze({
   category: true,
@@ -18,10 +18,10 @@ const CATEGORY_COUNTS = {
   [ALL_CATEGORY]: 12,
 };
 
-export function sanitizePriceInput(value) {
+export function sanitizePriceInput(value, maxLimit = DEFAULT_MAX_PRICE) {
   const numericValue = String(value ?? '').replace(/[^0-9]/g, '');
   if (!numericValue) return '';
-  return Number(numericValue) > MAX_PRICE_VALUE ? String(MAX_PRICE_VALUE) : numericValue;
+  return Number(numericValue) > maxLimit ? String(maxLimit) : numericValue;
 }
 
 export function hasInvalidPriceRange(minPrice, maxPrice) {

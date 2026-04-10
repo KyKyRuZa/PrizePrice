@@ -1,8 +1,24 @@
 import SequelizePkg from "sequelize";
 import { Offer, Product } from "../models/index.js";
-import { computeBestPrice, sortProducts } from "../utils/index.js";
+import { computeBestPrice } from "../utils/index.js";
 
 const { Sequelize, Op } = SequelizePkg;
+
+function getSortOrder(sort) {
+  switch (sort) {
+    case "price_asc":
+      return [[Sequelize.literal("(SELECT MIN(o.price) FROM offers o WHERE o.product_id = \"Product\".id)"), "ASC"]];
+    case "price_desc":
+      return [[Sequelize.literal("(SELECT MIN(o.price) FROM offers o WHERE o.product_id = \"Product\".id)"), "DESC"]];
+    case "rating":
+      return [["rating", "DESC"]];
+    case "discount":
+      return [[Sequelize.literal("(SELECT MAX(o.discount) FROM offers o WHERE o.product_id = \"Product\".id)"), "DESC"]];
+    case "popularity":
+    default:
+      return [["id", "ASC"]];
+  }
+}
 
 function mapProductWithOffers(productInstance) {
   const offers = (productInstance.offers || [])
@@ -36,18 +52,30 @@ export async function countCategories() {
   const rows = await Product.findAll({
     attributes: [
       "category",
-      [Sequelize.fn("COUNT", Sequelize.col("id")), "count"],
+      [Sequelize.fn("COUNT", Sequelize.col("Product.id")), "count"],
+      [Sequelize.fn("MAX", Sequelize.col("offers.price")), "maxPrice"],
+    ],
+    include: [
+      {
+        model: Offer,
+        as: "offers",
+        attributes: [],
+        required: false,
+      },
     ],
     group: ["category"],
     order: [["category", "ASC"]],
     raw: true,
   });
-  
-  const counts = {};
+
+  const result = {};
   rows.forEach((row) => {
-    counts[row.category] = Number(row.count);
+    result[row.category] = {
+      count: Number(row.count),
+      maxPrice: row.maxPrice ? Number(row.maxPrice) : null,
+    };
   });
-  return counts;
+  return result;
 }
 
 export async function getProductById(id) {
@@ -127,8 +155,9 @@ export async function searchProducts({
   const hasOfferFilters = offerWhere.marketplace || offerWhere.price;
 
   // Получаем общее количество товаров для пагинации
-  const { count } = await Product.findAndCountAll({ 
+  const { count } = await Product.findAndCountAll({
     where,
+    distinct: true,
     include: hasOfferFilters ? [{
       model: Offer,
       as: "offers",
@@ -137,11 +166,14 @@ export async function searchProducts({
     }] : [],
   });
 
+  // count может быть массивом при include, берем число
+  const total = Array.isArray(count) ? count.length : count;
+
   const rows = await Product.findAll({
     where,
     limit: limitNum,
     offset,
-    order: [["id", "ASC"], [{ model: Offer, as: "offers" }, "price", "ASC"]],
+    order: getSortOrder(sort),
     include: hasOfferFilters ? [{
       model: Offer,
       as: "offers",
@@ -159,13 +191,13 @@ export async function searchProducts({
   const result = rows.map(mapProductWithOffers);
 
   return {
-    items: sortProducts(result, sort),
+    items: result,
     pagination: {
       page: pageNum,
       limit: limitNum,
-      total: count,
-      totalPages: Math.ceil(count / limitNum),
-      hasMore: offset + limitNum < count,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      hasMore: offset + limitNum < total,
     },
   };
 }

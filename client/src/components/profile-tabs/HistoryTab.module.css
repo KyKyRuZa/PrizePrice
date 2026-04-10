@@ -1,0 +1,144 @@
+.historyToolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.clearAllButton {
+  padding: 10px 12px;
+  border: none;
+  background: #f5f5f5;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #999;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.clearAllButton:hover {
+  color: #002870;
+}
+
+.clearButton {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.clearButton:hover {
+  color: #002870;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.historyItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.historyItem:hover {
+  background: #e8e8e8;
+}
+
+.historyQuery {
+  font-weight: 500;
+}
+
+.historyDate {
+  font-size: 14px;
+  color: #999;
+}
+
+.historyMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.paginationBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.paginationBtn:hover:not(:disabled) {
+  border-color: #002870;
+  color: #002870;
+}
+
+.paginationBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.paginationPage {
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #333;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.paginationPage:hover {
+  border-color: #002870;
+  color: #002870;
+}
+
+.paginationPageActive {
+  background: #002870;
+  border-color: #002870;
+  color: white;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.emptyState svg {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.emptyState h3 {
+  margin: 15px 0 8px;
+  color: #333;
+}
+
+.emptyState p {
+  font-size: 16px;
+}

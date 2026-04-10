@@ -1,0 +1,90 @@
+.sectionTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sectionHeading {
+  margin: 0;
+}
+
+.actionGroup {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.smallBtn {
+  border: 1px solid #999;
+  background: white;
+  color: #333;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.smallBtn:hover {
+  border-color: #002870;
+  color: #002870;
+}
+
+.watchesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.relativeCard {
+  position: relative;
+}
+
+.watchMeta {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  color: #999;
+  font-size: 13px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.metaBadge {
+  background: rgba(0, 40, 112, 0.08);
+  color: #002870;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.watchActions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.emptyState svg {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.emptyState h3 {
+  margin: 15px 0 8px;
+  color: #333;
+}
+
+.emptyState p {
+  font-size: 16px;
+}

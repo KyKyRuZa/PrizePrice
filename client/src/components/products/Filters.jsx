@@ -5,7 +5,7 @@ import {
   createDefaultFilters,
   DEFAULT_MARKETPLACES,
   RATING_OPTIONS,
-  MAX_PRICE_VALUE,
+  DEFAULT_MAX_PRICE,
 } from '../../constants/filters';
 import {
   toggleMarketplaceSelection,
@@ -20,6 +20,11 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
     rating: true,
     marketplace: true,
   });
+
+  // Real max price from current category stats
+  const currentCategoryStats = categoryCounts[filters.category] || null;
+  const categoryMaxPrice = currentCategoryStats?.maxPrice || null;
+  const displayMaxPrice = categoryMaxPrice ? categoryMaxPrice.toLocaleString('ru-RU') : null;
 
   const isPriceRangeError = Boolean(filters.minPrice && filters.maxPrice && Number(filters.minPrice) > Number(filters.maxPrice));
 
@@ -83,7 +88,8 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
           <div className={styles.categoryList}>
             {[ALL_CATEGORY, ...categories].map((category) => {
               const isSelected = filters.category === category;
-              const count = categoryCounts[category] || 0;
+              const stats = categoryCounts[category];
+              const count = typeof stats === 'object' ? stats.count : (stats || 0);
 
               return (
                 <div key={category} className={styles.categoryItem} data-selected={isSelected} onClick={() => handleCategorySelect(category)}>
@@ -106,7 +112,6 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
           <>
             <div className={styles.priceInputs}>
               <div className={styles.priceInputContainer}>
-                <CreditCard className={styles.currencyIcon} />
                 <input
                   className={styles.priceInput}
                   type="text"
@@ -120,13 +125,12 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
                 />
               </div>
               <div className={styles.priceInputContainer}>
-                <CreditCard className={styles.currencyIcon} />
                 <input
                   className={styles.priceInput}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  placeholder={`До ${(MAX_PRICE_VALUE / 1e9).toFixed(0)} млрд`}
+                  placeholder={displayMaxPrice ? `До ${displayMaxPrice}` : 'До ...'}
                   value={filters.maxPrice}
                   onChange={(event) => handlePriceChange('max', event.target.value)}
                   maxLength="10"

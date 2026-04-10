@@ -56,7 +56,7 @@ const HomePage = () => {
 
             <div className={styles.resultsHeader}>
               <div>
-                <h2 className={styles.resultsTitle}>{searchQuery ? 'Найденные товары' : 'Рекомендуемые товары'}</h2>
+                <h2 className={styles.resultsTitle}>{searchQuery ? 'Найденные товары' : (filters.category === 'Все' ? 'Все товары' : filters.category)}</h2>
                 <div className={styles.resultsCount}>Найдено товаров: {filteredProducts.length}</div>
               </div>
               <SortOptions sortBy={sortBy} onSortChange={setSortBy} />
@@ -64,12 +64,11 @@ const HomePage = () => {
 
             {isLoadingProducts ? (
               <div className={styles.emptyState}>
-                <h3>Loading products...</h3>
-                <p>Fetching latest data from API</p>
+                <h3>Загрузка товаров...</h3>
               </div>
             ) : productsError ? (
               <div className={styles.emptyState}>
-                <h3>Failed to load products</h3>
+                <h3>Ошибка загрузки товаров</h3>
                 <p>{productsError}</p>
               </div>
             ) : filteredProducts.length > 0 ? (

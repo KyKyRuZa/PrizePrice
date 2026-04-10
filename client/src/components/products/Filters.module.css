@@ -4,18 +4,6 @@
   gap: 25px;
 }
 
-.filterSection {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(153, 153, 153, 0.19);
-}
-
-.filterSection:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
 .sectionHeader {
   display: flex;
   justify-content: space-between;
@@ -47,7 +35,7 @@
 
 .priceInput {
   width: 100%;
-  padding: 12px 15px 12px 35px;
+  padding: 12px 15px;
   border: 2px solid rgba(153, 153, 153, 0.31);
   border-radius: 8px;
   font-size: 14px;

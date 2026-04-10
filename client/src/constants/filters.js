@@ -18,7 +18,7 @@ export const MARKETPLACE_DISPLAY_MAP = Object.freeze({
 });
 
 export const RATING_OPTIONS = Object.freeze([4.5, 4.0, 3.5, 3.0]);
-export const MAX_PRICE_VALUE = 9999999999;
+export const DEFAULT_MAX_PRICE = 9999999999;
 
 export const createDefaultFilters = () => ({
   category: ALL_CATEGORY,
@@ -34,8 +34,8 @@ export function mapMarketplacesToDB(marketplaces = []) {
 }
 
 // Получение эффективных значений цены для фильтрации (используется на сервере)
-export function getEffectivePriceRange(minPrice, maxPrice) {
+export function getEffectivePriceRange(minPrice, maxPrice, fallbackMax = DEFAULT_MAX_PRICE) {
   const effectiveMin = minPrice && minPrice !== '' ? Number(minPrice) : 0;
-  const effectiveMax = maxPrice && maxPrice !== '' ? Number(maxPrice) : MAX_PRICE_VALUE;
+  const effectiveMax = maxPrice && maxPrice !== '' ? Number(maxPrice) : fallbackMax;
   return { min: effectiveMin, max: effectiveMax };
 }

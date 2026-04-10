@@ -7,9 +7,9 @@ import { useFavorites } from '../context/FavoritesContext';
 import { useNotifications } from '../context/NotificationsContext';
 import { usePriceWatch } from '../context/PriceWatchContext';
 import { useSearchHistory } from '../context/SearchHistoryContext';
-import { INPUT_LIMITS, clampInputValue, sanitizeTextInput } from '../utils/inputSanitizers';
+import { INPUT_LIMITS, sanitizeTextInput } from '../utils/inputSanitizers';
 
-const PROFILE_TABS = new Set(['favorites', 'history', 'watch', 'notifications']);
+const PROFILE_TABS = new Set(['favorites', 'history', 'compare', 'watch', 'notifications']);
 
 const normalizeDisplayName = (name) =>
   sanitizeTextInput(name, {
@@ -20,7 +20,7 @@ const normalizeDisplayName = (name) =>
 export function useProfilePageState() {
   const { user, isAuthenticated, logout, setName } = useAuth();
   const { favorites, favoritesCount, removeFromFavorites, clearFavorites } = useFavorites();
-  const { cartCount } = useCart();
+  const { cart, cartCount, removeFromCart, clearCart } = useCart();
   const { history, historyCount, clear: clearHistory, remove: removeHistoryItem } = useSearchHistory();
   const { watches, watchesCount, remove: removeWatch } = usePriceWatch();
   const {
@@ -37,7 +37,7 @@ export function useProfilePageState() {
 
   const [activeTab, setActiveTab] = useState('favorites');
   const [watchModalProduct, setWatchModalProduct] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [historyPage, setHistoryPage] = useState(1);
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(user?.name || '');
 
@@ -61,15 +61,18 @@ export function useProfilePageState() {
     }
   }, [activeTab, refreshNotifications]);
 
-  const filteredHistory = useMemo(
-    () =>
-      (history || []).filter((item) =>
-        String(item?.query || '')
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      ),
-    [history, searchTerm]
-  );
+  const HISTORY_PER_PAGE = 15;
+
+  const paginatedHistory = useMemo(() => {
+    const items = history || [];
+    const start = (historyPage - 1) * HISTORY_PER_PAGE;
+    return items.slice(start, start + HISTORY_PER_PAGE);
+  }, [history, historyPage]);
+
+  const historyPagesCount = useMemo(() => {
+    const items = history || [];
+    return Math.max(1, Math.ceil(items.length / HISTORY_PER_PAGE));
+  }, [history]);
 
   const handleNameInputChange = useCallback((value) => {
     setNewName(normalizeDisplayName(value));
@@ -101,12 +104,8 @@ export function useProfilePageState() {
     setNewName(user?.name || '');
   }, [user?.name]);
 
-  const clearSearchTerm = useCallback(() => {
-    setSearchTerm('');
-  }, []);
-
-  const handleSearchTermChange = useCallback((value) => {
-    setSearchTerm(clampInputValue(value, INPUT_LIMITS.SEARCH_QUERY));
+  const goToHistoryPage = useCallback((page) => {
+    setHistoryPage(page);
   }, []);
 
   const handleHistorySearch = useCallback(
@@ -152,10 +151,6 @@ export function useProfilePageState() {
     setWatchModalProduct(null);
   }, []);
 
-  const goToCompare = useCallback(() => {
-    navigate('/compare');
-  }, [navigate]);
-
   const openExternalLink = useCallback((link) => {
     if (!link) return;
     window.open(link, '_blank');
@@ -168,7 +163,10 @@ export function useProfilePageState() {
     favorites,
     favoritesCount,
     clearFavorites,
+    cart,
     cartCount,
+    removeFromCart,
+    clearCart,
     history,
     historyCount,
     clearHistory,
@@ -184,17 +182,17 @@ export function useProfilePageState() {
     activeTab,
     setActiveTab,
     watchModalProduct,
-    searchTerm,
     editingName,
     newName,
     setNewName,
-    filteredHistory,
+    paginatedHistory,
+    historyPagesCount,
+    historyPage,
+    goToHistoryPage,
     handleNameInputChange,
     handleNameUpdate,
     startNameEditing,
     cancelNameEditing,
-    clearSearchTerm,
-    handleSearchTermChange,
     handleHistorySearch,
     handleProductClick,
     formatHistoryDate,
@@ -202,7 +200,6 @@ export function useProfilePageState() {
     handleRemoveFavorite,
     openWatchModal,
     closeWatchModal,
-    goToCompare,
     openExternalLink,
   };
 }

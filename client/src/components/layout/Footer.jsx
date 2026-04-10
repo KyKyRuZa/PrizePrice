@@ -23,32 +23,18 @@ const Footer = () => {
 
         <div className={styles.footerGrid}>
           <div className={styles.footerSection}>
-            <h3>Покупателям</h3>
-            <ul>
-              <li><a href="#">Как сделать заказ</a></li>
-              <li><a href="#">Доставка</a></li>
-              <li><a href="#">Оплата</a></li>
-              <li><a href="#">Возврат товара</a></li>
-            </ul>
-          </div>
-
-          <div className={styles.footerSection}>
             <h3>Компания</h3>
             <ul>
               <li><a href="#">О нас</a></li>
               <li><a href="#">Контакты</a></li>
-              <li><a href="#">Вакансии</a></li>
-              <li><a href="#">Партнерство</a></li>
             </ul>
           </div>
 
           <div className={styles.footerSection}>
             <h3>Помощь</h3>
             <ul>
-              <li><a href="#">Центр поддержки</a></li>
               <li><a href="#">Политика конфиденциальности</a></li>
               <li><a href="#">Пользовательское соглашение</a></li>
-              <li><a href="#">Сообщить об ошибке</a></li>
             </ul>
           </div>
         </div>
