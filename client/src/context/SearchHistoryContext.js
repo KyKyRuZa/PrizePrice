@@ -45,7 +45,7 @@ function toSearchRecord(query, index) {
 }
 
 export const SearchHistoryProvider = ({ children }) => {
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [history, setHistory] = useState([]);
   const historyRef = useSyncedRef(history);
 
@@ -64,11 +64,11 @@ export const SearchHistoryProvider = ({ children }) => {
 
   useEffect(() => {
     let cancelled = false;
-    if (!isAuthenticated || !token) return undefined;
+    if (!isAuthenticated) return undefined;
 
     (async () => {
       try {
-        const userData = await apiGet('/auth/user-data', { token, schema: userDataPayloadSchema });
+        const userData = await apiGet('/auth/user-data', { schema: userDataPayloadSchema });
         const serverHistory = Array.isArray(userData?.searchHistory) ? userData.searchHistory : [];
 
         const localItems = normalizeIdList(historyRef.current, (item) => item?.query);
@@ -86,24 +86,33 @@ export const SearchHistoryProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, token, historyRef]);
+  }, [isAuthenticated, historyRef]);
 
   const addQuery = async (query) => {
     const q = normalizeQuery(query);
     if (!q) return;
 
-    setHistory((prev) => upsertLocal(prev, q));
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'search history' });
+    setHistory((prev) => {
+      const next = upsertLocal(prev, q);
+      persistStoredJson(STORAGE_KEY, next);
+      return next;
+    });
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'search history' });
   };
 
   const clear = async () => {
     setHistory([]);
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'search history' });
+    persistStoredJson(STORAGE_KEY, []);
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'search history' });
   };
 
   const remove = async (id) => {
-    setHistory((prev) => prev.filter((it) => it?.id !== id));
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'search history' });
+    setHistory((prev) => {
+      const next = prev.filter((it) => it?.id !== id);
+      persistStoredJson(STORAGE_KEY, next);
+      return next;
+    });
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'search history' });
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -113,7 +122,7 @@ export const SearchHistoryProvider = ({ children }) => {
     addQuery,
     clear,
     remove,
-  }), [history, isAuthenticated, token, addQuery, clear, remove]);
+  }), [history, isAuthenticated, addQuery, clear, remove]);
 
   return React.createElement(SearchHistoryContext.Provider, { value }, children);
 };

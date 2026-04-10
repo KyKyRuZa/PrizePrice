@@ -33,7 +33,7 @@ const needsProductHydration = (item) => {
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const cartRef = useSyncedRef(cart);
 
   useEffect(() => {
@@ -50,11 +50,11 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => {
     let cancelled = false;
-    if (!isAuthenticated || !token) return undefined;
+    if (!isAuthenticated) return undefined;
 
     (async () => {
       try {
-        const userData = await apiGet('/auth/user-data', { token, schema: userDataPayloadSchema });
+        const userData = await apiGet('/auth/user-data', { schema: userDataPayloadSchema });
         const serverCart = Array.isArray(userData?.cart) ? userData.cart : [];
 
         const localItems = normalizeIdList(cartRef.current, (item) => getProductRefId(item));
@@ -72,7 +72,7 @@ export const CartProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, token, cartRef]);
+  }, [isAuthenticated, cartRef]);
 
   useEffect(() => {
     const targets = Array.isArray(cart) ? cart.filter(needsProductHydration) : [];
@@ -127,20 +127,27 @@ export const CartProvider = ({ children }) => {
 
     setCart((prev) => {
       if (prev.some((p) => p.id === product.id)) return prev;
-      return [...prev, { ...product, addedAt: new Date().toISOString() }];
+      const next = [...prev, { ...product, addedAt: new Date().toISOString() }];
+      persistStoredJson(STORAGE_KEY, next);
+      return next;
     });
 
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'cart' });
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'cart' });
   };
 
   const removeFromCart = (productId) => {
-    setCart((prev) => prev.filter((p) => p.id !== productId));
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'cart' });
+    setCart((prev) => {
+      const next = prev.filter((p) => p.id !== productId);
+      persistStoredJson(STORAGE_KEY, next);
+      return next;
+    });
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'cart' });
   };
 
   const clearCart = () => {
     setCart([]);
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'cart' });
+    persistStoredJson(STORAGE_KEY, []);
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'cart' });
   };
 
   const isInCart = (productId) => {
@@ -157,7 +164,7 @@ export const CartProvider = ({ children }) => {
     removeFromCart,
     clearCart,
     isInCart,
-  }), [cart, isAuthenticated, token, addToCart, removeFromCart, clearCart, isInCart]);
+  }), [cart, isAuthenticated, addToCart, removeFromCart, clearCart, isInCart]);
 
   return React.createElement(CartContext.Provider, { value }, children);
 };

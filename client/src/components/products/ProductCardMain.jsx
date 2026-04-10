@@ -51,7 +51,7 @@ const ProductCardMain = ({ product, onClick }) => {
     if (!inCart) {
       addToCart(product);
     }
-    navigate('/compare');
+    navigate('/profile?tab=compare');
   };
 
   const handleWatchClick = (event) => {

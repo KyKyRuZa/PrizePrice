@@ -18,39 +18,39 @@ export const [NotificationsContext, useNotifications] = createStrictContext({
 });
 
 export const NotificationsProvider = ({ children }) => {
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [items, setItems] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const itemsRef = useSyncedRef(items);
 
   const refresh = useCallback(async ({ limit = DEFAULT_NOTIFICATIONS_LIMIT, unreadOnly = false } = {}) => {
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated) {
       setItems([]);
       setUnreadCount(0);
       return;
     }
 
-    const data = await fetchNotifications(token, { limit, unreadOnly });
+    const data = await fetchNotifications({ limit, unreadOnly });
     setItems(Array.isArray(data?.items) ? data.items : []);
     setUnreadCount(Number(data?.unreadCount ?? 0));
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated]);
 
   const refreshUnread = useCallback(async () => {
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated) {
       setUnreadCount(0);
       return;
     }
 
     try {
-      const data = await fetchUnreadCount(token);
+      const data = await fetchUnreadCount();
       setUnreadCount(Number(data?.unreadCount ?? 0));
     } catch {
       // ignore
     }
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated) {
       setItems([]);
       setUnreadCount(0);
       return undefined;
@@ -61,7 +61,7 @@ export const NotificationsProvider = ({ children }) => {
     const timer = setInterval(() => refreshUnread(), UNREAD_POLL_INTERVAL_MS);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated]);
 
   const markRead = async (id) => {
     const notificationId = Number(id);
@@ -74,8 +74,8 @@ export const NotificationsProvider = ({ children }) => {
     );
     setUnreadCount((count) => Math.max(0, count - 1));
 
-    if (isAuthenticated && token) {
-      markNotificationRead(token, notificationId)
+    if (isAuthenticated) {
+      markNotificationRead(notificationId)
         .then(() => refreshUnread())
         .catch(() => null);
     }
@@ -85,8 +85,8 @@ export const NotificationsProvider = ({ children }) => {
     setItems((prev) => (Array.isArray(prev) ? prev.map((item) => ({ ...item, read: true })) : prev));
     setUnreadCount(0);
 
-    if (isAuthenticated && token) {
-      markAllNotificationsRead(token)
+    if (isAuthenticated) {
+      markAllNotificationsRead()
         .then(() => refreshUnread())
         .catch(() => null);
     }
@@ -101,8 +101,8 @@ export const NotificationsProvider = ({ children }) => {
     const existing = (itemsRef.current || []).find((item) => item.id === notificationId);
     if (existing && !existing.read) setUnreadCount((count) => Math.max(0, count - 1));
 
-    if (isAuthenticated && token) {
-      deleteNotification(token, notificationId)
+    if (isAuthenticated) {
+      deleteNotification(notificationId)
         .then(() => refreshUnread())
         .catch(() => null);
     }
@@ -119,7 +119,7 @@ export const NotificationsProvider = ({ children }) => {
       markAll,
       remove,
     }),
-    [items, unreadCount, isAuthenticated, token, refresh, refreshUnread, markRead, markAll, remove]
+    [items, unreadCount, isAuthenticated, refresh, refreshUnread, markRead, markAll, remove]
   );
 
   return React.createElement(NotificationsContext.Provider, { value }, children);

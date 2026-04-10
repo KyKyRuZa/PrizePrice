@@ -1,5 +1,5 @@
 import React from 'react';
-import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
@@ -7,13 +7,12 @@ import { CartProvider } from '../context/CartContext';
 import { FavoritesProvider } from '../context/FavoritesContext';
 import { PriceWatchProvider } from '../context/PriceWatchContext';
 import { SearchHistoryProvider } from '../context/SearchHistoryContext';
-import { mockProducts } from '../utils/mockData';
-import { apiGet } from '../utils/apiClient';
 import HomePage from './HomePage';
 
-vi.mock('../utils/apiClient', () => ({
-  apiGet: vi.fn(),
-}));
+const mockProducts = [
+  { id: 1, name: 'Test Product 1', category: 'electronics', prices: [] },
+  { id: 2, name: 'Test Product 2', category: 'electronics', prices: [] },
+];
 
 vi.mock('../components/products/ProductCardMain', () => ({
   default: ({ product }) => <div data-testid="product-card">{product?.name || 'Mock Product Card'}</div>
@@ -34,12 +33,32 @@ vi.mock('../context/AuthContext', async () => {
     AuthProvider: ({ children }) => <>{children}</>,
     useAuth: () => ({
       user: null,
-      token: null,
       login: vi.fn(),
       logout: vi.fn(),
       register: vi.fn(),
       isAuthenticated: false,
     }),
+  };
+});
+
+// Mock apiGet to return proper response shapes
+vi.mock('../utils/apiClient', () => {
+  const mockApiGet = vi.fn();
+  mockApiGet.mockImplementation((path) => {
+    if (path === '/products/categories') {
+      return Promise.resolve({ categories: ['electronics'] });
+    }
+    if (path === '/products/recommended') {
+      return Promise.resolve({ items: mockProducts, pagination: null });
+    }
+    if (String(path).startsWith('/products/search')) {
+      return Promise.resolve({ items: mockProducts, pagination: null });
+    }
+    return Promise.resolve({});
+  });
+
+  return {
+    apiGet: mockApiGet,
   };
 });
 
@@ -105,23 +124,6 @@ vi.mock('../context/SearchHistoryContext', async () => {
 });
 
 describe('HomePage Component', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-
-    apiGet.mockImplementation((path) => {
-      if (path === '/products/categories') {
-        return Promise.resolve({ categories: ['electronics'] });
-      }
-      if (path === '/products/recommended') {
-        return Promise.resolve({ items: mockProducts });
-      }
-      if (String(path).startsWith('/products/search')) {
-        return Promise.resolve({ items: mockProducts });
-      }
-      return Promise.resolve({});
-    });
-  });
-
   const renderWithProviders = (component) => {
     return render(
       <MemoryRouter>

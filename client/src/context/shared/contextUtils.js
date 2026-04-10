@@ -40,9 +40,9 @@ export function mergeUniqueIds({ primary = [], secondary = [] }) {
   return [...new Set([...primary, ...secondary])];
 }
 
-export function syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope = "context" }) {
-  if (!isAuthenticated || !token) return;
-  uploadLocalChanges(token).catch((error) => {
+export function syncLocalChangesIfAuthenticated({ isAuthenticated, scope = "context" }) {
+  if (!isAuthenticated) return;
+  uploadLocalChanges().catch((error) => {
     console.error(`Error syncing ${scope} with server:`, error);
   });
 }

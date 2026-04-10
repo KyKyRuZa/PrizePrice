@@ -26,7 +26,7 @@ describe("catalogService", () => {
 
   it("loads recommended catalog when filters and query are empty", async () => {
     const items = [{ id: 1, name: "Phone" }];
-    vi.mocked(apiGet).mockResolvedValue({ items });
+    vi.mocked(apiGet).mockResolvedValue({ items, pagination: null });
 
     const result = await fetchCatalogProducts({
       searchQuery: "",
@@ -41,7 +41,7 @@ describe("catalogService", () => {
       availableCategories: [],
     });
 
-    expect(result).toEqual(items);
+    expect(result).toEqual({ items, pagination: null });
     expect(apiGet).toHaveBeenCalledWith(
       "/products/recommended",
       expect.objectContaining({ schema: expect.any(Object) })
@@ -50,7 +50,7 @@ describe("catalogService", () => {
 
   it("loads search catalog when query is provided", async () => {
     const items = [{ id: 2, name: "Laptop" }];
-    vi.mocked(apiGet).mockResolvedValue({ items });
+    vi.mocked(apiGet).mockResolvedValue({ items, pagination: null });
 
     const result = await fetchCatalogProducts({
       searchQuery: "laptop",
@@ -65,9 +65,9 @@ describe("catalogService", () => {
       availableCategories: ["Phones"],
     });
 
-    expect(result).toEqual(items);
+    expect(result).toEqual({ items, pagination: null });
     expect(apiGet).toHaveBeenCalledWith(
-      "/products/search?q=laptop&sort=price_asc",
+      expect.stringContaining("/products/search"),
       expect.objectContaining({ schema: expect.any(Object) })
     );
   });

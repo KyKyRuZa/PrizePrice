@@ -3,8 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { apiGet } from "../utils/apiClient";
 import { initializeLocalData, syncAllUserData } from "../utils/syncUserData";
 import { createAuthActions } from "./auth/actions";
-import { COOKIE_SESSION_TOKEN, USER_SYNC_INTERVAL_MS } from "./auth/constants";
-import { clearStoredSession, readStoredSession, saveSessionFlag, saveUser } from "./auth/storage";
+import { USER_SYNC_INTERVAL_MS } from "./auth/constants";
+import { readStoredSession } from "./auth/storage";
 import { userResponseSchema } from "../contracts/apiSchemas";
 import { createStrictContext } from "./createStrictContext";
 
@@ -14,41 +14,32 @@ export const [AuthContext, useAuth] = createStrictContext({
 });
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Проверяем сессию при загрузке через /api/me (куки отправляются автоматически)
   useEffect(() => {
     let cancelled = false;
-    const stored = readStoredSession();
-    const hasSession = Boolean(stored.session);
-
-    if (hasSession && stored.user) {
-      setUser(stored.user);
-    }
-
-    if (!hasSession) {
-      if (stored.user) {
-        clearStoredSession();
-      }
-      setIsLoading(false);
-      return () => {
-        cancelled = true;
-      };
-    }
 
     (async () => {
+      const stored = readStoredSession();
+      // Если есть сохранённый пользователь из предыдущей сессии, показываем его сразу
+      if (stored.user) {
+        setUser(stored.user);
+      }
+
       try {
         const data = await apiGet("/me", { schema: userResponseSchema });
-        if (cancelled || !data?.user) return;
-        setToken(COOKIE_SESSION_TOKEN);
+        if (cancelled || !data?.user) {
+          if (!cancelled) {
+            setUser(null);
+          }
+          return;
+        }
         setUser(data.user);
-        saveSessionFlag();
-        saveUser(data.user);
       } catch {
         if (!cancelled) {
-          setToken(null);
-          clearStoredSession();
+          setUser(null);
         }
       } finally {
         if (!cancelled) {
@@ -62,65 +53,40 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  const isAuthenticated = Boolean(token);
+  const isAuthenticated = Boolean(user);
 
-  useEffect(() => {
-    let cancelled = false;
-    if (!token) return undefined;
-
-    (async () => {
-      try {
-        const data = await apiGet("/me", { token, schema: userResponseSchema });
-        if (!cancelled && data?.user) {
-          setUser(data.user);
-          saveSessionFlag();
-          saveUser(data.user);
-        }
-      } catch {
-        if (!cancelled) {
-          setToken(null);
-          setUser(null);
-          clearStoredSession();
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [token]);
-
-  const actions = useMemo(() => createAuthActions({ token, setToken, setUser }), [token]);
+  const actions = useMemo(() => createAuthActions({ setUser }), [setUser]);
 
   const value = useMemo(
     () => ({
-      token,
       user,
       isAuthenticated,
       isLoading,
       ...actions,
     }),
-    [token, user, isAuthenticated, isLoading, actions]
+    [user, isAuthenticated, isLoading, actions]
   );
 
+  // Инициализация localStorage для избранного/истории при входе
   useEffect(() => {
-    if (isAuthenticated && token) {
-      initializeLocalData(token).catch((error) => {
+    if (isAuthenticated) {
+      initializeLocalData().catch((error) => {
         console.error("Error initializing local data:", error);
       });
 
-      syncAllUserData(token).catch((error) => {
+      syncAllUserData().catch((error) => {
         console.error("Error performing initial sync:", error);
       });
     }
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated]);
 
+  // Периодическая синхронизация
   useEffect(() => {
     let intervalId = null;
 
-    if (isAuthenticated && token) {
+    if (isAuthenticated) {
       intervalId = setInterval(() => {
-        syncAllUserData(token).catch((error) => {
+        syncAllUserData().catch((error) => {
           console.error("Periodic sync failed:", error);
         });
       }, USER_SYNC_INTERVAL_MS);
@@ -129,7 +95,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated]);
 
   return React.createElement(AuthContext.Provider, { value }, children);
 };

@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   CART: 'prizeprice_cart',
   SEARCH_HISTORY: 'prizeprice_search_history',
   BROWSING_HISTORY: 'prizeprice_browsing_history',
+  PRICE_WATCH: 'prizeprice_price_watch',
 };
 
 const pickFieldOrSelf = (field) => (item) => (typeof item === 'object' ? item?.[field] : item);
@@ -39,6 +40,20 @@ const DATA_CHANNELS = [
     storageKey: STORAGE_KEYS.BROWSING_HISTORY,
     getId: pickFieldOrSelf('productId'),
     toPayload: pickFieldOrSelf('productId'),
+  },
+  {
+    field: 'priceWatch',
+    storageKey: STORAGE_KEYS.PRICE_WATCH,
+    getId: (item) => Number(item?.watch?.productId ?? item?.productId),
+    toPayload: (item) => {
+      const productId = Number(item?.watch?.productId ?? item?.productId);
+      return {
+        productId,
+        targetPrice: item?.watch?.targetPrice ?? item?.targetPrice ?? null,
+        dropPercent: item?.watch?.dropPercent ?? item?.dropPercent ?? null,
+        active: item?.watch?.active ?? item?.active ?? true,
+      };
+    },
   },
 ];
 
@@ -80,16 +95,7 @@ const mergeSnapshotWithServerData = (localSnapshot, serverData) =>
     return snapshot;
   }, {});
 
-const getServerUserData = async (token) => apiGet('/auth/user-data', { token, schema: userDataPayloadSchema });
-
-const withTokenGuard = (token, warningMessage) => {
-  if (token) {
-    return true;
-  }
-
-  console.warn(warningMessage);
-  return false;
-};
+const getServerUserData = async () => apiGet('/auth/user-data', { schema: userDataPayloadSchema });
 
 const runSyncOperation = async (errorMessage, operation) => {
   try {
@@ -151,20 +157,15 @@ const mergeData = (localData, serverData, getId) => {
 /**
  * Synchronize all user data with the server
  */
-export const syncAllUserData = async (token) => {
-  if (!withTokenGuard(token, 'No token provided for user data sync')) {
-    return null;
-  }
-
+export const syncAllUserData = async () => {
   return runSyncOperation('Error synchronizing user data:', async () => {
     const localSnapshot = readLocalSnapshot();
-    const serverData = await getServerUserData(token);
+    const serverData = await getServerUserData();
 
     const mergedSnapshot = mergeSnapshotWithServerData(localSnapshot, serverData);
     writeLocalSnapshot(mergedSnapshot);
 
     await apiPost('/auth/user-data', buildUploadPayload(mergedSnapshot), {
-      token,
       schema: okResponseSchema,
     });
 
@@ -175,16 +176,11 @@ export const syncAllUserData = async (token) => {
 /**
  * Upload local changes to server
  */
-export const uploadLocalChanges = async (token) => {
-  if (!withTokenGuard(token, 'No token provided for uploading local changes')) {
-    return;
-  }
-
+export const uploadLocalChanges = async () => {
   return runSyncOperation('Error uploading local changes:', async () => {
     const localSnapshot = readLocalSnapshot();
 
     await apiPost('/auth/user-data', buildUploadPayload(localSnapshot), {
-      token,
       schema: okResponseSchema,
     });
   });
@@ -193,13 +189,9 @@ export const uploadLocalChanges = async (token) => {
 /**
  * Download server data and merge with local data
  */
-export const downloadAndMergeServerData = async (token) => {
-  if (!withTokenGuard(token, 'No token provided for downloading server data')) {
-    return;
-  }
-
+export const downloadAndMergeServerData = async () => {
   return runSyncOperation('Error downloading and merging server data:', async () => {
-    const serverData = await getServerUserData(token);
+    const serverData = await getServerUserData();
     const localSnapshot = readLocalSnapshot();
 
     const mergedSnapshot = mergeSnapshotWithServerData(localSnapshot, serverData);
@@ -212,13 +204,9 @@ export const downloadAndMergeServerData = async (token) => {
 /**
  * Initialize local storage with server data if authenticated
  */
-export const initializeLocalData = async (token) => {
-  if (!withTokenGuard(token, 'No token provided for initializing local data')) {
-    return;
-  }
-
+export const initializeLocalData = async () => {
   return runSyncOperation('Error initializing local data:', async () => {
-    const serverData = await getServerUserData(token);
+    const serverData = await getServerUserData();
 
     for (const channel of DATA_CHANNELS) {
       if (!localStorage.getItem(channel.storageKey)) {

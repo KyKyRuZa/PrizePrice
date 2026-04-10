@@ -9,6 +9,24 @@
   padding-top: 80px;
 }
 
+/* На мобильных Header меньше — уменьшаем padding */
+@media (max-width: 1024px) {
+  .main-content {
+    padding-top: 70px;
+  }
+}
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding-top: 57px;
+  }
+}
+
 .page-loader {
   display: flex;
   flex-direction: column;

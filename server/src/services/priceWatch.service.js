@@ -93,6 +93,10 @@ export async function removePriceWatch(userId, productId) {
   await PriceWatch.destroy({ where: { userId, productId } });
 }
 
+export async function clearPriceWatches(userId) {
+  await PriceWatch.destroy({ where: { userId } });
+}
+
 export async function importPriceWatches(userId, watches = []) {
   const list = Array.isArray(watches) ? watches : [];
   for (const w of list) {

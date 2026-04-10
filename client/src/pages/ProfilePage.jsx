@@ -134,7 +134,7 @@ const ProfilePage = () => {
                 key={tab.key}
                 className={styles.tabButton}
                 data-active={activeTab === tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => navigate(`/profile?tab=${tab.key}`)}
               >
                 {tab.label}
               </button>

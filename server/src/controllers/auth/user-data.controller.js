@@ -14,6 +14,11 @@ import {
   listCart,
   listFavorites,
 } from "../../services/user.service.js";
+import {
+  clearPriceWatches,
+  importPriceWatches,
+  listPriceWatches,
+} from "../../services/priceWatch.service.js";
 import { buildRequestLogMeta } from "../../utils/requestMeta.js";
 import { INPUT_LIMITS, sanitizeSearchQuery } from "../../utils/sanitize.js";
 import { logger } from "../../utils/logger.js";
@@ -43,6 +48,17 @@ const userDataSchema = z
             productId: z.number().int().positive(),
           }),
         ])
+      )
+      .max(INPUT_LIMITS.USER_DATA_ITEMS)
+      .optional(),
+    priceWatch: z
+      .array(
+        z.object({
+          productId: z.number().int().positive(),
+          targetPrice: z.number().int().nullable().optional(),
+          dropPercent: z.number().int().nullable().optional(),
+          active: z.boolean().optional(),
+        })
       )
       .max(INPUT_LIMITS.USER_DATA_ITEMS)
       .optional(),
@@ -137,12 +153,14 @@ export const getUserData = async (req, res) => {
     const cart = await listCart(user.id);
     const searchHistory = await getSearchHistory(user.id);
     const browsingHistory = await getBrowsingHistory(user.id);
+    const priceWatch = await listPriceWatches(user.id);
 
     return res.json({
       favorites,
       cart,
       searchHistory,
       browsingHistory,
+      priceWatch,
     });
   } catch (error) {
     logger.error("get_user_data_failed", {
@@ -171,6 +189,7 @@ export const updateUserData = async (req, res) => {
       cart = [],
       searchHistory = [],
       browsingHistory = [],
+      priceWatch = [],
     } = parsed.data;
 
     const existingProductIds = await resolveExistingProductIdSet({
@@ -213,6 +232,13 @@ export const updateUserData = async (req, res) => {
       items: browsingHistory,
       mapItem: (historyItem) => keepExistingProductId(extractBrowsingProductId(historyItem), existingProductIds),
     });
+
+    // Price watch: clear all then re-import
+    await clearPriceWatches(user.id);
+    const validWatches = priceWatch.filter((w) => w?.productId != null);
+    if (validWatches.length > 0) {
+      await importPriceWatches(user.id, validWatches);
+    }
 
     return res.json({ ok: true });
   } catch (error) {

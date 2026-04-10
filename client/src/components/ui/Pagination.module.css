@@ -57,25 +57,54 @@
   letter-spacing: 2px;
 }
 
-/* Mobile */
+/* Mobile — горизонтальный скролл вместо скрытия */
 @media (max-width: 640px) {
+  .pagination {
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 5px;
+    justify-content: flex-start;
+    -webkit-overflow-scrollbar-width: none;
+    scrollbar-width: none;
+  }
+
+  .pagination::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pageButton {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .dots {
+    min-width: 38px;
+    height: 38px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
   .pagination {
     gap: 4px;
   }
 
   .pageButton {
-    min-width: 36px;
-    height: 36px;
+    min-width: 34px;
+    height: 34px;
     padding: 0 8px;
-    font-size: 13px;
-  }
-
-  /* Скрываем некоторые кнопки на мобильных */
-  .pageButton:not(.active):not(:first-child):not(:last-child) {
-    display: none;
+    font-size: 12px;
   }
 
   .dots {
-    display: none;
+    min-width: 34px;
+    height: 34px;
+    font-size: 12px;
   }
 }

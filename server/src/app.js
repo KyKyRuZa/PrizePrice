@@ -4,6 +4,7 @@ import path from "path";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 
 import { config } from "./config/index.js";
 import { apiRouter } from "./routes/index.js";
@@ -53,6 +54,7 @@ export function createApp() {
   );
 
   app.use(express.json({ limit: config.bodyLimit }));
+  app.use(cookieParser());
   app.use(requestIdMiddleware);
   app.use(metricsMiddleware);
   app.use(requestLogMiddleware);

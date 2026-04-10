@@ -33,7 +33,7 @@ const normalizeWatchPayload = (item) => {
 };
 
 export const PriceWatchProvider = ({ children }) => {
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [watches, setWatches] = useState([]);
   const watchesRef = useSyncedRef(watches);
 
@@ -52,11 +52,11 @@ export const PriceWatchProvider = ({ children }) => {
 
   useEffect(() => {
     let cancelled = false;
-    if (!isAuthenticated || !token) return undefined;
+    if (!isAuthenticated) return undefined;
 
     (async () => {
       try {
-        const server = await apiGet('/me/price-watch', { token, schema: priceWatchListResponseSchema });
+        const server = await apiGet('/me/price-watch', { schema: priceWatchListResponseSchema });
         const serverItems = Array.isArray(server?.items) ? server.items : [];
 
         const localItems = Array.isArray(watchesRef.current) ? watchesRef.current : [];
@@ -73,11 +73,11 @@ export const PriceWatchProvider = ({ children }) => {
           await apiPost(
             '/me/price-watch/import',
             { watches: missing.slice(0, 100) },
-            { token, schema: okPriceWatchListResponseSchema }
+            { schema: okPriceWatchListResponseSchema }
           );
         }
 
-        const server2 = await apiGet('/me/price-watch', { token, schema: priceWatchListResponseSchema });
+        const server2 = await apiGet('/me/price-watch', { schema: priceWatchListResponseSchema });
         const server2Items = Array.isArray(server2?.items) ? server2.items : serverItems;
 
         if (!cancelled) {
@@ -92,7 +92,7 @@ export const PriceWatchProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, token, watchesRef]);
+  }, [isAuthenticated, watchesRef]);
 
   const getWatch = (productId) => {
     const pid = Number(productId);
@@ -118,23 +118,26 @@ export const PriceWatchProvider = ({ children }) => {
     setWatches((prev) => {
       const arr = Array.isArray(prev) ? prev : [];
       const filtered = arr.filter((it) => Number(it?.watch?.productId ?? it?.productId) !== pid);
-      return [nextItem, ...filtered];
+      const next = [nextItem, ...filtered];
+      persistStoredJson(STORAGE_KEY, next);
+      return next;
     });
 
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'price watch' });
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'price watch' });
   };
 
   const remove = async (productId) => {
     const pid = Number(productId);
     if (!Number.isFinite(pid)) return;
 
-    setWatches((prev) =>
-      Array.isArray(prev)
-        ? prev.filter((it) => Number(it?.watch?.productId ?? it?.productId) !== pid)
-        : []
-    );
+    setWatches((prev) => {
+      const arr = Array.isArray(prev) ? prev : [];
+      const next = arr.filter((it) => Number(it?.watch?.productId ?? it?.productId) !== pid);
+      persistStoredJson(STORAGE_KEY, next);
+      return next;
+    });
 
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'price watch' });
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'price watch' });
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,7 +147,7 @@ export const PriceWatchProvider = ({ children }) => {
     getWatch,
     upsert,
     remove,
-  }), [watches, isAuthenticated, token, getWatch, upsert, remove]);
+  }), [watches, isAuthenticated, getWatch, upsert, remove]);
 
   return React.createElement(PriceWatchContext.Provider, { value }, children);
 };

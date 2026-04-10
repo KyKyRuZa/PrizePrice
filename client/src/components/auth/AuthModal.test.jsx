@@ -1,19 +1,21 @@
 ﻿import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, vi, beforeEach, expect } from 'vitest';
+
+// Mock errorTracker FIRST (before apiClient imports it)
+vi.mock('../../observability/errorTracker', () => ({
+  captureClientException: vi.fn(),
+}));
+
+vi.mock('../../utils/apiClient', () => ({
+  apiPost: vi.fn(),
+  apiGet: vi.fn(),
+}));
+
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 import { STORAGE_AUTH_SESSION, STORAGE_USER } from '../../context/auth/constants';
 import { apiGet, apiPost } from '../../utils/apiClient';
 import AuthModal from './AuthModal';
-
-vi.mock('../../utils/apiClient', async () => {
-  const actual = await vi.importActual('../../utils/apiClient');
-  return {
-    ...actual,
-    apiPost: vi.fn(),
-    apiGet: vi.fn(),
-  };
-});
 
 const MockComponent = () => {
   const auth = useAuth();
@@ -35,9 +37,8 @@ const MockComponent = () => {
 
 const renderWithProvider = async (ui) => {
   render(<AuthProvider>{ui}</AuthProvider>);
-  await waitFor(() => {
-    expect(apiGet).not.toHaveBeenCalled();
-  });
+  // AuthContext now calls GET /me on init, just wait for it to settle
+  await new Promise((r) => setTimeout(r, 50));
 };
 
 const renderModal = async () => {
@@ -53,8 +54,13 @@ describe('AuthContext Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearAuthStorage();
-    apiGet.mockResolvedValue({});
-    apiPost.mockResolvedValue({});
+
+    // Reset mock implementations
+    vi.mocked(apiGet).mockImplementation((path) => {
+      if (path === '/me') return Promise.resolve({ user: null });
+      return Promise.resolve({});
+    });
+    vi.mocked(apiPost).mockResolvedValue({});
   });
 
   it('should initialize with null values', async () => {
@@ -110,8 +116,13 @@ describe('AuthModal Component Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearAuthStorage();
-    apiGet.mockResolvedValue({});
-    apiPost.mockResolvedValue({});
+
+    // Reset mock implementations
+    vi.mocked(apiGet).mockImplementation((path) => {
+      if (path === '/me') return Promise.resolve({ user: null });
+      return Promise.resolve({});
+    });
+    vi.mocked(apiPost).mockResolvedValue({});
   });
 
   it('should render the modal with initial state', async () => {

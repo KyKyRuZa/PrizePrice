@@ -46,7 +46,7 @@ function toHistoryRecord(productId, index, prefix = 'local') {
 }
 
 export const BrowsingHistoryProvider = ({ children }) => {
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [history, setHistory] = useState([]);
   const historyRef = useSyncedRef(history);
 
@@ -65,11 +65,11 @@ export const BrowsingHistoryProvider = ({ children }) => {
 
   useEffect(() => {
     let cancelled = false;
-    if (!isAuthenticated || !token) return undefined;
+    if (!isAuthenticated) return undefined;
 
     (async () => {
       try {
-        const userData = await apiGet('/auth/user-data', { token, schema: userDataPayloadSchema });
+        const userData = await apiGet('/auth/user-data', { schema: userDataPayloadSchema });
         const serverHistory = Array.isArray(userData?.browsingHistory) ? userData.browsingHistory : [];
 
         const serverItems = normalizeIdList(serverHistory, (item) => item?.productId);
@@ -87,24 +87,33 @@ export const BrowsingHistoryProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, token, historyRef]);
+  }, [isAuthenticated, historyRef]);
 
   const addViewedProduct = async (productId) => {
     const pid = normalizeProductId(productId);
     if (!pid) return;
 
-    setHistory((prev) => upsertLocal(prev, pid));
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'browsing history' });
+    setHistory((prev) => {
+      const next = upsertLocal(prev, pid);
+      persistStoredJson(STORAGE_KEY, next);
+      return next;
+    });
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'browsing history' });
   };
 
   const clear = async () => {
     setHistory([]);
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'browsing history' });
+    persistStoredJson(STORAGE_KEY, []);
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'browsing history' });
   };
 
   const remove = async (id) => {
-    setHistory((prev) => prev.filter((it) => it?.id !== id));
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'browsing history' });
+    setHistory((prev) => {
+      const next = prev.filter((it) => it?.id !== id);
+      persistStoredJson(STORAGE_KEY, next);
+      return next;
+    });
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'browsing history' });
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,7 +123,7 @@ export const BrowsingHistoryProvider = ({ children }) => {
     addViewedProduct,
     clear,
     remove,
-  }), [history, isAuthenticated, token, addViewedProduct, clear, remove]);
+  }), [history, isAuthenticated, addViewedProduct, clear, remove]);
 
   return React.createElement(BrowsingHistoryContext.Provider, { value }, children);
 };

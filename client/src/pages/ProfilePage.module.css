@@ -77,6 +77,7 @@
 .tabsHeader {
   display: flex;
   border-bottom: 2px solid #f5f5f5;
+  min-height: 60px;
 }
 
 .tabButton {
@@ -173,4 +174,116 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Tablet responsiveness */
+@media (max-width: 768px) {
+  .profileContainer {
+    padding-top: 80px;
+  }
+
+  .content {
+    padding: 15px;
+  }
+
+  .profileHeader {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+  }
+
+  .userInfo {
+    text-align: center;
+  }
+
+  .userName {
+    font-size: 24px;
+  }
+
+  .logoutButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tabsHeader {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tabsHeader::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabButton {
+    padding: 15px 10px;
+    font-size: 14px;
+    white-space: nowrap;
+    flex: none;
+  }
+
+  .tabContent {
+    padding: 20px 15px;
+  }
+
+  .nameRow {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nameInput {
+    width: 100%;
+    font-size: 20px;
+  }
+
+  .primaryActionBtn,
+  .secondaryActionBtn {
+    width: 100%;
+  }
+}
+
+/* Small mobile optimizations */
+@media (max-width: 480px) {
+  .profileContainer {
+    padding-top: 70px;
+  }
+
+  .content {
+    padding: 10px;
+  }
+
+  .profileHeader {
+    padding: 15px;
+  }
+
+  .avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+
+  .userName {
+    font-size: 20px;
+  }
+
+  .userDetails {
+    font-size: 14px;
+  }
+
+  .tabButton {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  .tabContent {
+    padding: 15px 10px;
+  }
 }

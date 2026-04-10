@@ -22,7 +22,7 @@ export const [FavoritesContext, useFavorites] = createStrictContext({
 const STORAGE_KEY = 'prizeprice_favorites';
 
 export const FavoritesProvider = ({ children }) => {
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [favorites, setFavorites] = useState([]);
   const favoritesRef = useSyncedRef(favorites);
 
@@ -41,11 +41,11 @@ export const FavoritesProvider = ({ children }) => {
 
   useEffect(() => {
     let cancelled = false;
-    if (!isAuthenticated || !token) return undefined;
+    if (!isAuthenticated) return undefined;
 
     (async () => {
       try {
-        const userData = await apiGet('/auth/user-data', { token, schema: userDataPayloadSchema });
+        const userData = await apiGet('/auth/user-data', { schema: userDataPayloadSchema });
         const serverFavorites = Array.isArray(userData?.favorites) ? userData.favorites : [];
 
         const localItems = normalizeIdList(favoritesRef.current, (item) => getProductRefId(item));
@@ -63,27 +63,34 @@ export const FavoritesProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, token, favoritesRef]);
+  }, [isAuthenticated, favoritesRef]);
 
   const addToFavorites = (product) => {
     if (!product?.id) return;
 
     setFavorites((prev) => {
       if (prev.some((p) => p.id === product.id)) return prev;
-      return [...prev, { ...product, addedAt: new Date().toISOString() }];
+      const next = [...prev, { ...product, addedAt: new Date().toISOString() }];
+      persistStoredJson(STORAGE_KEY, next);
+      return next;
     });
 
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'favorites' });
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'favorites' });
   };
 
   const removeFromFavorites = (productId) => {
-    setFavorites((prev) => prev.filter((p) => p.id !== productId));
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'favorites' });
+    setFavorites((prev) => {
+      const next = prev.filter((p) => p.id !== productId);
+      persistStoredJson(STORAGE_KEY, next);
+      return next;
+    });
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'favorites' });
   };
 
   const clearFavorites = () => {
     setFavorites([]);
-    syncLocalChangesIfAuthenticated({ isAuthenticated, token, scope: 'favorites' });
+    persistStoredJson(STORAGE_KEY, []);
+    syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'favorites' });
   };
 
   const isInFavorites = (productId) => {
@@ -100,7 +107,7 @@ export const FavoritesProvider = ({ children }) => {
     removeFromFavorites,
     clearFavorites,
     isInFavorites,
-  }), [favorites, isAuthenticated, token, addToFavorites, removeFromFavorites, clearFavorites, isInFavorites]);
+  }), [favorites, isAuthenticated, addToFavorites, removeFromFavorites, clearFavorites, isInFavorites]);
 
   return React.createElement(FavoritesContext.Provider, { value }, children);
 };

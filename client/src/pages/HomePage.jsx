@@ -1,13 +1,16 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import ProductCardMain from '../components/products/ProductCardMain';
 import Filters from '../components/products/Filters';
 import SortOptions from '../components/products/SortOptions';
 import Pagination from '../components/ui/Pagination';
 import { SUPPORT_LOGOS, SUPPORT_TEXT } from '../constants/supportInfo';
 import { useHomePageState } from '../hooks/useHomePageState';
+import { Filter, X } from 'lucide-react';
 import styles from './HomePage.module.css';
 
 const HomePage = () => {
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  
   const {
     searchQuery,
     sortBy,
@@ -26,6 +29,30 @@ const HomePage = () => {
     handlePageChange,
   } = useHomePageState();
 
+  // Закрываем фильтры при изменении размера экрана
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setIsFiltersOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Закрываем фильтры при клике на Escape
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setIsFiltersOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
+
   return (
     <div className={styles.homeContainer}>
       <div className={styles.content}>
@@ -34,11 +61,50 @@ const HomePage = () => {
           <p>Находите лучшие цены на популярных маркетплейсах</p>
         </div>
 
+        {/* Mobile filter toggle button */}
+        <button
+          className={styles.mobileFilterButton}
+          onClick={() => setIsFiltersOpen(true)}
+          type="button"
+          aria-label="Открыть фильтры"
+        >
+          <Filter size={20} />
+          <span>Фильтры</span>
+        </button>
+
+        {/* Overlay for mobile filters */}
+        {isFiltersOpen && (
+          <div
+            className={styles.filterOverlay}
+            onClick={() => setIsFiltersOpen(false)}
+            role="presentation"
+          />
+        )}
+
         <div className={styles.mainLayout}>
-          <div className={styles.filtersSection}>
-            <Filters 
-              filters={filters} 
-              onFilterChange={handleFilterChange} 
+          <div className={`${styles.filtersSection} ${isFiltersOpen ? styles.filtersOpen : ''}`}>
+            {/* Mobile header — показывается только на мобильных */}
+            <div className={styles.filtersHeader}>
+              <h3>Фильтры</h3>
+              <button
+                className={styles.closeFiltersButton}
+                onClick={() => setIsFiltersOpen(false)}
+                type="button"
+                aria-label="Закрыть фильтры"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <Filters
+              filters={filters}
+              onFilterChange={(newFilters) => {
+                handleFilterChange(newFilters);
+                // На мобильных закрываем фильтры после выбора
+                if (window.innerWidth <= 768) {
+                  setIsFiltersOpen(false);
+                }
+              }}
               categories={availableCategories}
               categoryCounts={categoryCounts}
             />

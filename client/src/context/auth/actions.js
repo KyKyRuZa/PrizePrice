@@ -3,8 +3,6 @@ import { clearLocalUserData } from "../../utils/syncUserData";
 import { INPUT_LIMITS, sanitizeTextInput } from "../../utils/inputSanitizers";
 import { normalizePhoneInput } from "../../utils/phoneMask";
 import { assertLogin, assertNewPassword, assertOtpCode, assertPhone } from "./validators";
-import { COOKIE_SESSION_TOKEN } from "./constants";
-import { clearStoredSession, saveSessionFlag, saveUser } from "./storage";
 import {
   authSuccessSchema,
   okResponseSchema,
@@ -20,13 +18,9 @@ function createApiError(code, data) {
   return error;
 }
 
-function persistAuthSession(data, { setToken, setUser }) {
-  setToken(COOKIE_SESSION_TOKEN);
-  saveSessionFlag();
-
+function persistAuthSession(data, { setUser }) {
   if (data?.user) {
     setUser(data.user);
-    saveUser(data.user);
   }
 }
 
@@ -38,8 +32,8 @@ function normalizePhone(phone) {
   return normalizePhoneInput(phone);
 }
 
-export function createAuthActions({ token, setToken, setUser }) {
-  const applySession = (data) => persistAuthSession(data, { setToken, setUser });
+export function createAuthActions({ setUser }) {
+  const applySession = (data) => persistAuthSession(data, { setUser });
 
   return {
     async requestCode(phone) {
@@ -153,23 +147,22 @@ export function createAuthActions({ token, setToken, setUser }) {
         {
           name: sanitizeTextInput(name, { maxLength: INPUT_LIMITS.DISPLAY_NAME, stripHtml: true }),
         },
-        { token, schema: userResponseSchema }
+        { schema: userResponseSchema }
       );
       if (!data?.user) {
         throw createApiError("NO_USER_DATA", data);
       }
 
       setUser(data.user);
-      saveUser(data.user);
       return data;
     },
 
     async updateUserData(userData) {
-      return apiPost("/auth/user-data", userData, { token, schema: okResponseSchema });
+      return apiPost("/auth/user-data", userData, { schema: okResponseSchema });
     },
 
     async getUserData() {
-      return apiGet("/auth/user-data", { token, schema: userDataPayloadSchema });
+      return apiGet("/auth/user-data", { schema: userDataPayloadSchema });
     },
 
     async logout() {
@@ -179,9 +172,7 @@ export function createAuthActions({ token, setToken, setUser }) {
         // Ignore network/logout endpoint errors on client-side logout.
       }
 
-      setToken(null);
       setUser(null);
-      clearStoredSession();
       clearLocalUserData();
     },
   };
