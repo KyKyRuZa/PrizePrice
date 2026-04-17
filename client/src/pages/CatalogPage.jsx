@@ -168,9 +168,6 @@ const CatalogPage = () => {
               <Home size={20} />
             </button>
           </div>
-          <div className={styles.resultsCount}>
-            Найдено товаров: {filteredProducts.length}
-          </div>
         </div>
 
         {/* Mobile filter toggle button */}

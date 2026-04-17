@@ -4,6 +4,7 @@ import styles from './SortOptions.module.css';
 
 const SortOptions = ({ sortBy, onSortChange }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const containerRef = React.useRef(null);
 
   const sortOptions = [
     { id: 'popularity', label: 'По популярности' },
@@ -15,15 +16,53 @@ const SortOptions = ({ sortBy, onSortChange }) => {
 
   const selectedOption = sortOptions.find(opt => opt.id === sortBy) || sortOptions[0];
 
+  // Close on ESC key
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
+
+  // Close on outside click
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
+
   return (
-    <div className={styles.sortContainer}>
-      <button className={styles.sortButton} onClick={() => setIsOpen(!isOpen)}>
+    <div className={styles.sortContainer} ref={containerRef}>
+      <button
+        className={styles.sortButton}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+      >
         {selectedOption.label}
-        <ChevronDown size={16} />
+        <ChevronDown size={16} aria-hidden="true" />
       </button>
 
       {isOpen && (
-        <div className={styles.sortDropdown}>
+        <div className={styles.sortDropdown} role="listbox">
           {sortOptions.map(option => (
             <button
               key={option.id}
@@ -32,6 +71,8 @@ const SortOptions = ({ sortBy, onSortChange }) => {
                 onSortChange(option.id);
                 setIsOpen(false);
               }}
+              role="option"
+              aria-selected={option.id === sortBy}
             >
               {option.label}
             </button>

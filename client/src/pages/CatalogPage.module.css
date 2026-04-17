@@ -16,11 +16,13 @@
 
 .headerTop {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 4px;
+  gap: 12px;
+  position: relative;
 }
 
 .pageTitle {
@@ -28,6 +30,7 @@
   color: #002870;
   margin: 0;
   flex: 1;
+  word-break: break-word;
 }
 
 .backToHomeButton {
@@ -43,7 +46,7 @@
   transition: all 0.2s ease;
   color: #002870;
   flex-shrink: 0;
-  margin-left: 16px;
+  margin-left: auto;
 }
 
 .backToHomeButton:hover {
@@ -70,24 +73,30 @@
   position: fixed;
   top: 80px;
   left: 15px;
-  z-index: 999;
   background: white;
   border: 2px solid #002870;
   color: #002870;
-  padding: 10px 16px;
-  border-radius: 25px;
+  padding: 12px 20px;
+  border-radius: 28px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   align-items: center;
   gap: 8px;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .mobileFilterButton:hover {
   background: #002870;
   color: white;
+  transform: scale(1.05);
+}
+
+.mobileFilterButton:active {
+  transform: scale(0.98);
 }
 
 /* Overlay for mobile filters */
@@ -159,16 +168,13 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .resultsTitle {
   font-size: 24px;
   color: #002870;
-}
-
-.resultsCount {
-  color: #999;
-  font-size: 14px;
 }
 
 .productsSection {
@@ -240,10 +246,35 @@
     gap: 20px;
   }
 
-  /* Show mobile filter button */
-  .mobileFilterButton {
-    display: flex;
-  }
+   /* Show mobile filter button in LEFT TOP corner */
+   .mobileFilterButton {
+     display: flex;
+     top: 80px;
+     left: 10px;
+     right: auto;
+   }
+
+   /* Convert filters to slide-out panel from LEFT */
+   .filtersSection {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 85%;
+     max-width: 350px;
+     height: 100vh;
+     z-index: 1001;
+     padding: 20px;
+     border-radius: 0;
+     transform: translateX(-100%);
+     transition: transform 0.3s ease;
+     overflow-y: auto;
+     background: white;
+     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+   }
+
+   .filtersSection.filtersOpen {
+     transform: translateX(0);
+   }
 
   /* Show overlay when filters open */
   .filterOverlay {
@@ -255,42 +286,92 @@
     display: flex;
   }
 
-  /* Convert filters to slide-out panel */
-  .filtersSection {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 85%;
-    max-width: 350px;
-    height: 100vh;
-    z-index: 1001;
-    padding: 20px;
-    border-radius: 0;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    overflow-y: auto;
-  }
-
-  .filtersSection.filtersOpen {
-    transform: translateX(0);
-  }
-
-   .pageHeader {
-     margin-top: 60px; /* space for mobile filter button */
+   /* Convert filters to slide-out panel from LEFT */
+   .filtersSection {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 85%;
+     max-width: 350px;
+     height: 100vh;
+     z-index: 1001;
+     padding: 20px;
+     border-radius: 0;
+     transform: translateX(-100%);
+     transition: transform 0.3s ease;
+     overflow-y: auto;
+     background: white;
+     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
    }
 
-   .headerTop {
-     padding: 0;
+   .filtersSection.filtersOpen {
+     transform: translateX(0);
+   }
+
+   .pageHeader {
+     margin-top: 70px; /* space for mobile filter button */
    }
 
    .pageTitle {
      font-size: 1.5rem;
+     margin: 0;
+   }
+
+   .resultsCount {
+     margin-top: 8px;
+   }
+
+   .productsSection {
+     padding: 15px;
+   }
+
+   .productsGrid {
+     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+     gap: 15px;
+   }
+
+   .resultsHeader {
+     flex-direction: column;
+     align-items: flex-start;
+     gap: 10px;
+   }
+
+   /* Ensure filter content stays within panel */
+   .filtersContainer {
+     padding-bottom: 80px;
+   }
+
+   .resetButton {
+     position: sticky;
+     bottom: 0;
+     background: white;
+     border-top: 2px solid #e0e0e0;
+     border-radius: 0;
+     padding: 15px;
+     margin-top: 20px;
    }
 
    .backToHomeButton {
      width: 40px;
      height: 40px;
    }
+
+  .filtersSection.filtersOpen {
+    transform: translateX(0);
+  }
+
+   .pageHeader {
+     margin-top: 70px; /* space for mobile filter button */
+   }
+
+   .pageTitle {
+     font-size: 1.5rem;
+     margin: 0;
+   }
+
+  .resultsCount {
+    margin-top: 8px;
+  }
 
   .productsSection {
     padding: 15px;
@@ -306,6 +387,26 @@
     align-items: flex-start;
     gap: 10px;
   }
+
+  /* Ensure filter content stays within panel */
+  .filtersContainer {
+    padding-bottom: 80px;
+  }
+
+  .resetButton {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    border-top: 2px solid #e0e0e0;
+    border-radius: 0;
+    padding: 15px;
+    margin-top: 20px;
+  }
+
+  .backToHomeButton {
+    width: 40px;
+    height: 40px;
+  }
 }
 
 /* ==================== SMALL MOBILE (≤480px) ==================== */
@@ -314,14 +415,32 @@
     padding: 10px;
   }
 
+   .mobileFilterButton {
+     top: 80px;
+     left: 10px;
+     padding: 8px 12px;
+     font-size: 13px;
+   }
+
    .pageTitle {
      font-size: 1.25rem;
    }
 
-   .backToHomeButton {
-     width: 36px;
-     height: 36px;
-   }
+  .pageTitle {
+    font-size: 1.25rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .backToHomeButton {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .headerTop {
+    gap: 8px;
+  }
 
   .productsGrid {
     grid-template-columns: 1fr;
@@ -342,15 +461,12 @@
     width: 100%;
   }
 
-  .mobileFilterButton {
-    top: 70px;
-    left: 10px;
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-
   .filtersSection {
     width: 90%;
-    padding: 15px;
+    max-width: none;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
   }
 }
