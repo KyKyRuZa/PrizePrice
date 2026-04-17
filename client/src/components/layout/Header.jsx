@@ -12,7 +12,7 @@ import AuthModal from '../auth/AuthModal';
 import { Button } from '../ui/Button';
 import styles from './Header.module.css';
 
-const Header = ({ onSearch }) => {
+const Header = ({ onSearch, showSearch = true }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -92,6 +92,7 @@ const Header = ({ onSearch }) => {
           <img src={logo} alt="PrizePrice Logo" className={styles.logoIcon} />
         </div>
 
+        {showSearch && (
         <div className={styles.searchContainer} role="search" aria-label="Поиск товаров">
           <form onSubmit={handleSearchSubmit}>
             <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -111,6 +112,7 @@ const Header = ({ onSearch }) => {
             <span id="search-help" className="sr-only">Введите название товара для поиска</span>
           </form>
         </div>
+        )}
 
         <nav className={`${styles.iconsContainer} ${isMobileMenuOpen ? styles.mobileOpen : ''}`} role="navigation" aria-label="Основная навигация">
           <button
@@ -192,6 +194,7 @@ const Header = ({ onSearch }) => {
       {/* Mobile menu dropdown */}
       {isMobileMenuOpen && (
         <div className={styles.mobileMenu} role="menu" aria-label="Мобильное меню">
+          {showSearch && (
           <div className={styles.mobileMenuSearch}>
             <form onSubmit={handleSearchSubmit}>
               <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -209,6 +212,7 @@ const Header = ({ onSearch }) => {
               />
             </form>
           </div>
+          )}
 
           <div className={styles.mobileMenuActions}>
             <button

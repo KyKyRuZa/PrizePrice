@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useCallback, useState } from 'react';
 
 import { useAuth } from './AuthContext';
 import { apiGet } from '../utils/apiClient';
@@ -23,17 +23,11 @@ const STORAGE_KEY = 'prizeprice_favorites';
 
 export const FavoritesProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  const [favorites, setFavorites] = useState([]);
-  const favoritesRef = useSyncedRef(favorites);
-
-  // Initialize from localStorage only once
-  useEffect(() => {
+  const [favorites, setFavorites] = useState(() => {
     const parsed = loadStoredArray(STORAGE_KEY);
-    if (parsed.length) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFavorites(hydrateProductRefs(parsed));
-    }
-  }, []);
+    return parsed.length ? hydrateProductRefs(parsed) : [];
+  });
+  const favoritesRef = useSyncedRef(favorites);
 
   useEffect(() => {
     persistStoredJson(STORAGE_KEY, favorites);
@@ -65,7 +59,7 @@ export const FavoritesProvider = ({ children }) => {
     };
   }, [isAuthenticated, favoritesRef]);
 
-  const addToFavorites = (product) => {
+  const addToFavorites = useCallback((product) => {
     if (!product?.id) return;
 
     setFavorites((prev) => {
@@ -76,38 +70,37 @@ export const FavoritesProvider = ({ children }) => {
     });
 
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'favorites' });
-  };
+  }, [isAuthenticated]);
 
-  const removeFromFavorites = (productId) => {
+  const removeFromFavorites = useCallback((productId) => {
     setFavorites((prev) => {
       const next = prev.filter((p) => p.id !== productId);
       persistStoredJson(STORAGE_KEY, next);
       return next;
     });
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'favorites' });
-  };
+  }, [isAuthenticated]);
 
-  const clearFavorites = () => {
+  const clearFavorites = useCallback(() => {
     setFavorites([]);
     persistStoredJson(STORAGE_KEY, []);
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'favorites' });
-  };
+  }, [isAuthenticated]);
 
-  const isInFavorites = (productId) => {
+  const isInFavorites = useCallback((productId) => {
     const normalizedId = Number(productId);
     if (!Number.isFinite(normalizedId)) return false;
     return favorites.some((p) => Number(p?.id) === normalizedId);
-  };
+  }, [favorites]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const value = useMemo(() => ({
-    favorites,
-    favoritesCount: favorites.length,
-    addToFavorites,
-    removeFromFavorites,
-    clearFavorites,
-    isInFavorites,
-  }), [favorites, isAuthenticated, addToFavorites, removeFromFavorites, clearFavorites, isInFavorites]);
+   const value = useMemo(() => ({
+     favorites,
+     favoritesCount: favorites.length,
+     addToFavorites,
+     removeFromFavorites,
+     clearFavorites,
+     isInFavorites,
+   }), [favorites, addToFavorites, removeFromFavorites, clearFavorites, isInFavorites]);
 
   return React.createElement(FavoritesContext.Provider, { value }, children);
 };

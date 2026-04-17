@@ -5,8 +5,8 @@ import { ALL_CATEGORY, createDefaultFilters } from '../constants/filters';
 import { useSearchHistory } from '../context/SearchHistoryContext';
 import { fetchAvailableCategories, fetchCatalogProducts, fetchCategoryCounts } from '../services/catalogService';
 import { normalizeSearchQuery } from '../utils/inputSanitizers';
+import useDebounce from './useDebounce';
 
-// Парсинг query params в объект состояния
 function parseQueryParams(search) {
   const params = new URLSearchParams(search);
   const query = normalizeSearchQuery(params.get('q') || '');
@@ -25,7 +25,6 @@ export function useCatalogPageState() {
   const { addQuery } = useSearchHistory();
   const lastRecordedRef = useRef('');
 
-  // Инициализация состояния из URL (только при mount)
   const initialParams = useMemo(() => parseQueryParams(location.search), [location.search]);
 
   const [searchQuery, setSearchQuery] = useState(initialParams.searchQuery);
@@ -47,6 +46,16 @@ export function useCatalogPageState() {
   const [categoryCounts, setCategoryCounts] = useState({});
   const ITEMS_PER_PAGE = 20;
 
+  // Объединяем параметры для debounce (поиск, фильтры, сортировка)
+  const filterParams = useMemo(() => ({
+    searchQuery,
+    filters,
+    sortBy,
+  }), [searchQuery, filters, sortBy]);
+
+  // Debounce — 300мс, чтобы не слать запрос при каждом вводе
+  const debouncedParams = useDebounce(filterParams, 250);
+
   // Синхронизация с URL (back/forward)
   useEffect(() => {
     const { searchQuery: q, category, minPrice, maxPrice, inStock, sort, page } = parseQueryParams(location.search);
@@ -62,17 +71,18 @@ export function useCatalogPageState() {
     setCurrentPage(page);
   }, [location.search]);
 
-  // Загрузка категорий
+  // Загрузка категорий (один раз при mount)
   useEffect(() => {
     let isMounted = true;
+    const controller = new AbortController();
 
     async function loadCategories() {
       try {
-        const categories = await fetchAvailableCategories();
+        const categories = await fetchAvailableCategories({ signal: controller.signal });
         if (!isMounted) return;
         setAvailableCategories(categories);
 
-        const counts = await fetchCategoryCounts();
+        const counts = await fetchCategoryCounts({ signal: controller.signal });
         if (isMounted && counts) {
           const total = Object.values(counts).reduce((sum, entry) => sum + (entry.count || 0), 0);
           const overallMax = Object.values(counts).reduce((max, entry) => Math.max(max, entry.maxPrice || 0), 0);
@@ -86,47 +96,61 @@ export function useCatalogPageState() {
     }
 
     void loadCategories();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, []);
 
-  // Загрузка товаров
+  // Загрузка товаров — с отменой предыдущего запроса и игнорированием устаревших ответов
   useEffect(() => {
     let isMounted = true;
+    let controller = new AbortController();
+    let requestId = 0;
 
     async function loadProducts() {
+      const currentRequestId = ++requestId;
       setIsLoadingProducts(true);
       setProductsError('');
 
       try {
         const { items, pagination: pag } = await fetchCatalogProducts({
-          searchQuery,
-          filters,
-          sortBy,
+          searchQuery: debouncedParams.searchQuery,
+          filters: debouncedParams.filters,
+          sortBy: debouncedParams.sortBy,
           availableCategories,
           page: currentPage,
           limit: ITEMS_PER_PAGE,
+          signal: controller.signal,
         });
 
-        const results = items || [];
-
-        if (!isMounted) return;
-        setFilteredProducts(results);
+        if (!isMounted || currentRequestId !== requestId) return;
+        setFilteredProducts(items || []);
         setPagination(pag);
       } catch (error) {
-        if (!isMounted) return;
+        if (!isMounted || currentRequestId !== requestId) return;
+        if (error.name === 'AbortError') {
+          return;
+        }
         setFilteredProducts([]);
         setPagination(null);
-        setProductsError(error?.data?.message || 'Failed to load products');
+        setProductsError(error?.data?.message || 'Не удалось загрузить товары');
       } finally {
-        if (isMounted) {
+        if (isMounted && currentRequestId === requestId) {
           setIsLoadingProducts(false);
         }
       }
     }
 
     void loadProducts();
-    return () => { isMounted = false; };
-  }, [searchQuery, filters, sortBy, currentPage, availableCategories]);
+
+    return () => {
+      isMounted = false;
+      if (controller) {
+        controller.abort();
+      }
+    };
+  }, [debouncedParams, currentPage, availableCategories]);
 
   // Добавление запроса в историю поиска
   useEffect(() => {
@@ -182,7 +206,8 @@ export function useCatalogPageState() {
     if (newSearch !== currentSearch) {
       navigate({ search: newSearch ? `?${newSearch}` : '' }, { replace: false });
     }
-  }, [searchQuery, filters, sortBy, currentPage, navigate, location.search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, filters, sortBy, currentPage, navigate]);
 
   return {
     searchQuery,

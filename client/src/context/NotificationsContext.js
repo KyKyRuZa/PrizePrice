@@ -63,7 +63,7 @@ export const NotificationsProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
-  const markRead = async (id) => {
+  const markRead = useCallback(async (id) => {
     const notificationId = Number(id);
     if (!Number.isFinite(notificationId)) return;
 
@@ -79,9 +79,9 @@ export const NotificationsProvider = ({ children }) => {
         .then(() => refreshUnread())
         .catch(() => null);
     }
-  };
+  }, [isAuthenticated, refreshUnread]);
 
-  const markAll = async () => {
+  const markAll = useCallback(async () => {
     setItems((prev) => (Array.isArray(prev) ? prev.map((item) => ({ ...item, read: true })) : prev));
     setUnreadCount(0);
 
@@ -90,9 +90,9 @@ export const NotificationsProvider = ({ children }) => {
         .then(() => refreshUnread())
         .catch(() => null);
     }
-  };
+  }, [isAuthenticated, refreshUnread]);
 
-  const remove = async (id) => {
+  const remove = useCallback(async (id) => {
     const notificationId = Number(id);
     if (!Number.isFinite(notificationId)) return;
 
@@ -106,21 +106,20 @@ export const NotificationsProvider = ({ children }) => {
         .then(() => refreshUnread())
         .catch(() => null);
     }
-  };
+  }, [isAuthenticated, itemsRef, refreshUnread]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const value = useMemo(
-    () => ({
-      items,
-      unreadCount,
-      refresh,
-      refreshUnread,
-      markRead,
-      markAll,
-      remove,
-    }),
-    [items, unreadCount, isAuthenticated, refresh, refreshUnread, markRead, markAll, remove]
-  );
+   const value = useMemo(
+     () => ({
+       items,
+       unreadCount,
+       refresh,
+       refreshUnread,
+       markRead,
+       markAll,
+       remove,
+     }),
+     [items, unreadCount, refresh, refreshUnread, markRead, markAll, remove]
+   );
 
   return React.createElement(NotificationsContext.Provider, { value }, children);
 };

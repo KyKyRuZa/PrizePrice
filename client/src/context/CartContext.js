@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useCallback, useState } from 'react';
 
 import { useAuth } from './AuthContext';
 import { apiGet } from '../utils/apiClient';
@@ -32,17 +32,12 @@ const needsProductHydration = (item) => {
 };
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const parsed = loadStoredArray(STORAGE_KEY);
+    return parsed.length ? hydrateProductRefs(parsed) : [];
+  });
   const { isAuthenticated } = useAuth();
   const cartRef = useSyncedRef(cart);
-
-  useEffect(() => {
-    const parsed = loadStoredArray(STORAGE_KEY);
-    if (parsed.length) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCart(hydrateProductRefs(parsed));
-    }
-  }, []);
 
   useEffect(() => {
     persistStoredJson(STORAGE_KEY, cart);
@@ -122,7 +117,7 @@ export const CartProvider = ({ children }) => {
     };
   }, [cart]);
 
-  const addToCart = (product) => {
+  const addToCart = useCallback((product) => {
     if (!product?.id) return;
 
     setCart((prev) => {
@@ -133,38 +128,37 @@ export const CartProvider = ({ children }) => {
     });
 
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'cart' });
-  };
+  }, [isAuthenticated]);
 
-  const removeFromCart = (productId) => {
+  const removeFromCart = useCallback((productId) => {
     setCart((prev) => {
       const next = prev.filter((p) => p.id !== productId);
       persistStoredJson(STORAGE_KEY, next);
       return next;
     });
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'cart' });
-  };
+  }, [isAuthenticated]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([]);
     persistStoredJson(STORAGE_KEY, []);
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'cart' });
-  };
+  }, [isAuthenticated]);
 
-  const isInCart = (productId) => {
+  const isInCart = useCallback((productId) => {
     const normalizedId = Number(productId);
     if (!Number.isFinite(normalizedId)) return false;
     return cart.some((p) => Number(p?.id) === normalizedId);
-  };
+  }, [cart]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const value = useMemo(() => ({
-    cart,
-    cartCount: cart.length,
-    addToCart,
-    removeFromCart,
-    clearCart,
-    isInCart,
-  }), [cart, isAuthenticated, addToCart, removeFromCart, clearCart, isInCart]);
+   const value = useMemo(() => ({
+     cart,
+     cartCount: cart.length,
+     addToCart,
+     removeFromCart,
+     clearCart,
+     isInCart,
+   }), [cart, addToCart, removeFromCart, clearCart, isInCart]);
 
   return React.createElement(CartContext.Provider, { value }, children);
 };

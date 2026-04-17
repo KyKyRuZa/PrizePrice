@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useCallback, useState } from 'react';
 
 import { useAuth } from './AuthContext';
 import { apiGet, apiPost } from '../utils/apiClient';
@@ -34,17 +34,11 @@ const normalizeWatchPayload = (item) => {
 
 export const PriceWatchProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  const [watches, setWatches] = useState([]);
-  const watchesRef = useSyncedRef(watches);
-
-  // Initialize from localStorage only once
-  useEffect(() => {
+  const [watches, setWatches] = useState(() => {
     const parsed = loadStoredArray(STORAGE_KEY);
-    if (parsed.length) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setWatches(parsed);
-    }
-  }, []);
+    return parsed.length ? parsed : [];
+  });
+  const watchesRef = useSyncedRef(watches);
 
   useEffect(() => {
     persistStoredJson(STORAGE_KEY, watches);
@@ -94,12 +88,12 @@ export const PriceWatchProvider = ({ children }) => {
     };
   }, [isAuthenticated, watchesRef]);
 
-  const getWatch = (productId) => {
+  const getWatch = useCallback((productId) => {
     const pid = Number(productId);
     return watches.find((it) => Number(it?.watch?.productId ?? it?.productId) === pid) || null;
-  };
+  }, [watches]);
 
-  const upsert = async (product, { targetPrice = null, dropPercent = null, active = true } = {}) => {
+  const upsert = useCallback(async (product, { targetPrice = null, dropPercent = null, active = true } = {}) => {
     if (!product?.id) return;
     const pid = Number(product.id);
     if (!Number.isFinite(pid)) return;
@@ -124,9 +118,9 @@ export const PriceWatchProvider = ({ children }) => {
     });
 
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'price watch' });
-  };
+  }, [isAuthenticated]);
 
-  const remove = async (productId) => {
+  const remove = useCallback(async (productId) => {
     const pid = Number(productId);
     if (!Number.isFinite(pid)) return;
 
@@ -138,16 +132,15 @@ export const PriceWatchProvider = ({ children }) => {
     });
 
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'price watch' });
-  };
+  }, [isAuthenticated]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const value = useMemo(() => ({
-    watches,
-    watchesCount: watches.length,
-    getWatch,
-    upsert,
-    remove,
-  }), [watches, isAuthenticated, getWatch, upsert, remove]);
+   const value = useMemo(() => ({
+     watches,
+     watchesCount: watches.length,
+     getWatch,
+     upsert,
+     remove,
+   }), [watches, getWatch, upsert, remove]);
 
   return React.createElement(PriceWatchContext.Provider, { value }, children);
 };

@@ -13,14 +13,14 @@ export function hasMarketplaceFilter(marketplaces = []) {
   return Array.isArray(marketplaces) && marketplaces.length > 0 && marketplaces.length < 3;
 }
 
-export async function fetchAvailableCategories() {
-  const response = await apiGet("/products/categories", { schema: categoriesResponseSchema });
+export async function fetchAvailableCategories({ signal } = {}) {
+  const response = await apiGet("/products/categories", { schema: categoriesResponseSchema, signal });
   return Array.isArray(response?.categories) ? response.categories : [];
 }
 
-export async function fetchCategoryCounts() {
+export async function fetchCategoryCounts({ signal } = {}) {
   try {
-    const response = await apiGet("/products/category-counts");
+    const response = await apiGet("/products/category-counts", { signal });
     return response?.counts || {};
   } catch {
     return {};
@@ -34,6 +34,7 @@ export async function fetchCatalogProducts({
   availableCategories,
   page = 1,
   limit = 20,
+  signal,
 }) {
   const normalizedQuery = normalizeSearchQuery(searchQuery);
   const normalizedCategory = resolveCategoryFilter(filters?.category, availableCategories);
@@ -47,7 +48,7 @@ export async function fetchCatalogProducts({
     sortBy === "popularity";
 
   if (useRecommended) {
-    const response = await apiGet("/products/recommended", { schema: productListResponseSchema });
+    const response = await apiGet("/products/recommended", { schema: productListResponseSchema, signal });
     return {
       items: Array.isArray(response?.items) ? response.items : [],
       pagination: null,
@@ -60,17 +61,14 @@ export async function fetchCatalogProducts({
   params.set("sort", sortBy);
   params.set("page", String(page));
   params.set("limit", String(limit));
-  
-  // Фильтрация по маркетплейсам
+
   if (filters?.marketplaces && Array.isArray(filters.marketplaces) && filters.marketplaces.length > 0) {
-    // Конвертируем отображаемые названия в значения БД
     const dbMarketplaces = mapMarketplacesToDB(filters.marketplaces);
     if (dbMarketplaces.length > 0) {
       params.set("marketplaces", dbMarketplaces.join(","));
     }
   }
-  
-  // Фильтрация по цене
+
   if (filters?.minPrice != null && filters.minPrice !== '') {
     params.set("minPrice", String(filters.minPrice));
   }
@@ -80,8 +78,9 @@ export async function fetchCatalogProducts({
 
   const response = await apiGet(`/products/search?${params.toString()}`, {
     schema: productListResponseSchema,
+    signal,
   });
-  
+
   return {
     items: Array.isArray(response?.items) ? response.items : [],
     pagination: response?.pagination || null,

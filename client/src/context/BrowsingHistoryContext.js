@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useCallback, useState } from 'react';
 
 import { useAuth } from './AuthContext';
 import { apiGet } from '../utils/apiClient';
@@ -47,17 +47,11 @@ function toHistoryRecord(productId, index, prefix = 'local') {
 
 export const BrowsingHistoryProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  const [history, setHistory] = useState([]);
-  const historyRef = useSyncedRef(history);
-
-  // Initialize from localStorage only once
-  useEffect(() => {
+  const [history, setHistory] = useState(() => {
     const parsed = loadStoredArray(STORAGE_KEY);
-    if (parsed.length) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setHistory(parsed);
-    }
-  }, []);
+    return parsed.length ? parsed : [];
+  });
+  const historyRef = useSyncedRef(history);
 
   useEffect(() => {
     persistStoredJson(STORAGE_KEY, history);
@@ -89,7 +83,7 @@ export const BrowsingHistoryProvider = ({ children }) => {
     };
   }, [isAuthenticated, historyRef]);
 
-  const addViewedProduct = async (productId) => {
+  const addViewedProduct = useCallback(async (productId) => {
     const pid = normalizeProductId(productId);
     if (!pid) return;
 
@@ -99,31 +93,30 @@ export const BrowsingHistoryProvider = ({ children }) => {
       return next;
     });
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'browsing history' });
-  };
+  }, [isAuthenticated]);
 
-  const clear = async () => {
+  const clear = useCallback(async () => {
     setHistory([]);
     persistStoredJson(STORAGE_KEY, []);
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'browsing history' });
-  };
+  }, [isAuthenticated]);
 
-  const remove = async (id) => {
+  const remove = useCallback(async (id) => {
     setHistory((prev) => {
       const next = prev.filter((it) => it?.id !== id);
       persistStoredJson(STORAGE_KEY, next);
       return next;
     });
     syncLocalChangesIfAuthenticated({ isAuthenticated, scope: 'browsing history' });
-  };
+  }, [isAuthenticated]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const value = useMemo(() => ({
-    history,
-    historyCount: history.length,
-    addViewedProduct,
-    clear,
-    remove,
-  }), [history, isAuthenticated, addViewedProduct, clear, remove]);
+   const value = useMemo(() => ({
+     history,
+     historyCount: history.length,
+     addViewedProduct,
+     clear,
+     remove,
+   }), [history, addViewedProduct, clear, remove]);
 
   return React.createElement(BrowsingHistoryContext.Provider, { value }, children);
 };

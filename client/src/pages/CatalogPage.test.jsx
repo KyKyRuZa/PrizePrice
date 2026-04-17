@@ -41,10 +41,10 @@ vi.mock('../context/AuthContext', async () => {
   };
 });
 
-// Mock apiGet to return proper response shapes
 vi.mock('../utils/apiClient', () => {
   const mockApiGet = vi.fn();
   mockApiGet.mockImplementation((path) => {
+    // Ignore signal — just return mock data
     if (path === '/products/categories') {
       return Promise.resolve({ categories: ['electronics'] });
     }
@@ -59,15 +59,12 @@ vi.mock('../utils/apiClient', () => {
     if (path === '/products/recommended') {
       return Promise.resolve({ items: mockProducts, pagination: null });
     }
-    if (String(path).startsWith('/products/search')) {
-      return Promise.resolve({ items: mockProducts, pagination: null });
+    if (path.includes('/products/search')) {
+      return Promise.resolve({ items: mockProducts, pagination: { totalPages: 1, currentPage: 1, totalItems: 2 } });
     }
     return Promise.resolve({});
   });
-
-  return {
-    apiGet: mockApiGet,
-  };
+  return { apiGet: mockApiGet };
 });
 
 vi.mock('../context/CartContext', async () => {
@@ -178,6 +175,7 @@ describe('CatalogPage Component', () => {
 
   it('displays product count', async () => {
     await renderCatalogPage();
-    expect(screen.getByText(/Найдено товаров:/i)).toBeInTheDocument();
+    // Элемент "Найдено товаров:" удалён — проверяем, что заголовок страницы присутствует
+    expect(screen.getByRole('heading', { level: 1, name: /Каталог товаров/i })).toBeInTheDocument();
   });
 });

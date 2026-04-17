@@ -1,5 +1,5 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -10,12 +10,6 @@ import { useSearchHistory } from '../context/SearchHistoryContext';
 import { INPUT_LIMITS, sanitizeTextInput } from '../utils/inputSanitizers';
 
 const PROFILE_TABS = new Set(['favorites', 'history', 'compare', 'watch', 'notifications']);
-
-const normalizeDisplayName = (name) =>
-  sanitizeTextInput(name, {
-    maxLength: INPUT_LIMITS.DISPLAY_NAME,
-    stripHtml: true,
-  });
 
 export function useProfilePageState() {
   const { user, isAuthenticated, logout, setName } = useAuth();
@@ -32,28 +26,27 @@ export function useProfilePageState() {
     remove: removeNotification,
   } = useNotifications();
 
-  const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState('favorites');
+  const activeTab = PROFILE_TABS.has(searchParams.get('tab'))
+    ? searchParams.get('tab')
+    : 'favorites';
+
+  const setActiveTab = useCallback((tab) => {
+    if (PROFILE_TABS.has(tab)) {
+      setSearchParams({ tab });
+    }
+  }, [setSearchParams]);
+
   const [watchModalProduct, setWatchModalProduct] = useState(null);
   const [historyPage, setHistoryPage] = useState(1);
   const [editingName, setEditingName] = useState(false);
-  const [newName, setNewName] = useState(user?.name || '');
+  const [newName, setNewName] = useState(() => user?.name || '');
+  const [nameError, setNameError] = useState('');
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const tab = params.get('tab');
-    if (tab && PROFILE_TABS.has(tab)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setActiveTab(tab);
-    }
-  }, [location.search]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setNewName(user?.name || '');
-  }, [user?.name]);
+  // No need for separate effect to setActiveTab from URL — handled by useState initialization
+  // Back/forward navigation will re-run the component, initializing state correctly
 
   useEffect(() => {
     if (activeTab === 'notifications') {
@@ -75,33 +68,51 @@ export function useProfilePageState() {
   }, [history]);
 
   const handleNameInputChange = useCallback((value) => {
-    setNewName(normalizeDisplayName(value));
+    const sanitized = sanitizeTextInput(value, {
+      maxLength: INPUT_LIMITS.DISPLAY_NAME,
+      stripHtml: true,
+      trim: true,
+    });
+    setNewName(sanitized);
+    if (sanitized.length < 2) {
+      setNameError('Имя должно содержать минимум 2 символа');
+    } else {
+      setNameError('');
+    }
   }, []);
 
   const handleNameUpdate = useCallback(async () => {
-    const normalizedName = normalizeDisplayName(newName);
+    const normalizedName = sanitizeTextInput(newName, {
+      maxLength: INPUT_LIMITS.DISPLAY_NAME,
+      stripHtml: true,
+      trim: true,
+    });
 
-    if (!normalizedName) {
-      alert('Имя не может быть пустым');
+    if (normalizedName.length < 2) {
+      setNameError('Имя должно содержать минимум 2 символа');
       return;
     }
 
     try {
       await setName(normalizedName);
       setEditingName(false);
+      setNameError('');
     } catch (error) {
       console.error('Ошибка при обновлении имени:', error);
-      alert('Ошибка при обновлении имени');
+      setNameError('Не удалось обновить имя');
     }
   }, [newName, setName]);
 
   const startNameEditing = useCallback(() => {
+    setNewName(user?.name || '');
     setEditingName(true);
-  }, []);
+    setNameError('');
+  }, [user?.name]);
 
   const cancelNameEditing = useCallback(() => {
     setEditingName(false);
     setNewName(user?.name || '');
+    setNameError('');
   }, [user?.name]);
 
   const goToHistoryPage = useCallback((page) => {
@@ -185,6 +196,9 @@ export function useProfilePageState() {
     editingName,
     newName,
     setNewName,
+    nameError,
+    setNameError,
+    setEditingName,
     paginatedHistory,
     historyPagesCount,
     historyPage,

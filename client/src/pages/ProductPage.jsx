@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useBrowsingHistory } from '../context/BrowsingHistoryContext';
 import { useFavorites } from '../context/FavoritesContext';
@@ -27,11 +27,13 @@ const ProductPage = () => {
     addToCart,
   });
 
-  const offers = Array.isArray(product?.prices)
-    ? product.prices
-    : Array.isArray(product?.offers)
-      ? product.offers
-      : [];
+  const offers = useMemo(() => {
+    return Array.isArray(product?.prices)
+      ? product.prices
+      : Array.isArray(product?.offers)
+        ? product.offers
+        : [];
+  }, [product]);
 
   // SEO: обновляем мета-теги и structured data
   useEffect(() => {

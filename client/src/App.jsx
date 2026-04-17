@@ -1,12 +1,14 @@
 import React, { Suspense, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import AppProviders from './context/AppProviders';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import { normalizeSearchQuery } from './utils/inputSanitizers';
+import ErrorBoundary from './components/observability/ErrorBoundary';
 import './App.css';
 import './styles/global.css';
 
+// Code splitting
 const HomeLandingPage = React.lazy(() => import('./pages/HomeLandingPage'));
 const CatalogPage = React.lazy(() => import('./pages/CatalogPage'));
 const ProductPage = React.lazy(() => import('./pages/ProductPage'));
@@ -16,13 +18,16 @@ const ComparePage = React.lazy(() => import('./pages/ComparePage'));
 
 const HeaderWithRouter = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const handleSearch = (query) => {
     const normalizedQuery = normalizeSearchQuery(query);
     if (normalizedQuery) {
       navigate(`/catalog?q=${encodeURIComponent(normalizedQuery)}`);
     }
   };
-  return <Header onSearch={handleSearch} />;
+  // Hide search on home page, show on catalog and other pages
+  const showSearch = location.pathname !== '/';
+  return <Header onSearch={handleSearch} showSearch={showSearch} />;
 };
 
 const PageLoader = () => (
@@ -55,14 +60,16 @@ function App() {
           <HeaderWithRouter />
           <main id="main-content" className="main-content" role="main" tabIndex="-1">
             <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<HomeLandingPage />} />
-                <Route path="/catalog" element={<CatalogPage />} />
-                <Route path="/product/:id" element={<ProductPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/compare" element={<ComparePage />} />
-              </Routes>
+              <ErrorBoundary>
+                <Routes>
+                  <Route path="/" element={<HomeLandingPage />} />
+                  <Route path="/catalog" element={<CatalogPage />} />
+                  <Route path="/product/:id" element={<ProductPage />} />
+                  <Route path="/search" element={<SearchPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/compare" element={<ComparePage />} />
+                </Routes>
+              </ErrorBoundary>
             </Suspense>
           </main>
           <Footer />
