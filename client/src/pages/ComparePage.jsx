@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, Bell, ShoppingBag, Trash2, TrendingUp, X } from 'lucide-react';
 import WatchPriceModal from '../components/watch/WatchPriceModal';
 import { useComparePage } from '../hooks/useComparePage';
@@ -22,6 +23,11 @@ const ComparePage = () => {
 
   return (
     <div className={styles.page}>
+      <Helmet>
+        <title>Сравнение цен — PrizePrice</title>
+        <meta name="description" content="Сравнивайте цены на товары across маркетплейсов. Смотрите различия в стоимости, скидках и выбирайте лучшее предложение." />
+        <link rel="canonical" href="https://prizeprise.ru/compare" />
+      </Helmet>
       <div className={styles.content}>
         <header className={styles.header}>
           <div className={styles.titleBlock}>

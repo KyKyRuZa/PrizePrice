@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
 import WatchPriceModal from '../components/watch/WatchPriceModal';
@@ -90,6 +91,12 @@ const ProfilePage = () => {
 
   return (
     <div className={styles.profileContainer}>
+      <Helmet>
+        <title>Профиль пользователя — PrizePrice</title>
+        <meta name="description" content="Личный кабинет PrizePrice: история поиска, избранные товары, сравнение цен, отслеживание скидок и уведомления." />
+        <link rel="canonical" href="https://prizeprise.ru/profile" />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <div className={styles.content}>
         <header className={styles.profileHeader}>
           <div className={styles.avatar}>

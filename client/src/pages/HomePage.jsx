@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import ProductCardMain from '../components/products/ProductCardMain';
 import Filters from '../components/products/Filters';
 import SortOptions from '../components/products/SortOptions';
@@ -65,8 +66,72 @@ const HomePage = () => {
     };
   }, [isFiltersOpen]);
 
+  // Определяем, является ли это страницей поиска
+  const isSearchPage = !!searchQuery;
+  const canonicalUrl = isSearchPage 
+    ? `https://prizeprise.ru/` 
+    : `https://prizeprise.ru/`;
+
   return (
     <div className={styles.homeContainer}>
+      <Helmet>
+        <title>{isSearchPage 
+          ? `Результаты поиска: "${searchQuery}" — PrizePrice` 
+          : 'PrizePrice — Сравнивай цены, экономь деньги | Сервис сравнения цен на маркетплейсах'
+        }</title>
+        <meta name="description" content={isSearchPage
+          ? `Найдено товаров по запросу "${searchQuery}". Сравните цены на ${searchQuery} across Wildberries, Ozon, Яндекс Маркет и других маркетплейсов.`
+          : "PrizePrice — отслеживайте и сравнивайте цены на товары с Wildberries, Ozon, Яндекс Маркета и других маркетплейсов. Получайте уведомления о снижении цен, находите лучшие предложения."
+        } />
+        <link rel="canonical" href={canonicalUrl} />
+        
+        {/* noindex для страниц поиска */}
+        {isSearchPage && <meta name="robots" content="noindex, follow" />}
+        
+        {/* Structured Data - WebSite + SearchAction */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "PrizePrice",
+            "url": "https://prizeprise.ru",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://prizeprise.ru/search?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          })}
+        </script>
+        
+        {/* Structured Data - BreadcrumbList */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": isSearchPage ? [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Главная",
+                "item": "https://prizeprise.ru/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": `Поиск: "${searchQuery}"`,
+                "item": `https://prizeprise.ru/?q=${encodeURIComponent(searchQuery)}`
+              }
+            ] : [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Главная",
+                "item": "https://prizeprise.ru/"
+              }
+            ]
+          })}
+        </script>
+      </Helmet>
       <div className={styles.content}>
         <div className={styles.welcomeSection}>
           <h1>Добро пожаловать в PrizePrice!</h1>

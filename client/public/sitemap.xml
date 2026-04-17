@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Главная страница -->
+  <url>
+    <loc>https://prizeprise.ru/</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Страница сравнения цен -->
+  <url>
+    <loc>https://prizeprise.ru/compare</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Страница профиля -->
+  <url>
+    <loc>https://prizeprise.ru/profile</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- 
+    Примечание: URL продуктов (/product/:id) будут добавляться динамически 
+    после подключения бэкенда. Текущая версия содержит только статические страницы.
+  -->
+</urlset>
