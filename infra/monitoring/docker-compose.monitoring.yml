@@ -12,8 +12,6 @@ services:
       - prometheus_data:/prometheus
     env_file:
       - ../env/.env.prod
-    environment:
-      METRICS_TOKEN: ${METRICS_TOKEN}
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
