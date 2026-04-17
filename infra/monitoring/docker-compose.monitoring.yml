@@ -9,9 +9,8 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./alerts.prometheus.yml:/etc/prometheus/alerts.prometheus.yml:ro
+      - ./prometheus-token:/etc/prometheus/token:ro
       - prometheus_data:/prometheus
-    env_file:
-      - ../env/.env.prod
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'

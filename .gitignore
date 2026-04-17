@@ -145,3 +145,5 @@ e2e
 
 client/docs
 client/dist
+# Prometheus bearer token file
+infra/monitoring/prometheus-token
