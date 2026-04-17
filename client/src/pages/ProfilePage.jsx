@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Edit2, Check, X } from 'lucide-react';
+import { LogOut, User, Edit2, Check, X, ArrowLeft } from 'lucide-react';
 import WatchPriceModal from '../components/watch/WatchPriceModal';
 import HistoryTab from '../components/profile-tabs/HistoryTab';
 import FavoritesTab from '../components/profile-tabs/FavoritesTab';
@@ -132,6 +132,14 @@ const ProfilePage = () => {
   return (
     <div className={styles.profileContainer}>
       <div className={styles.content}>
+        <button
+          className={styles.backButton}
+          onClick={() => navigate(-1)}
+          type="button"
+          aria-label="Назад"
+        >
+          <ArrowLeft size={20} />
+        </button>
         <header className={styles.profileHeader}>
           <div className={styles.avatar} aria-hidden="true">
             {avatarInitial}
@@ -186,7 +194,7 @@ const ProfilePage = () => {
                 key={tab.key}
                 className={styles.tabButton}
                 data-active={activeTab === tab.key}
-                onClick={() => navigate(`/profile?tab=${tab.key}`)}
+                onClick={() => setActiveTab(tab.key)}
               >
                 {tab.label}
               </button>

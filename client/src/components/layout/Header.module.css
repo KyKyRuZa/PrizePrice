@@ -123,7 +123,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 999;
+  z-index: 1004;
   animation: fadeIn 0.3s ease;
 }
 
@@ -138,7 +138,7 @@
   padding: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-radius: 0 0 8px 8px;
-  z-index: 1001;
+  z-index: 1004;
   animation: slideDown 0.3s ease;
 }
 

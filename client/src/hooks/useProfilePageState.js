@@ -35,7 +35,7 @@ export function useProfilePageState() {
 
   const setActiveTab = useCallback((tab) => {
     if (PROFILE_TABS.has(tab)) {
-      setSearchParams({ tab });
+      setSearchParams({ tab }, { replace: true });
     }
   }, [setSearchParams]);
 
