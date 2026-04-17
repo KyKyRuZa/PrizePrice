@@ -1,5 +1,4 @@
-﻿import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useBrowsingHistory } from '../context/BrowsingHistoryContext';
 import { useFavorites } from '../context/FavoritesContext';
@@ -34,6 +33,85 @@ const ProductPage = () => {
       ? product.offers
       : [];
 
+  // SEO: обновляем мета-теги и structured data
+  useEffect(() => {
+    if (!product) return;
+
+    const offersList = offers.map(offer => ({
+      "@type": "Offer",
+      "price": offer.price,
+      "priceCurrency": "RUB",
+      "availability": "https://schema.org/InStock",
+      "seller": {
+        "@type": "Organization",
+        "name": offer.marketplace
+      },
+      "url": offer.link
+    }));
+
+    const title = `${product.name} — цены и сравнение | PrizePrice`;
+    const description = product.description
+      ? `${product.description.substring(0, 160)}...`
+      : `Сравните цены на ${product.name} across маркетплейсов. Лучшие предложения и скидки на ${product.name} на PrizePrice.`;
+
+    document.title = title;
+
+    // meta description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.name = 'description';
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', description);
+
+    // canonical
+    const canonicalUrl = `https://prizeprise.ru/product/${product.id}`;
+    let linkCanonical = document.querySelector('link[rel="canonical"]');
+    if (!linkCanonical) {
+      linkCanonical = document.createElement('link');
+      linkCanonical.rel = 'canonical';
+      document.head.appendChild(linkCanonical);
+    }
+    linkCanonical.href = canonicalUrl;
+
+    // Structured Data: Product
+    // Удаляем старые скрипты Product
+    document.head.querySelectorAll('script[data-seo="product"]').forEach(el => el.remove());
+
+    const productScript = document.createElement('script');
+    productScript.type = 'application/ld+json';
+    productScript.setAttribute('data-seo', 'product');
+    productScript.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": product.name,
+      "image": product.image ? [product.image] : [],
+      "description": product.description || "",
+      "category": product.category || "",
+      "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": Math.min(...offers.map(o => o.price)),
+        "highPrice": Math.max(...offers.map(o => o.price)),
+        "priceCurrency": "RUB",
+        "offerCount": offers.length,
+        "offers": offersList
+      },
+      "aggregateRating": product.rating ? {
+        "@type": "AggregateRating",
+        "ratingValue": product.rating,
+        "reviewCount": product.reviews || 0
+      } : undefined
+     });
+    document.head.appendChild(productScript);
+
+    // Cleanup
+    return () => {
+      // Удаляем продукт-скрипт
+      document.head.querySelectorAll('script[data-seo="product"]').forEach(el => el.remove());
+    };
+  }, [product, offers]);
+
   if (loading) {
     return <div className={styles.container}><div>Loading...</div></div>;
   }
@@ -46,89 +124,8 @@ const ProductPage = () => {
     return <div className={styles.container}><div>Product not found</div></div>;
   }
 
-  // Формируем offers для structured data
-  const offersList = offers.map(offer => ({
-    "@type": "Offer",
-    "price": offer.price,
-    "priceCurrency": "RUB",
-    "availability": "https://schema.org/InStock",
-    "seller": {
-      "@type": "Organization",
-      "name": offer.marketplace
-    },
-    "url": offer.link
-  }));
-
-  // Генерация Breadcrumb
-  const breadcrumbItems = [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Главная",
-      "item": "https://prizeprise.ru/"
-    }
-  ];
-
-  if (product.category) {
-    breadcrumbItems.push({
-      "@type": "ListItem",
-      "position": 2,
-      "name": product.category,
-      "item": `https://prizeprise.ru/?category=${encodeURIComponent(product.category)}`
-    });
-  }
-
-  breadcrumbItems.push({
-    "@type": "ListItem",
-    "position": breadcrumbItems.length + 1,
-    "name": product.name,
-    "item": `https://prizeprise.ru/product/${product.id}`
-  });
-
   return (
     <div className={styles.container}>
-      <Helmet>
-        <title>{product.name} — цены и сравнение | PrizePrice</title>
-        <meta name="description" content={product.description 
-          ? `${product.description.substring(0, 160)}...` 
-          : `Сравните цены на ${product.name} across маркетплейсов. Лучшие предложения и скидки на ${product.name} на PrizePrice.`
-        } />
-        <link rel="canonical" href={`https://prizeprise.ru/product/${product.id}`} />
-        
-        {/* Structured Data - Product */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            "name": product.name,
-            "image": product.image ? [product.image] : [],
-            "description": product.description || "",
-            "category": product.category || "",
-            "offers": {
-              "@type": "AggregateOffer",
-              "lowPrice": Math.min(...offers.map(o => o.price)),
-              "highPrice": Math.max(...offers.map(o => o.price)),
-              "priceCurrency": "RUB",
-              "offerCount": offers.length,
-              "offers": offersList
-            },
-            "aggregateRating": product.rating ? {
-              "@type": "AggregateRating",
-              "ratingValue": product.rating,
-              "reviewCount": product.reviews || 0
-            } : undefined
-          })}
-        </script>
-        
-        {/* Structured Data - BreadcrumbList */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            "itemListElement": breadcrumbItems
-          })}
-        </script>
-      </Helmet>
       <img className={styles.productImage} src={product.image} alt={product.name} />
 
       <div className={styles.productInfo}>
@@ -220,4 +217,3 @@ const ProductPage = () => {
 };
 
 export default ProductPage;
-

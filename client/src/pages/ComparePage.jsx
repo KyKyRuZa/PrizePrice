@@ -1,5 +1,4 @@
-﻿import React from 'react';
-import { Helmet } from 'react-helmet-async';
+﻿import React, { useEffect } from 'react';
 import { ArrowLeft, Bell, ShoppingBag, Trash2, TrendingUp, X } from 'lucide-react';
 import WatchPriceModal from '../components/watch/WatchPriceModal';
 import { useComparePage } from '../hooks/useComparePage';
@@ -21,13 +20,29 @@ const ComparePage = () => {
     getExistingWatch,
   } = useComparePage();
 
+  // SEO для страницы сравнения
+  useEffect(() => {
+    document.title = 'Сравнение цен — PrizePrice';
+    
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.name = 'description';
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', 'Сравнивайте цены на товары across маркетплейсов. Смотрите различия в ценах, скидках и выбирайте лучшее предложение.');
+
+    let linkCanonical = document.querySelector('link[rel="canonical"]');
+    if (!linkCanonical) {
+      linkCanonical = document.createElement('link');
+      linkCanonical.rel = 'canonical';
+      document.head.appendChild(linkCanonical);
+    }
+    linkCanonical.href = 'https://prizeprise.ru/compare';
+  }, []);
+
   return (
     <div className={styles.page}>
-      <Helmet>
-        <title>Сравнение цен — PrizePrice</title>
-        <meta name="description" content="Сравнивайте цены на товары across маркетплейсов. Смотрите различия в стоимости, скидках и выбирайте лучшее предложение." />
-        <link rel="canonical" href="https://prizeprise.ru/compare" />
-      </Helmet>
       <div className={styles.content}>
         <header className={styles.header}>
           <div className={styles.titleBlock}>

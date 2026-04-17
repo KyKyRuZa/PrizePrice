@@ -1,5 +1,4 @@
 ﻿import React from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
 import WatchPriceModal from '../components/watch/WatchPriceModal';
@@ -91,12 +90,35 @@ const ProfilePage = () => {
 
   return (
     <div className={styles.profileContainer}>
-      <Helmet>
-        <title>Профиль пользователя — PrizePrice</title>
-        <meta name="description" content="Личный кабинет PrizePrice: история поиска, избранные товары, сравнение цен, отслеживание скидок и уведомления." />
-        <link rel="canonical" href="https://prizeprise.ru/profile" />
-        <meta name="robots" content="noindex, follow" />
-      </Helmet>
+      {/* SEO: noindex for profile page */}
+      <script dangerouslySetInnerHTML={{ __html: `
+        <script>
+          document.title = 'Профиль пользователя — PrizePrice';
+          let metaDesc = document.querySelector('meta[name="description"]');
+          if (!metaDesc) {
+            metaDesc = document.createElement('meta');
+            metaDesc.name = 'description';
+            document.head.appendChild(metaDesc);
+          }
+          metaDesc.content = 'Личный кабинет PrizePrice: история поиска, избранные товары, сравнение цен, отслеживание скидок и уведомления.';
+          
+          let linkCanonical = document.querySelector('link[rel="canonical"]');
+          if (!linkCanonical) {
+            linkCanonical = document.createElement('link');
+            linkCanonical.rel = 'canonical';
+            document.head.appendChild(linkCanonical);
+          }
+          linkCanonical.href = 'https://prizeprise.ru/profile';
+          
+          let metaRobots = document.querySelector('meta[name="robots"]');
+          if (!metaRobots) {
+            metaRobots = document.createElement('meta');
+            metaRobots.name = 'robots';
+            document.head.appendChild(metaRobots);
+          }
+          metaRobots.content = 'noindex, follow';
+        </script>
+      `}} />
       <div className={styles.content}>
         <header className={styles.profileHeader}>
           <div className={styles.avatar}>

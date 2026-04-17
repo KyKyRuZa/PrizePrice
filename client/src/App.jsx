@@ -8,7 +8,8 @@ import './App.css';
 import './styles/global.css';
 
 // Code splitting для страниц
-const HomePage = React.lazy(() => import('./pages/HomePage'));
+const HomeLandingPage = React.lazy(() => import('./pages/HomeLandingPage'));
+const CatalogPage = React.lazy(() => import('./pages/CatalogPage'));
 const ProductPage = React.lazy(() => import('./pages/ProductPage'));
 const SearchPage = React.lazy(() => import('./pages/SearchPage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
@@ -21,7 +22,7 @@ const HeaderWithRouter = () => {
   const handleSearch = (query) => {
     const normalizedQuery = normalizeSearchQuery(query);
     if (normalizedQuery) {
-      navigate(`/?q=${encodeURIComponent(normalizedQuery)}`);
+      navigate(`/catalog?q=${encodeURIComponent(normalizedQuery)}`);
     }
   };
 
@@ -79,13 +80,14 @@ function App() {
           <HeaderWithRouter />
           <main id="main-content" className="main-content" role="main" tabIndex="-1">
             <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/product/:id" element={<ProductPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/compare" element={<ComparePage />} />
-              </Routes>
+               <Routes>
+                 <Route path="/" element={<HomeLandingPage />} />
+                 <Route path="/catalog" element={<CatalogPage />} />
+                 <Route path="/product/:id" element={<ProductPage />} />
+                 <Route path="/search" element={<SearchPage />} />
+                 <Route path="/profile" element={<ProfilePage />} />
+                 <Route path="/compare" element={<ComparePage />} />
+               </Routes>
             </Suspense>
           </main>
           <Footer />

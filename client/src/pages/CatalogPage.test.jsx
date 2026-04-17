@@ -7,7 +7,7 @@ import { CartProvider } from '../context/CartContext';
 import { FavoritesProvider } from '../context/FavoritesContext';
 import { PriceWatchProvider } from '../context/PriceWatchContext';
 import { SearchHistoryProvider } from '../context/SearchHistoryContext';
-import HomePage from './HomePage';
+import CatalogPage from './CatalogPage';
 
 const mockProducts = [
   { id: 1, name: 'Test Product 1', category: 'electronics', prices: [] },
@@ -47,6 +47,14 @@ vi.mock('../utils/apiClient', () => {
   mockApiGet.mockImplementation((path) => {
     if (path === '/products/categories') {
       return Promise.resolve({ categories: ['electronics'] });
+    }
+    if (path === '/products/category-counts') {
+      return Promise.resolve({
+        counts: {
+          electronics: { count: 2, maxPrice: 50000 },
+          Все: { count: 2, maxPrice: 50000 }
+        }
+      });
     }
     if (path === '/products/recommended') {
       return Promise.resolve({ items: mockProducts, pagination: null });
@@ -123,7 +131,7 @@ vi.mock('../context/SearchHistoryContext', async () => {
   };
 });
 
-describe('HomePage Component', () => {
+describe('CatalogPage Component', () => {
   const renderWithProviders = (component) => {
     return render(
       <MemoryRouter>
@@ -142,29 +150,34 @@ describe('HomePage Component', () => {
     );
   };
 
-  const renderHomePage = async () => {
-    renderWithProviders(<HomePage />);
+  const renderCatalogPage = async () => {
+    renderWithProviders(<CatalogPage />);
     await screen.findAllByTestId('product-card');
   };
 
-  it('renders welcome section', async () => {
-    await renderHomePage();
-    expect(screen.getByRole('heading', { level: 1, name: /PrizePrice/i })).toBeInTheDocument();
+  it('renders catalog page header', async () => {
+    await renderCatalogPage();
+    expect(screen.getByRole('heading', { level: 1, name: /Каталог товаров/i })).toBeInTheDocument();
   });
 
   it('renders filters section', async () => {
-    await renderHomePage();
+    await renderCatalogPage();
     expect(screen.getByTestId('filters')).toBeInTheDocument();
   });
 
   it('renders sort options', async () => {
-    await renderHomePage();
+    await renderCatalogPage();
     expect(screen.getByTestId('sort-options')).toBeInTheDocument();
   });
 
   it('renders product cards', async () => {
-    await renderHomePage();
+    await renderCatalogPage();
     const cards = screen.getAllByTestId('product-card');
     expect(cards).toHaveLength(mockProducts.length);
+  });
+
+  it('displays product count', async () => {
+    await renderCatalogPage();
+    expect(screen.getByText(/Найдено товаров:/i)).toBeInTheDocument();
   });
 });

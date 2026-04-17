@@ -1,0 +1,204 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+import { ALL_CATEGORY, createDefaultFilters } from '../constants/filters';
+import { useSearchHistory } from '../context/SearchHistoryContext';
+import { fetchAvailableCategories, fetchCatalogProducts, fetchCategoryCounts } from '../services/catalogService';
+import { normalizeSearchQuery } from '../utils/inputSanitizers';
+
+// Парсинг query params в объект состояния
+function parseQueryParams(search) {
+  const params = new URLSearchParams(search);
+  const query = normalizeSearchQuery(params.get('q') || '');
+  const category = params.get('category') || ALL_CATEGORY;
+  const minPrice = params.get('minPrice') || '';
+  const maxPrice = params.get('maxPrice') || '';
+  const inStock = params.get('inStock') || 'all';
+  const sort = params.get('sort') || 'popularity';
+  const page = parseInt(params.get('page') || '1', 10);
+  return { searchQuery: query, category, minPrice, maxPrice, inStock, sort, page };
+}
+
+export function useCatalogPageState() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { addQuery } = useSearchHistory();
+  const lastRecordedRef = useRef('');
+
+  // Инициализация состояния из URL (только при mount)
+  const initialParams = useMemo(() => parseQueryParams(location.search), [location.search]);
+
+  const [searchQuery, setSearchQuery] = useState(initialParams.searchQuery);
+  const [filters, setFilters] = useState({
+    category: initialParams.category,
+    minPrice: initialParams.minPrice,
+    maxPrice: initialParams.maxPrice,
+    inStock: initialParams.inStock,
+    marketplaces: [],
+  });
+  const [sortBy, setSortBy] = useState(initialParams.sort);
+  const [currentPage, setCurrentPage] = useState(initialParams.page);
+
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [availableCategories, setAvailableCategories] = useState([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [productsError, setProductsError] = useState('');
+  const [pagination, setPagination] = useState(null);
+  const [categoryCounts, setCategoryCounts] = useState({});
+  const ITEMS_PER_PAGE = 20;
+
+  // Синхронизация с URL (back/forward)
+  useEffect(() => {
+    const { searchQuery: q, category, minPrice, maxPrice, inStock, sort, page } = parseQueryParams(location.search);
+    setSearchQuery(q);
+    setFilters({
+      category,
+      minPrice,
+      maxPrice,
+      inStock,
+      marketplaces: [],
+    });
+    setSortBy(sort);
+    setCurrentPage(page);
+  }, [location.search]);
+
+  // Загрузка категорий
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCategories() {
+      try {
+        const categories = await fetchAvailableCategories();
+        if (!isMounted) return;
+        setAvailableCategories(categories);
+
+        const counts = await fetchCategoryCounts();
+        if (isMounted && counts) {
+          const total = Object.values(counts).reduce((sum, entry) => sum + (entry.count || 0), 0);
+          const overallMax = Object.values(counts).reduce((max, entry) => Math.max(max, entry.maxPrice || 0), 0);
+          setCategoryCounts({ [ALL_CATEGORY]: { count: total, maxPrice: overallMax || null }, ...counts });
+        }
+      } catch {
+        if (!isMounted) return;
+        setAvailableCategories([]);
+        setCategoryCounts({});
+      }
+    }
+
+    void loadCategories();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Загрузка товаров
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadProducts() {
+      setIsLoadingProducts(true);
+      setProductsError('');
+
+      try {
+        const { items, pagination: pag } = await fetchCatalogProducts({
+          searchQuery,
+          filters,
+          sortBy,
+          availableCategories,
+          page: currentPage,
+          limit: ITEMS_PER_PAGE,
+        });
+
+        const results = items || [];
+
+        if (!isMounted) return;
+        setFilteredProducts(results);
+        setPagination(pag);
+      } catch (error) {
+        if (!isMounted) return;
+        setFilteredProducts([]);
+        setPagination(null);
+        setProductsError(error?.data?.message || 'Failed to load products');
+      } finally {
+        if (isMounted) {
+          setIsLoadingProducts(false);
+        }
+      }
+    }
+
+    void loadProducts();
+    return () => { isMounted = false; };
+  }, [searchQuery, filters, sortBy, currentPage, availableCategories]);
+
+  // Добавление запроса в историю поиска
+  useEffect(() => {
+    const query = normalizeSearchQuery(searchQuery);
+    if (!query) return;
+
+    const key = query.toLowerCase();
+    if (lastRecordedRef.current === key) return;
+    lastRecordedRef.current = key;
+    addQuery(query);
+  }, [searchQuery, addQuery]);
+
+  const handleFilterChange = useCallback((nextFilters) => {
+    setFilters(nextFilters);
+    setCurrentPage(1);
+  }, []);
+
+  const handleSortChange = useCallback((newSort) => {
+    setSortBy(newSort);
+    setCurrentPage(1);
+  }, []);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    setFilters(createDefaultFilters());
+    setCurrentPage(1);
+    navigate('/catalog', { replace: true });
+    window.dispatchEvent(new CustomEvent('clear-search'));
+  }, [navigate]);
+
+  const handleProductClick = useCallback((product) => {
+    console.log('Товар выбран:', product?.name);
+  }, []);
+
+  const handlePageChange = useCallback((page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Синхронизация URL при изменении состояния (UI -> URL)
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (filters.category && filters.category !== ALL_CATEGORY) params.set('category', filters.category);
+    if (filters.minPrice) params.set('minPrice', filters.minPrice);
+    if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
+    if (filters.inStock && filters.inStock !== 'all') params.set('inStock', filters.inStock);
+    if (sortBy !== 'popularity') params.set('sort', sortBy);
+    if (currentPage > 1) params.set('page', String(currentPage));
+
+    const newSearch = params.toString();
+    const currentSearch = location.search.slice(1);
+    if (newSearch !== currentSearch) {
+      navigate({ search: newSearch ? `?${newSearch}` : '' }, { replace: false });
+    }
+  }, [searchQuery, filters, sortBy, currentPage, navigate, location.search]);
+
+  return {
+    searchQuery,
+    sortBy,
+    filters,
+    filteredProducts,
+    availableCategories,
+    isLoadingProducts,
+    productsError,
+    categoryCounts,
+    pagination,
+    currentPage,
+    setSortBy: handleSortChange,
+    handleFilterChange,
+    handleClearSearch,
+    handleProductClick,
+    handlePageChange,
+  };
+}

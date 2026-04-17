@@ -1,4 +1,4 @@
-.homeContainer {
+.catalogContainer {
   min-height: 100vh;
   background-color: #f5f5f5;
 }
@@ -7,6 +7,61 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
+}
+
+/* Page Header */
+.pageHeader {
+  margin-bottom: 24px;
+}
+
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 4px;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  color: #002870;
+  margin: 0;
+  flex: 1;
+}
+
+.backToHomeButton {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #002870;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+.backToHomeButton:hover {
+  background: #f0f7ff;
+  border-color: #002870;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 40, 112, 0.15);
+}
+
+.backToHomeButton:active {
+  transform: translateY(0);
+}
+
+.resultsCount {
+  color: #999;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 12px;
 }
 
 /* Mobile filter button — hidden on desktop */
@@ -80,25 +135,6 @@
 
 .closeFiltersButton:hover {
   color: #333;
-}
-
-.welcomeSection {
-  text-align: center;
-  margin-bottom: 40px;
-  padding: 30px;
-  background: linear-gradient(135deg, #002870 0%, #0055b8 100%);
-  border-radius: 15px;
-  color: white;
-}
-
-.welcomeSection h1 {
-  font-size: 36px;
-  margin-bottom: 10px;
-}
-
-.welcomeSection p {
-  font-size: 18px;
-  opacity: 0.9;
 }
 
 .mainLayout {
@@ -239,18 +275,22 @@
     transform: translateX(0);
   }
 
-  .welcomeSection {
-    padding: 20px;
-    margin-bottom: 20px;
-  }
+   .pageHeader {
+     margin-top: 60px; /* space for mobile filter button */
+   }
 
-  .welcomeSection h1 {
-    font-size: 24px;
-  }
+   .headerTop {
+     padding: 0;
+   }
 
-  .welcomeSection p {
-    font-size: 16px;
-  }
+   .pageTitle {
+     font-size: 1.5rem;
+   }
+
+   .backToHomeButton {
+     width: 40px;
+     height: 40px;
+   }
 
   .productsSection {
     padding: 15px;
@@ -274,13 +314,14 @@
     padding: 10px;
   }
 
-  .welcomeSection h1 {
-    font-size: 20px;
-  }
+   .pageTitle {
+     font-size: 1.25rem;
+   }
 
-  .welcomeSection p {
-    font-size: 14px;
-  }
+   .backToHomeButton {
+     width: 36px;
+     height: 36px;
+   }
 
   .productsGrid {
     grid-template-columns: 1fr;
@@ -288,7 +329,7 @@
   }
 
   .resultsTitle {
-    font-size: 20px;
+    font-size: 1.1rem;
   }
 
   .searchResultsInfo {

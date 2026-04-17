@@ -1,0 +1,271 @@
+.landingContainer {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hero Section */
+.hero {
+  color: black;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.heroContent {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.heroTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.heroSubtitle {
+  font-size: 1.25rem;
+  opacity: 0.9;
+  margin-bottom: 32px;
+}
+
+.searchBox {
+  display: flex;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto 24px;
+}
+
+.searchInputWrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 16px;
+  color: #666;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  font-size: 16px;
+  border: 1px solid black;
+  border-radius: 8px;
+  outline: none;
+}
+
+.searchButton {
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  background: #002870;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.searchButton:hover {
+  background: #001050;
+}
+
+.ctaButton {
+  display: inline-block;
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: 600;
+  background: #002870;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ctaButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* How It Works Section */
+.howItWorks {
+  padding: 80px 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 48px;
+  color: #333;
+}
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 32px;
+}
+
+.stepCard {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.stepIcon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 50%;
+}
+
+.stepCard h3 {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.stepCard p {
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Benefits Section */
+.benefits {
+  padding: 80px 20px;
+  background: white;
+}
+
+.benefitsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.benefitCard {
+  padding: 24px;
+  text-align: center;
+}
+
+.benefitIcon {
+  color: #4caf50;
+  margin-bottom: 16px;
+}
+
+.benefitCard h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.benefitCard p {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* SEO Text Section */
+.seoText {
+  padding: 60px 20px;
+  background: #f5f5f5;
+}
+
+.textBlock {
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.8;
+  color: #444;
+}
+
+.textBlock p {
+  margin-bottom: 16px;
+}
+
+.textBlock p:last-child {
+  margin-bottom: 0;
+}
+
+/* Final CTA Section */
+.finalCta {
+  padding: 80px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+}
+
+.finalCta h2 {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.finalCta p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 32px;
+}
+
+.primaryButton {
+  padding: 16px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  background: white;
+  color: #002870;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 1.8rem;
+  }
+
+  .heroSubtitle {
+    font-size: 1rem;
+  }
+
+  .searchBox {
+    flex-direction: column;
+  }
+
+  .searchButton {
+    width: 100%;
+  }
+
+  .sectionTitle {
+    font-size: 1.5rem;
+  }
+
+  .stepsGrid,
+  .benefitsGrid {
+    grid-template-columns: 1fr;
+  }
+}

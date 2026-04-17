@@ -11,7 +11,7 @@ const SearchPage = () => {
     return <Navigate to="/" replace />;
   }
 
-  return <Navigate to={`/?q=${encodeURIComponent(query)}`} replace />;
+  return <Navigate to={`/catalog?q=${encodeURIComponent(query)}`} replace />;
 };
 
 export default SearchPage;
