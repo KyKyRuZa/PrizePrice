@@ -1,4 +1,5 @@
-import { User, Op } from "../models/index.js";
+import { User } from "../models/index.js";
+import { Op } from "sequelize";
 import { activeUsersTotal } from "../middlewares/metrics.middleware.js";
 
 const UPDATE_INTERVAL_MS = 30_000;
