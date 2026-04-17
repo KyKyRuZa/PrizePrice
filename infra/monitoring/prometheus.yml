@@ -6,12 +6,12 @@ rule_files:
   - alerts.prometheus.yml
 
 scrape_configs:
-  - job_name: 'prizeprice-api'
-    metrics_path: /metrics
-    scheme: http
-    bearer_token: ${METRICS_TOKEN}
-    static_configs:
-      - targets: ['prizeprice-server:3001']
+   - job_name: 'prizeprice-api'
+     metrics_path: /metrics
+     scheme: http
+     bearer_token: ${METRICS_TOKEN}
+     static_configs:
+       - targets: ['172.20.0.4:3001']
 
   - job_name: 'cadvisor'
     static_configs:
