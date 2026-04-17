@@ -19,23 +19,23 @@ services:
     networks:
       - prizeprice
 
-   grafana:
-     image: grafana/grafana:latest
-     container_name: monitoring-grafana
-     ports:
-       - "3000:3000"
-     env_file:
-       - ../env/.env.prod
-     environment:
-       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-       GF_USERS_ALLOW_SIGN_UP: "false"
-     volumes:
-       - grafana_data:/var/lib/grafana
-       - ./provisioning:/etc/grafana/provisioning:ro
-     depends_on:
-       - prometheus
-     networks:
-       - prizeprice
+  grafana:
+    image: grafana/grafana:latest
+    container_name: monitoring-grafana
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../env/.env.prod
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - prizeprice
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
