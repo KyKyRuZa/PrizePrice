@@ -55,9 +55,9 @@ export function createApp() {
 
   app.use(express.json({ limit: config.bodyLimit }));
   app.use(cookieParser());
-  app.use(requestIdMiddleware);
-  app.use(metricsMiddleware);
-  app.use(requestLogMiddleware);
+   app.use(requestIdMiddleware);
+   app.use(metricsMiddleware);
+   app.use(requestLogMiddleware);
 
   app.get("/health", (_req, res) => {
     res.json({ ok: true });

@@ -7,14 +7,14 @@
 
 ## Запуск
 
-Мониторинг запускается **отдельно** от production и подключается к API через `host.docker.internal`:
+Mониторинг запускается **отдельно** и подключается к API через общую Docker-сеть `prizeprice`:
 
 ```bash
 cd infra/monitoring
 docker compose -f docker-compose.monitoring.yml up -d
 ```
 
-**Требование:** Production API должен быть запущен и доступен на `localhost:3001`.
+**Требование:** Production API должен быть запущен в той же сети (`prizeprice`).
 
 ## Доступы
 
@@ -25,14 +25,13 @@ docker compose -f docker-compose.monitoring.yml up -d
 
 ## Метрики приложения
 
-Сервер экспортирует метрики на `/metrics`:
+Сервер экспортирует метрики на `/metrics` с Bearer-аутентификацией:
 
 ```bash
-curl -u metrics:<METRICS_TOKEN> http://localhost:3001/metrics
+curl -H "Authorization: Bearer <METRICS_TOKEN>" http://localhost:3001/metrics
 ```
 
-> **Примечание:** Prometheus скрейпит без auth через `host.docker.internal:3001`.
-> Если `METRICS_TOKEN` установлен, нужно добавить basic_auth в `prometheus.yml`.
+Prometheus использует `bearer_token: ${METRICS_TOKEN}` в `prometheus.yml`.
 
 ### Ключевые метрики
 
@@ -46,7 +45,7 @@ curl -u metrics:<METRICS_TOKEN> http://localhost:3001/metrics
 
 ## Алерты
 
-Определены в `docs/monitoring/alerts.prometheus.yml`:
+Определены в `../monitoring/alerts.prometheus.yml`:
 
 | Алерт | Severity | Условие |
 |-------|----------|---------|

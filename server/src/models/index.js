@@ -22,6 +22,7 @@ export const User = sequelize.define(
     name: { type: DataTypes.TEXT, allowNull: true, unique: true },
     passwordHash: { type: DataTypes.TEXT, allowNull: true, field: "password_hash" },
     passwordUpdatedAt: { type: DataTypes.DATE, allowNull: true, field: "password_updated_at" },
+    lastSeen: { type: DataTypes.DATE, allowNull: true, field: "last_seen" },
   },
   {
     tableName: "users",

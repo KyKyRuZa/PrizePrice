@@ -63,7 +63,7 @@ cd infra/monitoring
 docker compose -f docker-compose.monitoring.yml up -d
 ```
 
-**Требование:** Production API должен быть запущен на `localhost:3001`.
+**Важно:** Monitoring stack подключается к той же Docker-сети (`prizeprice`), что и production API. Убедитесь, что production запущен.
 
 **Порты:**
 - Prometheus: http://localhost:9090

@@ -8,6 +8,7 @@ import { runPreflightChecks } from "./preflight/index.js";
 import { setNotReady, setReady } from "./runtime/readiness.js";
 import { closeLogger, logger } from "./utils/logger.js";
 import { captureException, flushErrorTracker, initErrorTracker } from "./observability/errorTracker.js";
+import { startActiveUsersUpdater, stopActiveUsersUpdater } from "./utils/activeUsersUpdater.js";
 
 initErrorTracker();
 const app = createApp();
@@ -16,14 +17,18 @@ async function bootstrap() {
   setNotReady("BOOTING");
   runPreflightChecks(config);
 
-  const migrationInfo = await initDb();
-  logger.info("migrations_status", migrationInfo);
-  if (config.seedOnBoot) {
-    await seedDbIfEmpty();
-    logger.info("seed_boot_enabled");
-  } else {
-    logger.info("seed_boot_skipped");
-  }
+   const migrationInfo = await initDb();
+   logger.info("migrations_status", migrationInfo);
+   if (config.seedOnBoot) {
+     await seedDbIfEmpty();
+     logger.info("seed_boot_enabled");
+   } else {
+     logger.info("seed_boot_skipped");
+   }
+
+   // Start active users metric updater
+   startActiveUsersUpdater();
+   logger.info("active_users_updater_started");
 
   const otpInfo = await initOtpStorage();
   logger.info("otp_storage_ready", { driver: otpInfo.driver });
@@ -46,11 +51,12 @@ async function bootstrap() {
     setNotReady("SHUTTING_DOWN");
     logger.info("shutdown_signal_received", { signal, exitCode });
 
-    try {
-      watcher?.stop?.();
-    } catch {
-      /* ignore */
-    }
+   try {
+     watcher?.stop?.();
+     stopActiveUsersUpdater();
+   } catch {
+     /* ignore */
+   }
 
     try {
       await Promise.race([

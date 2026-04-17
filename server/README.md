@@ -90,5 +90,5 @@ The report includes:
 - Security notes: `docs/SECURITY.md`
 - Changelog: `docs/CHANGELOG.md`
 - Monitoring guide: `docs/MONITORING.md`
-- Prometheus alert rules: `docs/monitoring/alerts.prometheus.yml`
+- Prometheus alert rules: `../monitoring/alerts.prometheus.yml`
 - Frontend env template: `client/.env.example`

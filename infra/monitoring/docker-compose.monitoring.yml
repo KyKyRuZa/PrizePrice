@@ -8,23 +8,27 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ../monitoring/alerts.prometheus.yml:/etc/prometheus/alerts.prometheus.yml:ro
+      - ./alerts.prometheus.yml:/etc/prometheus/alerts.prometheus.yml:ro
       - prometheus_data:/prometheus
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    env_file:
+      - ../env/.env.prod
+    environment:
+      METRICS_TOKEN: ${METRICS_TOKEN}
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=15d'
       - '--web.enable-lifecycle'
     networks:
-      - monitoring
+      - prizeprice
 
   grafana:
     image: grafana/grafana:latest
     container_name: monitoring-grafana
     ports:
       - "3000:3000"
+    env_file:
+      - ../env/.env.prod
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
@@ -33,12 +37,26 @@ services:
     depends_on:
       - prometheus
     networks:
-      - monitoring
+      - prizeprice
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: monitoring-cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    privileged: true
+    networks:
+      - prizeprice
 
 volumes:
   prometheus_data:
   grafana_data:
 
 networks:
-  monitoring:
-    driver: bridge
+  prizeprice:
+    external: true

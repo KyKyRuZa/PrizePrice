@@ -109,4 +109,5 @@ volumes:
 
 networks:
   prizeprice:
+    name: prizeprice
     driver: bridge

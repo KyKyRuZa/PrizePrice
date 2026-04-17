@@ -26,6 +26,17 @@ function isTokenIssuedBeforePasswordUpdate(payload, user) {
   return tokenIssuedAtSec < passwordUpdatedAtSec;
 }
 
+function touchLastSeen(userId) {
+  // Fire-and-forget: don't await to avoid latency
+  User.update(
+    { lastSeen: new Date() },
+    { where: { id: userId } }
+  ).catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("Failed to update last_seen:", err);
+  });
+}
+
 /**
  * Требует корректный JWT.
  */
@@ -45,13 +56,16 @@ export async function authRequired(req, res, next) {
       return res.status(401).json({ error: "UNAUTHORIZED" });
     }
 
-    // Добавляем информацию о пользователе в запрос
-    req.user = user.toJSON();
-    req.userId = payload.userId;
-    req.phone = payload.phone;
-    setRequestContextValue("userId", payload.userId);
+     // Добавляем информацию о пользователе в запрос
+     req.user = user.toJSON();
+     req.userId = payload.userId;
+     req.phone = payload.phone;
+     setRequestContextValue("userId", payload.userId);
 
-    return next();
+     // Обновляем last_seen (fire-and-forget)
+     touchLastSeen(payload.userId);
+
+     return next();
   } catch {
     return res.status(401).json({ error: "UNAUTHORIZED" });
   }
@@ -68,13 +82,16 @@ export async function authOptional(req, _res, next) {
 
     // Находим пользователя в базе данных
     const user = await User.findByPk(payload.userId);
-    if (user && !isTokenIssuedBeforePasswordUpdate(payload, user)) {
-      // Добавляем информацию о пользователе в запрос
-      req.user = user.toJSON();
-      req.userId = payload.userId;
-      req.phone = payload.phone;
-      setRequestContextValue("userId", payload.userId);
-    }
+     if (user && !isTokenIssuedBeforePasswordUpdate(payload, user)) {
+       // Добавляем информацию о пользователе в запрос
+       req.user = user.toJSON();
+       req.userId = payload.userId;
+       req.phone = payload.phone;
+       setRequestContextValue("userId", payload.userId);
+
+       // Обновляем last_seen (fire-and-forget)
+       touchLastSeen(payload.userId);
+     }
   } catch {
     // ignore invalid tokens
   }
