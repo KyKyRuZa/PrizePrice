@@ -101,20 +101,15 @@
       }
     },
     {
-      "id": 1,
-      "title": "Request Rate",
+      "id": 6,
+      "title": "Memory Usage",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
       "targets": [
         {
-          "expr": "rate(http_request_duration_seconds_count[5m])",
-          "legend": "{{method}} {{route}} {{code}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": { "unit": "reqps" }
-      }
-    },
+          "expr": "nodejs_external_memory_bytes / 1024 / 1024",
+          "legend": "external MB"
+        },
         {
           "expr": "nodejs_heap_size_used_bytes / 1024 / 1024",
           "legend": "heap used MB"
