@@ -75,74 +75,76 @@ const ProductCardMain = ({ product, onClick }) => {
           {product.image ? <img src={product.image} alt={product.name} /> : <span className={styles.emptyImageText}>Фото товара</span>}
         </div>
 
-        <h3 className={styles.title}>{product.name}</h3>
+        <div className={styles.cardContent}>
+          <h3 className={styles.title}>{product.name}</h3>
 
-        <div className={styles.actionsRow}>
-          <button className={styles.watchBtn} onClick={handleWatchClick} title="Отслеживать цену" type="button">
-            <Bell size={14} />
-            {existingWatch ? 'Следите' : 'Следить'}
-          </button>
+          <div className={styles.actionsRow}>
+            <button className={styles.watchBtn} onClick={handleWatchClick} title="Отслеживать цену" type="button">
+              <Bell size={14} />
+              {existingWatch ? 'Следите' : 'Следить'}
+            </button>
 
-          <button
-            className={styles.compareButton}
-            data-active={inCart}
-            onClick={handleCompareClick}
-            type="button"
-          >
-            <TrendingUp size={14} />
-            {inCart ? 'В сравнении' : 'Сравнить цены'}
-          </button>
-        </div>
-
-        <div className={styles.ratingContainer}>
-          <div className={styles.rating}>
-            {Array.from({ length: STAR_COUNT }, (_, index) => (
-              <Star
-                key={index}
-                size={14}
-                fill={index < productStars ? '#ffb400' : 'none'}
-                color="#ffb400"
-              />
-            ))}
+            <button
+              className={styles.compareButton}
+              data-active={inCart}
+              onClick={handleCompareClick}
+              type="button"
+            >
+              <TrendingUp size={14} />
+              {inCart ? 'В сравнении' : 'Сравнить цены'}
+            </button>
           </div>
-          <span className={styles.reviewsCount}>({product.reviews} отзывов)</span>
-        </div>
 
-        <div className={styles.marketplaceRows}>
-          {marketplaceRows.length > 0 ? (
-            marketplaceRows.map(({ meta, priceInfo, key, index }) => {
-              const stars = getMarketplaceRating(priceInfo, product.rating);
+          <div className={styles.ratingContainer}>
+            <div className={styles.rating}>
+              {Array.from({ length: STAR_COUNT }, (_, index) => (
+                <Star
+                  key={index}
+                  size={14}
+                  fill={index < productStars ? '#ffb400' : 'none'}
+                  color="#ffb400"
+                />
+              ))}
+            </div>
+            <span className={styles.reviewsCount}>({product.reviews} отзывов)</span>
+          </div>
 
-              return (
-                <div key={`${product.id}-${key}-${index}`} className={styles.marketplaceRow}>
-                  <div className={styles.marketplaceIdentity}>
-                    <span
-                      className={styles.marketplaceLogo}
-                      style={{ background: meta.bg, color: meta.color }}
-                    >
-                      {meta.short}
-                    </span>
-                    <span className={styles.marketplaceName}>{meta.label}</span>
+          <div className={styles.marketplaceRows}>
+            {marketplaceRows.length > 0 ? (
+              marketplaceRows.map(({ meta, priceInfo, key, index }) => {
+                const stars = getMarketplaceRating(priceInfo, product.rating);
+
+                return (
+                  <div key={`${product.id}-${key}-${index}`} className={styles.marketplaceRow}>
+                    <div className={styles.marketplaceIdentity}>
+                      <span
+                        className={styles.marketplaceLogo}
+                        style={{ background: meta.bg, color: meta.color }}
+                      >
+                        {meta.short}
+                      </span>
+                      <span className={styles.marketplaceName}>{meta.label}</span>
+                    </div>
+
+                    <span className={styles.marketplacePrice}>{formatProductPrice(priceInfo.price)}</span>
+
+                    <div className={styles.marketplaceStars} aria-label={`Рейтинг ${meta.label}`}>
+                      {Array.from({ length: STAR_COUNT }, (_, starIndex) => (
+                        <Star
+                          key={starIndex}
+                          size={11}
+                          fill={starIndex < stars ? '#ffb400' : 'none'}
+                          color="#ffb400"
+                        />
+                      ))}
+                    </div>
                   </div>
-
-                  <span className={styles.marketplacePrice}>{formatProductPrice(priceInfo.price)}</span>
-
-                  <div className={styles.marketplaceStars} aria-label={`Рейтинг ${meta.label}`}>
-                    {Array.from({ length: STAR_COUNT }, (_, starIndex) => (
-                      <Star
-                        key={starIndex}
-                        size={11}
-                        fill={starIndex < stars ? '#ffb400' : 'none'}
-                        color="#ffb400"
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <span className={styles.emptyMarketplace}>Нет данных по маркетплейсам</span>
-          )}
+                );
+              })
+            ) : (
+              <span className={styles.emptyMarketplace}>Нет данных по маркетплейсам</span>
+            )}
+          </div>
         </div>
       </div>
 

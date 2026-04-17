@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Bell, Heart, TrendingUp, User, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import logo from '../../assets/logo.svg';
 
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -44,6 +45,18 @@ const Header = ({ onSearch }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Блокируем скролл при открытом мобильном меню
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   const handleOpenAuthModal = () => {
     setShowAuthModal(true);
   };
@@ -76,8 +89,7 @@ const Header = ({ onSearch }) => {
           tabIndex={0}
           aria-label="PrizePrice — на главную страницу"
         >
-          <span className={styles.logoIcon}>PP</span>
-          <span>PrizePrice</span>
+          <img src={logo} alt="PrizePrice Logo" className={styles.logoIcon} />
         </div>
 
         <div className={styles.searchContainer} role="search" aria-label="Поиск товаров">
@@ -167,6 +179,15 @@ const Header = ({ onSearch }) => {
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
+
+      {/* Overlay for mobile menu - closes menu on click */}
+      {isMobileMenuOpen && (
+        <div
+          className={styles.mobileMenuOverlay}
+          onClick={() => setIsMobileMenuOpen(false)}
+          role="presentation"
+        />
+      )}
 
       {/* Mobile menu dropdown */}
       {isMobileMenuOpen && (

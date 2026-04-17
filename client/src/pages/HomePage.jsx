@@ -53,6 +53,18 @@ const HomePage = () => {
     return () => document.removeEventListener('keydown', handleEscape);
   }, []);
 
+  // Блокируем скролл при открытых фильтрах
+  useEffect(() => {
+    if (isFiltersOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isFiltersOpen]);
+
   return (
     <div className={styles.homeContainer}>
       <div className={styles.content}>

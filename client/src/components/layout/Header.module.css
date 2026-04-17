@@ -29,15 +29,10 @@
 }
 
 .logoIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  color: white;
-  font-weight: bold;
-  background: #002870;
-  border-radius: 8px;
+  width: 80px;
+  height: 46px;
+  display: block;
+  object-fit: contain;
 }
 
 .searchContainer {
@@ -113,18 +108,39 @@
   cursor: pointer;
   padding: 8px;
   transition: color 0.3s;
+  z-index: 1002; /* Above overlay */
 }
 
 .burgerButton:hover {
   color: #002870;
 }
 
+/* Mobile menu overlay */
+.mobileMenuOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+}
+
 /* Mobile menu */
 .mobileMenu {
   display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
   background: white;
-  border-top: 1px solid #e0e0e0;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 0 0 8px 8px;
+  z-index: 1001;
+  animation: slideDown 0.3s ease;
 }
 
 .mobileMenuSearch {
@@ -258,14 +274,19 @@
     display: block;
   }
 
+  /* Show overlay when open */
+  .mobileMenuOverlay {
+    display: block;
+  }
+
   /* Make logo smaller on mobile */
   .logo {
     font-size: 20px;
   }
 
   .logoIcon {
-    width: 32px;
-    height: 32px;
+    width: 70px;
+    height: 43px;
   }
 }
 
@@ -280,9 +301,8 @@
   }
 
   .logoIcon {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
+    width: 70px;
+    height: 43px;
   }
 
   .mobileMenuItem {
