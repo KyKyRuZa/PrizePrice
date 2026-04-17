@@ -76,6 +76,7 @@
   background: white;
   border: 2px solid #002870;
   color: #002870;
+  z-index: 1001;
   padding: 12px 20px;
   border-radius: 28px;
   font-size: 14px;
