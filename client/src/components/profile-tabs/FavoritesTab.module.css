@@ -22,6 +22,15 @@
   transition: all 0.3s;
 }
 
+.clearAllButton{
+  border: 1px solid #999;
+  background: #fff;
+  color: #333;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .2s;
+}
 .removeFavoriteButton:hover {
   background: #ff4444;
   color: white;
