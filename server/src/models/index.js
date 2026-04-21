@@ -23,6 +23,9 @@ export const User = sequelize.define(
     passwordHash: { type: DataTypes.TEXT, allowNull: true, field: "password_hash" },
     passwordUpdatedAt: { type: DataTypes.DATE, allowNull: true, field: "password_updated_at" },
     lastSeen: { type: DataTypes.DATE, allowNull: true, field: "last_seen" },
+    smsOptOut: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: "sms_opt_out" },
+    smsOptOutAt: { type: DataTypes.DATE, allowNull: true, field: "sms_opt_out_at" },
+    smsOptOutIp: { type: DataTypes.STRING, allowNull: true, field: "sms_opt_out_ip" },
   },
   {
     tableName: "users",
@@ -293,3 +296,134 @@ export async function seedDbIfEmpty() {
     throw e;
   }
 }
+
+export const UserConsent = sequelize.define(
+  "UserConsent",
+  {
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "user_id",
+    },
+    consentType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "consent_type",
+    },
+    consentGiven: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      field: "consent_given",
+    },
+    consentAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      field: "consent_at",
+    },
+    consentText: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      field: "consent_text",
+    },
+    ip: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "ip",
+    },
+    userAgent: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      field: "user_agent",
+    },
+  },
+  {
+    tableName: "user_consents",
+    timestamps: { createdAt: "created_at", updatedAt: false },
+    underscored: true,
+  }
+);
+
+User.hasMany(UserConsent, {
+  as: "consents",
+  foreignKey: "userId",
+});
+UserConsent.belongsTo(User, {
+  as: "user",
+  foreignKey: "userId",
+});
+
+export const SmsLog = sequelize.define(
+  "SmsLog",
+  {
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: "user_id",
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "phone",
+    },
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "type",
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "status",
+    },
+    providerMessageId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "provider_message_id",
+    },
+    costCents: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: "cost_cents",
+    },
+    errorMessage: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: "error_message",
+    },
+    metadata: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      field: "metadata",
+    },
+  },
+  {
+    tableName: "sms_logs",
+    timestamps: { createdAt: "created_at", updatedAt: false },
+    underscored: true,
+  }
+);
+
+User.hasMany(SmsLog, {
+  as: "smsLogs",
+  foreignKey: "userId",
+});
+SmsLog.belongsTo(User, {
+  as: "user",
+  foreignKey: "userId",
+});
+
+export {
+  sequelize,
+  User,
+  Product,
+  Offer,
+  Favorite,
+  CartItem,
+  SearchHistory,
+  PriceWatch,
+  PriceHistory,
+  Notification,
+  BrowsingHistory,
+  UserConsent,
+  SmsLog,
+};

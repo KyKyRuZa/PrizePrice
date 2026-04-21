@@ -16,6 +16,11 @@ const SearchPage = React.lazy(() => import('./pages/SearchPage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const ComparePage = React.lazy(() => import('./pages/ComparePage'));
 
+// Legal pages
+const PrivacyPolicyPage = React.lazy(() => import('./pages/legal/PrivacyPolicyPage'));
+const TermsOfServicePage = React.lazy(() => import('./pages/legal/TermsOfServicePage'));
+const SmsConsentPage = React.lazy(() => import('./pages/legal/SmsConsentPage'));
+
 const HeaderWithRouter = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,16 +65,19 @@ function App() {
           <HeaderWithRouter />
           <main id="main-content" className="main-content" role="main" tabIndex="-1">
             <Suspense fallback={<PageLoader />}>
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/" element={<HomeLandingPage />} />
-                  <Route path="/catalog" element={<CatalogPage />} />
-                  <Route path="/product/:id" element={<ProductPage />} />
-                  <Route path="/search" element={<SearchPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/compare" element={<ComparePage />} />
-                </Routes>
-              </ErrorBoundary>
+               <ErrorBoundary>
+                 <Routes>
+                   <Route path="/" element={<HomeLandingPage />} />
+                   <Route path="/catalog" element={<CatalogPage />} />
+                   <Route path="/product/:id" element={<ProductPage />} />
+                   <Route path="/search" element={<SearchPage />} />
+                   <Route path="/profile" element={<ProfilePage />} />
+                   <Route path="/compare" element={<ComparePage />} />
+                   <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                   <Route path="/terms" element={<TermsOfServicePage />} />
+                   <Route path="/sms-consent" element={<SmsConsentPage />} />
+                 </Routes>
+               </ErrorBoundary>
             </Suspense>
           </main>
           <Footer />

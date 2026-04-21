@@ -8,6 +8,7 @@ import {
 } from "../../services/otp.service.js";
 import { findOrCreateUserByPhone, getUserById } from "../../services/user.service.js";
 import { verifyPassword } from "../../utils/passwords.js";
+import { logger } from "../../utils/logger.js";
 import {
   sendInvalidAuthFlow,
   sendInvalidOtp,
@@ -24,6 +25,7 @@ import {
   parsePhoneOrValidationError,
   sanitizeLoginOrValidationError,
 } from "./request-helpers.js";
+import { getUserConsents } from "../../services/consent.service.js";
 import {
   loginInputSchema,
   otpCodeSchema,
@@ -93,8 +95,25 @@ export const requestCodeForLogin = async (req, res) => {
   const userRec = await findUserByLoginInput(sanitizedInput);
   const phone = userRec?.phone;
   const shouldIssueOtp = userRec && isValidPhone(phone);
+
+  if (shouldIssueOtp && userRec.id) {
+    try {
+      const consents = await getUserConsents(userRec.id);
+      const smsConsent = consents?.sms;
+      if (smsConsent && !smsConsent.given) {
+        return res.status(403).json({
+          error: "SMS_OPT_OUT",
+          message: "Вы отказались от SMS-сообщений. Вход по коду невозможен. Войдите по паролю или напишите в поддержку: support@prizeprise.ru",
+          supportEmail: process.env.SUPPORT_EMAIL || "support@prizeprise.ru",
+        });
+      }
+    } catch (error) {
+      logger.warn("consent_check_failed_login", { userId: userRec.id, error: error.message });
+    }
+  }
+
   const { code, smsSent } = shouldIssueOtp
-    ? await issueOtpCode(`login_${phone}`, phone)
+    ? await issueOtpCode(`login_${phone}`, phone, { userId: userRec.id, purpose: 'login' })
     : { code: null, smsSent: false };
 
   return res.json(

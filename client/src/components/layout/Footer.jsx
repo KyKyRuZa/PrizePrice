@@ -1,8 +1,13 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { SUPPORT_LOGOS, SUPPORT_TEXT } from '../../constants/supportInfo';
 import styles from './Footer.module.css';
 
 const Footer = () => {
+  const privacyPolicyUrl = import.meta.env.VITE_PRIVACY_POLICY_URL || '/privacy';
+  const termsUrl = import.meta.env.VITE_TERMS_URL || '/terms';
+  const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'support@prizeprise.ru';
+
   return (
     <footer className={styles.footer}>
       <div className={styles.footerContent}>
@@ -19,6 +24,9 @@ const Footer = () => {
 
         <div className={styles.supportSection}>
           <p>{SUPPORT_TEXT}</p>
+          <p style={{ marginTop: '8px' }}>
+            По вопросам: <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+          </p>
         </div>
 
         <div className={styles.footerGrid}>
@@ -33,8 +41,8 @@ const Footer = () => {
           <div className={styles.footerSection}>
             <h3>Помощь</h3>
             <ul>
-              <li><a href="#">Политика конфиденциальности</a></li>
-              <li><a href="#">Пользовательское соглашение</a></li>
+              <li><Link to={privacyPolicyUrl}>Политика конфиденциальности</Link></li>
+              <li><Link to={termsUrl}>Пользовательское соглашение</Link></li>
             </ul>
           </div>
         </div>

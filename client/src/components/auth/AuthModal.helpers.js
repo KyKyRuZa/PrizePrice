@@ -102,7 +102,8 @@ export const validateRegistrationPayload = ({
   phone,
   password,
   confirmPassword,
-  agreedToTerms,
+  pdConsent,
+  smsConsent,
 }) => {
   if (!username || !phone || !password || !confirmPassword) {
     return { error: 'Пожалуйста, заполните все поля', phone: '' };
@@ -113,9 +114,16 @@ export const validateRegistrationPayload = ({
     return normalizedPhone;
   }
 
-  if (!agreedToTerms) {
+  if (!pdConsent) {
     return {
-      error: 'Вы должны согласиться с правилами пользования и политикой конфиденциальности',
+      error: 'Необходимо дать согласие на обработку персональных данных',
+      phone: '',
+    };
+  }
+
+  if (!smsConsent) {
+    return {
+      error: 'Необходимо дать согласие на получение SMS-сообщений',
       phone: '',
     };
   }

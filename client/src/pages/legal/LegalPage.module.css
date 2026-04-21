@@ -1,0 +1,82 @@
+.legalPage {
+  min-height: 80vh;
+  padding: 2rem 1rem;
+  background-color: var(--color-bg-secondary);
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--color-text-primary);
+}
+
+.draft {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-bottom: 2rem;
+  padding: 0.75rem 1rem;
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  border-radius: 4px;
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.section h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-primary);
+}
+
+.section p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.section ul {
+  margin-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.section li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.section a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.section a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .legalPage {
+    padding: 1rem;
+  }
+  
+  .container {
+    padding: 1.5rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+}

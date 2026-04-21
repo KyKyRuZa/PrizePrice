@@ -83,7 +83,7 @@ export function createAuthActions({ setUser }) {
       return data;
     },
 
-    async requestCodeForRegistration(username, phone, password, passwordConfirmation) {
+    async requestCodeForRegistration(username, phone, password, passwordConfirmation, smsConsent = false) {
       return apiPost(
         "/auth/request-registration-code",
         {
@@ -91,6 +91,8 @@ export function createAuthActions({ setUser }) {
           phone: normalizePhone(phone),
           password: String(password ?? "").slice(0, INPUT_LIMITS.PASSWORD),
           passwordConfirmation: String(passwordConfirmation ?? "").slice(0, INPUT_LIMITS.PASSWORD),
+          pdConsent: true,
+          smsConsent: Boolean(smsConsent),
         },
         { schema: otpRequestedSchema }
       );
@@ -108,12 +110,14 @@ export function createAuthActions({ setUser }) {
       return data;
     },
 
-    async registerWithUsername(username, phone, password) {
+    async registerWithUsername(username, phone, password, smsConsent = false) {
       const data = await apiPost("/auth/register", {
         username: sanitizeTextInput(username, { maxLength: INPUT_LIMITS.USERNAME, stripHtml: true }),
         phone: normalizePhone(phone),
         password: String(password ?? "").slice(0, INPUT_LIMITS.PASSWORD),
         passwordConfirmation: String(password ?? "").slice(0, INPUT_LIMITS.PASSWORD),
+        pdConsent: true,
+        smsConsent: Boolean(smsConsent),
       }, { schema: authSuccessSchema });
       applySession(data);
       return data;

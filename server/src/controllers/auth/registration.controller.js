@@ -26,6 +26,7 @@ import {
   parseBodyOrValidationError,
   parsePhoneOrValidationError,
 } from "./request-helpers.js";
+import { recordConsent } from "../../services/consent.service.js";
 import {
   otpCodeSchema,
   passwordInputSchema,
@@ -38,6 +39,8 @@ const registrationPayloadSchema = z.object({
   phone: phoneInputSchema,
   password: passwordInputSchema,
   passwordConfirmation: passwordInputSchema,
+  pdConsent: z.boolean().refine(val => val === true, { message: "REQUIRED" }),
+  smsConsent: z.boolean().refine(val => val === true, { message: "REQUIRED" }),
 });
 
 const registerWithCodePayloadSchema = z.object({
@@ -104,6 +107,11 @@ export const requestCodeForRegistration = async (req, res) => {
 
     const { normalizedPhone, username, password } = validated;
 
+    // Проверяем согласия
+    if (!req.body.pdConsent || !req.body.smsConsent) {
+      return res.status(400).json({ error: "CONSENT_REQUIRED" });
+    }
+
     if (await sendRegistrationConflictIfAny(res, { phone: normalizedPhone, username })) {
       return;
     }
@@ -117,12 +125,20 @@ export const requestCodeForRegistration = async (req, res) => {
     const { code, smsSent } = await issueOtpCode(registrationOtpKey, normalizedPhone);
 
     const passwordHash = await hashPassword(password);
+    
+    // Сохраняем данные регистрации включая согласия
     await saveRegistrationData(
       registrationOtpKey,
       JSON.stringify({
         username,
         phone: normalizedPhone,
         passwordHash,
+        pdConsentGiven: true,
+        smsConsentGiven: true,
+        pdConsentText: "Я даю согласие на обработку моих персональных данных (имя, телефон, email, история поиска, избранное и др.) в соответствии с Политикой конфиденциальности",
+        smsConsentText: "Я даю согласие на получение SMS-сообщений от PrizePrice (в том числе кодов подтверждения при восстановлении пароля) в соответствии с Политикой конфиденциальности",
+        registrationIp: req.ip,
+        registrationUserAgent: req.headers['user-agent'] || '',
       })
     );
 
@@ -180,12 +196,44 @@ export const registerWithCode = async (req, res) => {
     const passwordHash = hasPasswordHash
       ? registrationData.passwordHash
       : await hashPassword(registrationData.password);
+    
     const user = await User.create({
       name: registrationUsername,
       phone: registrationPhone,
       passwordHash,
       passwordUpdatedAt: new Date(),
     });
+
+    // Сохраняем согласия
+    const pdConsentGiven = Boolean(registrationData.pdConsentGiven);
+    const smsConsentGiven = Boolean(registrationData.smsConsentGiven);
+    const pdConsentText = registrationData.pdConsentText || "";
+    const smsConsentText = registrationData.smsConsentText || "";
+    const registrationIp = registrationData.registrationIp || req.ip;
+    const registrationUserAgent = registrationData.registrationUserAgent || req.headers['user-agent'] || '';
+
+    try {
+      await recordConsent({
+        userId: user.id,
+        type: 'pd',
+        given: pdConsentGiven,
+        ip: registrationIp,
+        userAgent: registrationUserAgent,
+        consentText: pdConsentText,
+      });
+
+      await recordConsent({
+        userId: user.id,
+        type: 'sms',
+        given: smsConsentGiven,
+        ip: registrationIp,
+        userAgent: registrationUserAgent,
+        consentText: smsConsentText,
+      });
+    } catch (consentError) {
+      logger.error("consent_save_failed", { userId: user.id, error: consentError.message });
+      // Не падаем, если сохранение согласия не удалось
+    }
 
     const updatedUser = await getUserById(user.id);
     setAuthCookies(res, user);

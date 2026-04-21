@@ -25,6 +25,8 @@ import {
   notificationRead,
   notificationReadAll,
   notificationDelete,
+  optOutFromSms,
+  cancelSmsOptOut,
 } from "../controllers/me.controller.js";
 
 export const meRouter = express.Router();
@@ -60,3 +62,7 @@ meRouter.get("/notifications", asyncHandler(notifications));
 meRouter.post("/notifications/:id/read", asyncHandler(notificationRead));
 meRouter.post("/notifications/read-all", asyncHandler(notificationReadAll));
 meRouter.delete("/notifications/:id", asyncHandler(notificationDelete));
+
+// SMS settings
+meRouter.post("/sms-opt-out", asyncHandler(optOutFromSms));
+meRouter.post("/sms-opt-in", asyncHandler(cancelSmsOptOut));

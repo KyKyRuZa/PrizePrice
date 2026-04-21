@@ -17,6 +17,7 @@ import {
   parseBodyOrValidationError,
   parsePhoneOrValidationError,
 } from "./request-helpers.js";
+import { getUserConsents } from "../../services/consent.service.js";
 import { otpCodeSchema, passwordInputSchema, phoneInputSchema } from "./validation.js";
 
 const requestPasswordResetSchema = z.object({ phone: phoneInputSchema });
@@ -41,8 +42,26 @@ export const requestPasswordReset = async (req, res) => {
   await setSendCooldown(resetOtpKey);
 
   const user = await User.findOne({ where: { phone } });
+
+  // Проверяем SMS opt-out
+  if (user) {
+    try {
+      const consents = await getUserConsents(user.id);
+      const smsConsent = consents?.sms;
+      if (smsConsent && !smsConsent.given) {
+        return res.status(403).json({
+          error: "SMS_OPT_OUT",
+          message: "Вы отказались от SMS-сообщений. Восстановление пароля через SMS невозможно. Обратитесь в поддержку: support@prizeprise.ru",
+          supportEmail: process.env.SUPPORT_EMAIL || "support@prizeprise.ru",
+        });
+      }
+    } catch (error) {
+      logger.warn("consent_check_failed_reset", { userId: user.id, error: error.message });
+    }
+  }
+
   const { code, smsSent } = user
-    ? await issueOtpCode(resetOtpKey, phone)
+    ? await issueOtpCode(resetOtpKey, phone, { userId: user.id, purpose: 'password_reset' })
     : await maybeIssueDebugOtp(resetOtpKey) || { code: null, smsSent: false };
 
   return res.json(

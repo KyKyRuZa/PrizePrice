@@ -14,3 +14,4 @@ export {
   notificationReadAll,
   notificationDelete,
 } from "./notifications.controller.js";
+export { optOutFromSms, cancelSmsOptOut } from "./sms-settings.controller.js";

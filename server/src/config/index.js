@@ -172,10 +172,16 @@ export const config = {
   smsaeroSign: String(process.env.SMSAERO_SIGN || "PrizePrice").trim(),
 
   // Logging
-  debugLogging: parseBool(process.env.DEBUG_LOGGING, !isProduction && !isTest),
-  logFilePath: String(process.env.LOG_FILE_PATH || "").trim(),
-  sentryDsn: String(process.env.SENTRY_DSN || "").trim(),
-  sentryEnvironment: String(process.env.SENTRY_ENVIRONMENT || nodeEnv).trim() || nodeEnv,
-  sentryRelease: String(process.env.SENTRY_RELEASE || process.env.npm_package_version || "").trim(),
-  sentryTracesSampleRate: clampNumber(process.env.SENTRY_TRACES_SAMPLE_RATE, 0, 1, 0),
-};
+   debugLogging: parseBool(process.env.DEBUG_LOGGING, !isProduction && !isTest),
+   logFilePath: String(process.env.LOG_FILE_PATH || "").trim(),
+   sentryDsn: String(process.env.SENTRY_DSN || "").trim(),
+   sentryEnvironment: String(process.env.SENTRY_ENVIRONMENT || nodeEnv).trim() || nodeEnv,
+   sentryRelease: String(process.env.SENTRY_RELEASE || process.env.npm_package_version || "").trim(),
+   sentryTracesSampleRate: clampNumber(process.env.SENTRY_TRACES_SAMPLE_RATE, 0, 1, 0),
+
+   // Legal & Support
+   smsConsentPolicyUrl: String(process.env.SMS_CONSENT_POLICY_URL || "/sms-consent").trim(),
+   privacyPolicyUrl: String(process.env.PRIVACY_POLICY_URL || "/privacy").trim(),
+   termsUrl: String(process.env.TERMS_URL || "/terms").trim(),
+   supportEmail: String(process.env.SUPPORT_EMAIL || "support@prizeprise.ru").trim(),
+ };

@@ -6,6 +6,7 @@ import { INPUT_LIMITS, clampInputValue, sanitizeTextInput } from '../../utils/in
 import { formatPhoneNumber } from '../../utils/phoneMask';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import SmsConsentCheckbox from '../consent/SmsConsentCheckbox';
 import {
   extractDebugCode,
   getBackTransition,
@@ -66,6 +67,8 @@ const AuthModal = ({ onClose }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [smsConsentError, setSmsConsentError] = useState('');
 
   const canResend = cooldown <= 0;
 
@@ -331,6 +334,7 @@ const AuthModal = ({ onClose }) => {
   const handleRequestRegistrationCode = async (event) => {
     event.preventDefault();
     setError('');
+    setSmsConsentError('');
 
     const registrationPayload = validateRegistrationPayload({
       username,
@@ -338,7 +342,17 @@ const AuthModal = ({ onClose }) => {
       password,
       confirmPassword,
       agreedToTerms,
+      smsConsent,
     });
+
+    if (registrationPayload.error) {
+      if (registrationPayload.error.includes('SMS')) {
+        setSmsConsentError(registrationPayload.error);
+        return;
+      }
+      setError(registrationPayload.error);
+      return;
+    }
     if (registrationPayload.error) {
       setError(registrationPayload.error);
       return;
@@ -348,7 +362,7 @@ const AuthModal = ({ onClose }) => {
 
     setIsLoading(true);
     try {
-      const data = await requestCodeForRegistration(username, formattedPhone, password, confirmPassword);
+      const data = await requestCodeForRegistration(username, formattedPhone, password, confirmPassword, smsConsent);
       setVerificationCodeStep('register', data);
     } catch (err) {
       const errorCode = getErrorCode(err);
@@ -362,6 +376,7 @@ const AuthModal = ({ onClose }) => {
   const handleRegister = async (event) => {
     event.preventDefault();
     setError('');
+    setSmsConsentError('');
 
     const registrationPayload = validateRegistrationPayload({
       username,
@@ -369,8 +384,13 @@ const AuthModal = ({ onClose }) => {
       password,
       confirmPassword,
       agreedToTerms,
+      smsConsent,
     });
     if (registrationPayload.error) {
+      if (registrationPayload.error.includes('SMS')) {
+        setSmsConsentError(registrationPayload.error);
+        return;
+      }
       setError(registrationPayload.error);
       return;
     }
@@ -379,7 +399,7 @@ const AuthModal = ({ onClose }) => {
 
     setIsLoading(true);
     try {
-      await registerWithUsername(username, formattedPhone, password);
+      await registerWithUsername(username, formattedPhone, password, smsConsent);
       onClose();
     } catch (err) {
       const errorCode = getErrorCode(err);
@@ -477,6 +497,8 @@ const AuthModal = ({ onClose }) => {
     setPassword('');
     setConfirmPassword('');
     setAgreedToTerms(false);
+    setSmsConsent(false);
+    setSmsConsentError('');
   };
 
   const handleSwitchToForgot = () => {
@@ -674,6 +696,15 @@ const AuthModal = ({ onClose }) => {
                 Нажимая на кнопку, я соглашаюсь с правилами пользования торговой площадки и политикой конфиденциальности
               </label>
             </div>
+
+            <SmsConsentCheckbox
+              checked={smsConsent}
+              onChange={(checked) => {
+                setSmsConsent(checked);
+                setSmsConsentError('');
+              }}
+              error={smsConsentError}
+            />
 
             <Button data-testid="auth-register-request-code" type="submit" variant="primary" fullWidth disabled={isLoading}>
               {isLoading ? 'Отправка кода...' : 'Получить код подтверждения'}

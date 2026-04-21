@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Edit2, Check, X, ArrowLeft } from 'lucide-react';
+import { LogOut, User, Edit2, Check, X, ArrowLeft, MessageSquare } from 'lucide-react';
 import WatchPriceModal from '../components/watch/WatchPriceModal';
 import HistoryTab from '../components/profile-tabs/HistoryTab';
 import FavoritesTab from '../components/profile-tabs/FavoritesTab';
 import CompareTab from '../components/profile-tabs/CompareTab';
 import WatchTab from '../components/profile-tabs/WatchTab';
 import NotificationsTab from '../components/profile-tabs/NotificationsTab';
+import SmsOptOutToggle from '../components/profile/SmsOptOutToggle';
 import { useProfilePageState } from '../hooks/useProfilePageState';
 import { INPUT_LIMITS } from '../utils/inputSanitizers';
 import styles from './ProfilePage.module.css';
@@ -179,6 +180,21 @@ const ProfilePage = () => {
               {user.email && <div>Email: {user.email}</div>}
               <div>Дата регистрации: {registrationDate}</div>
             </div>
+          </div>
+
+          <div className={styles.userDetails}>
+            <div className={styles.settingsTitle}>
+              <MessageSquare size={18} style={{ marginRight: 8 }} />
+              SMS-уведомления
+            </div>
+            <SmsOptOutToggle
+              smsOptOut={user.sms_opt_out === true}
+              onSuccess={(optedOut) => {
+                if (user) {
+                  user.sms_opt_out = optedOut;
+                }
+              }}
+            />
           </div>
 
           <button className={styles.logoutButton} onClick={handleLogout}>
