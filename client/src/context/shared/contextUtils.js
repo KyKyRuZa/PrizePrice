@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef } from "react";
 
-import { uploadLocalChanges } from "../../utils/syncUserData";
+import { uploadLocalChanges } from "../../utils/user/syncUserData";
 
 export function safeParseJson(value, fallback) {
   try {

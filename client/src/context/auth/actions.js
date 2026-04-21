@@ -1,8 +1,8 @@
-import { apiGet, apiPost } from "../../utils/apiClient";
-import { clearLocalUserData } from "../../utils/syncUserData";
-import { INPUT_LIMITS, sanitizeTextInput } from "../../utils/inputSanitizers";
-import { normalizePhoneInput } from "../../utils/phoneMask";
-import { assertLogin, assertNewPassword, assertOtpCode, assertPhone } from "./validators";
+import { apiGet, apiPost } from "../../utils/api/apiClient";
+import { clearLocalUserData } from "../../utils/user/syncUserData";
+import { INPUT_LIMITS, sanitizeTextInput } from "../../utils/validation/inputSanitizers";
+import { normalizePhoneInput } from "../../utils/validation/phoneMask";
+import { assertLogin, assertNewPassword, assertOtpCode, assertPhone } from "../../utils/validation/validators";
 import {
   authSuccessSchema,
   okResponseSchema,

@@ -1,4 +1,4 @@
-import { captureClientException } from "../observability/errorTracker";
+import { captureClientException } from "../../shared/observability/errorTracker";
 
 const normalizeBase = (base) => {
   if (!base) return "";

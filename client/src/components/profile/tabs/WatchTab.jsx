@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bell } from 'lucide-react';
-import ProductCardMain from '../products/ProductCardMain';
-import WatchPriceModal from '../watch/WatchPriceModal';
+import ProductCardMain from '../../products/ProductCardMain';
+import WatchPriceModal from '../../watch/WatchPriceModal';
 import styles from './WatchTab.module.css';
 
 const WatchTab = ({ watchesCount, watches, setActiveTab, handleProductClick, openWatchModal, removeWatch }) => {

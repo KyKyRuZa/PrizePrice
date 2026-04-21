@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { apiPost } from '../../utils/apiClient';
+import { apiPost } from '../../utils/api/apiClient';
 import styles from './SmsOptOutToggle.module.css';
 
 export default function SmsOptOutToggle({ smsOptOut, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [tempValue, setTempValue] = useState(smsOptOut);
 
   const handleChange = async (checked) => {
     if (checked) {
-      setTempValue(true);
       setShowConfirm(true);
       return;
     }
@@ -25,7 +23,6 @@ export default function SmsOptOutToggle({ smsOptOut, onSuccess }) {
       if (onSuccess) onSuccess(shouldOptOut);
     } catch (error) {
       console.error('Failed to update SMS preference:', error);
-      setTempValue(!shouldOptOut);
     } finally {
       setLoading(false);
       setShowConfirm(false);
@@ -38,7 +35,6 @@ export default function SmsOptOutToggle({ smsOptOut, onSuccess }) {
 
   const cancelOptOut = () => {
     setShowConfirm(false);
-    setTempValue(false);
   };
 
   return (

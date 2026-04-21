@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShoppingBag, TrendingUp, X } from 'lucide-react';
-import { formatComparePrice, getCompareOffers } from '../../services/compareService';
+import { formatComparePrice, getCompareOffers } from '../../../services/compareService';
 import styles from './CompareTab.module.css';
 
 const CompareTab = ({ cartCount, cart, removeFromCart, clearCart, openExternalLink }) => {

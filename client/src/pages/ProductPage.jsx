@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useBrowsingHistory } from '../context/BrowsingHistoryContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { useCart } from '../context/CartContext';
-import { useProductPage } from '../hooks/useProductPage';
+import { useProductPage } from './ProductPage.state';
 import styles from '../components/products/ProductDetail.module.css';
 import { Heart, ShoppingCart, TrendingDown, Star } from 'lucide-react';
 

@@ -1,5 +1,5 @@
-﻿import { okResponseSchema, userDataPayloadSchema } from '../contracts/apiSchemas';
-import { apiGet, apiPost } from './apiClient';
+﻿import { okResponseSchema, userDataPayloadSchema } from '../../contracts/apiSchemas';
+import { apiGet, apiPost } from '../api/apiClient';
 
 /**
  * Centralized user data synchronization utility

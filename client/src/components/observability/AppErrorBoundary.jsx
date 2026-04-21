@@ -1,6 +1,6 @@
 import React from "react";
 import ErrorFallback from "./ErrorFallback";
-import { captureClientException } from "../../observability/errorTracker";
+import { captureClientException } from "../../shared/observability/errorTracker";
 
 class AppErrorBoundary extends React.Component {
   constructor(props) {

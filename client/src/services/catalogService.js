@@ -1,5 +1,5 @@
-import { apiGet } from "../utils/apiClient";
-import { normalizeSearchQuery } from "../utils/inputSanitizers";
+import { apiGet } from "../utils/api/apiClient";
+import { normalizeSearchQuery } from "../utils/validation/inputSanitizers";
 import { categoriesResponseSchema, productListResponseSchema } from "../contracts/apiSchemas";
 import { mapMarketplacesToDB } from "../constants/filters";
 

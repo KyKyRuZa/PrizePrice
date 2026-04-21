@@ -1,5 +1,5 @@
 ﻿import { useCallback } from 'react';
-import { syncAllUserData, uploadLocalChanges, downloadAndMergeServerData } from '../utils/syncUserData';
+import { syncAllUserData, uploadLocalChanges, downloadAndMergeServerData } from '../utils/user/syncUserData';
 
 /**
  * Custom hook for managing user data synchronization

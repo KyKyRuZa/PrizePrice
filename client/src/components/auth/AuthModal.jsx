@@ -1,12 +1,8 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Eye, EyeOff, Lock, Phone, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowLeft, X } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
-import { INPUT_LIMITS, clampInputValue, sanitizeTextInput } from '../../utils/inputSanitizers';
-import { formatPhoneNumber } from '../../utils/phoneMask';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import SmsConsentCheckbox from '../consent/SmsConsentCheckbox';
+import { formatPhoneNumber } from '../../utils/validation/phoneMask';
 import {
   extractDebugCode,
   getBackTransition,
@@ -26,6 +22,14 @@ import {
   validateAndNormalizePhone,
   validateRegistrationPayload,
 } from './AuthModal.helpers';
+import {
+  SelectStep,
+  LoginStep,
+  RegisterStep,
+  ForgotStep,
+  ResetCodeStep,
+  ResetNewPasswordStep,
+} from './steps';
 import styles from './AuthModal.module.css';
 
 const STEP_TITLE_MAP = {
@@ -36,8 +40,6 @@ const STEP_TITLE_MAP = {
   'reset-code': 'Введите код подтверждения',
   'reset-new-password': 'Придумайте новый пароль',
 };
-
-const BACK_ICON_STYLE = { marginRight: 4 };
 
 const AuthModal = ({ onClose }) => {
   const {
@@ -52,9 +54,9 @@ const AuthModal = ({ onClose }) => {
     resetPasswordWithOtp,
   } = useAuth();
 
-  const [step, setStep] = useState('select'); // 'select' | 'login' | 'register' | 'forgot' | 'reset-code' | 'reset-new-password' | 'register-code'
-  const [verificationPurpose, setVerificationPurpose] = useState(''); // 'login' | 'reset' | 'register'
-  const [loginInput, setLoginInput] = useState(''); // может быть телефон или имя пользователя
+  const [step, setStep] = useState('select');
+  const [verificationPurpose, setVerificationPurpose] = useState('');
+  const [loginInput, setLoginInput] = useState('');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
@@ -71,25 +73,6 @@ const AuthModal = ({ onClose }) => {
   const [smsConsentError, setSmsConsentError] = useState('');
 
   const canResend = cooldown <= 0;
-
-  const subtitle = useMemo(() => {
-    if (step === 'login') {
-      return 'Введите телефон или логин и пароль для входа.';
-    }
-    if (step === 'register') {
-      return 'Введите данные для регистрации.';
-    }
-    if (step === 'forgot') {
-      return 'Введите номер телефона, чтобы получить код для восстановления пароля.';
-    }
-    if (step === 'reset-code') {
-      return '';
-    }
-    if (step === 'reset-new-password') {
-      return 'Придумайте новый пароль';
-    }
-    return 'Выберите действие';
-  }, [step]);
 
   const modalTitle = STEP_TITLE_MAP[step] ?? STEP_TITLE_MAP.select;
 
@@ -167,6 +150,11 @@ const AuthModal = ({ onClose }) => {
     setError('');
     setDebugCode('');
     setCooldown(0);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setAgreedToTerms(false);
+    setSmsConsent(false);
+    setSmsConsentError('');
   };
 
   const handleCloseClick = () => {
@@ -180,40 +168,6 @@ const AuthModal = ({ onClose }) => {
     return () => clearInterval(timerId);
   }, [cooldown]);
 
-  const renderPasswordField = ({
-    testId,
-    label,
-    value,
-    onChange,
-    required = false,
-    showValue,
-    onToggle,
-  }) => (
-    <div className={styles.passwordInputContainer}>
-      <Input
-        data-testid={testId}
-        label={label}
-        type={showValue ? 'text' : 'password'}
-        placeholder="••••••••"
-        icon={<Lock size={20} />}
-        value={value}
-        maxLength={INPUT_LIMITS.PASSWORD}
-        onChange={onChange}
-        required={required}
-      />
-      <button className={styles.togglePasswordVisibility} type="button" onClick={onToggle}>
-        {showValue ? <EyeOff size={16} /> : <Eye size={16} />}
-      </button>
-    </div>
-  );
-
-  const renderBackLink = () => (
-    <button className={styles.linkBtn} type="button" onClick={handleBack}>
-      <ArrowLeft size={14} style={BACK_ICON_STYLE} />
-      Назад
-    </button>
-  );
-
   const handleRequestCode = async (event) => {
     event?.preventDefault();
     setError('');
@@ -225,7 +179,7 @@ const AuthModal = ({ onClose }) => {
     setIsLoading(true);
     try {
       const data = await requestCode(formattedPhone);
-      setVerificationCodeStep('reset', data);
+      setVerificationCodeStep('register', data);
     } catch (err) {
       if (handleRateLimitError(err, 'Слишком часто. Попробуйте снова через')) return;
       setError('Не удалось отправить код. Проверьте, что backend запущен.');
@@ -353,10 +307,6 @@ const AuthModal = ({ onClose }) => {
       setError(registrationPayload.error);
       return;
     }
-    if (registrationPayload.error) {
-      setError(registrationPayload.error);
-      return;
-    }
 
     const formattedPhone = registrationPayload.phone;
 
@@ -443,7 +393,7 @@ const AuthModal = ({ onClose }) => {
     setIsLoading(true);
     try {
       const data = await requestPasswordReset(formattedPhone);
-      setVerificationCodeStep('reset', data);
+      setVerificationCodeStep('register', data);
       setError('');
     } catch (err) {
       if (handleRateLimitError(err, 'Слишком часто. Попробуйте снова через')) return;
@@ -520,9 +470,142 @@ const AuthModal = ({ onClose }) => {
     setStep('reset-new-password');
   };
 
+  const handleResendCode = () => {
+    if (verificationPurpose === 'login') {
+      handleRequestLoginCode({ preventDefault: () => {} });
+    } else if (verificationPurpose === 'register') {
+      handleRequestRegistrationCode({ preventDefault: () => {} });
+    } else {
+      handleRequestCode({ preventDefault: () => {} });
+    }
+  };
+
+  const getSubtitle = () => {
+    if (step === 'login') {
+      return 'Введите телефон или логин и пароль для входа.';
+    }
+    if (step === 'register') {
+      return 'Введите данные для регистрации.';
+    }
+    if (step === 'forgot') {
+      return 'Введите номер телефона, чтобы получить код для восстановления пароля.';
+    }
+    if (step === 'reset-code') {
+      if (verificationPurpose === 'login') {
+        return 'Введите код подтверждения, который был отправлен на ваш номер телефона для входа в систему';
+      }
+      if (verificationPurpose === 'reset') {
+        return `Введите код, отправленный на ${formatPhoneNumber(phone)}`;
+      }
+      if (verificationPurpose === 'register') {
+        return 'Введите код подтверждения, который был отправлен на ваш номер телефона для завершения регистрации';
+      }
+    }
+    if (step === 'reset-new-password') {
+      return 'Придумайте новый пароль';
+    }
+    return 'Выберите действие';
+  };
+
+  const renderStep = () => {
+    switch (step) {
+      case 'select':
+        return (
+          <SelectStep
+            onLogin={handleSwitchToLogin}
+            onRegister={handleSwitchToRegister}
+          />
+        );
+      case 'login':
+        return (
+          <LoginStep
+            loginInput={loginInput}
+            setLoginInput={setLoginInput}
+            password={password}
+            setPassword={setPassword}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
+            isLoading={isLoading}
+            canResend={canResend}
+            cooldown={cooldown}
+            onLogin={handleLogin}
+            onRequestLoginCode={handleRequestLoginCode}
+            onSwitchToForgot={handleSwitchToForgot}
+            onSwitchToRegister={handleSwitchToRegister}
+          />
+        );
+      case 'register':
+        return (
+          <RegisterStep
+            username={username}
+            setUsername={setUsername}
+            phone={phone}
+            setPhone={setPhone}
+            password={password}
+            setPassword={setPassword}
+            confirmPassword={confirmPassword}
+            setConfirmPassword={setConfirmPassword}
+            agreedToTerms={agreedToTerms}
+            setAgreedToTerms={setAgreedToTerms}
+            smsConsent={smsConsent}
+            setSmsConsent={setSmsConsent}
+            smsConsentError={smsConsentError}
+            setSmsConsentError={setSmsConsentError}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
+            showConfirmPassword={showConfirmPassword}
+            setShowConfirmPassword={setShowConfirmPassword}
+            isLoading={isLoading}
+            onRequestCode={handleRequestRegistrationCode}
+            onRegister={handleRegister}
+            onSwitchToLogin={handleSwitchToLogin}
+          />
+        );
+      case 'forgot':
+        return (
+          <ForgotStep
+            phone={phone}
+            setPhone={setPhone}
+            isLoading={isLoading}
+            onForgotPassword={handleForgotPassword}
+          />
+        );
+      case 'reset-code':
+        return (
+          <ResetCodeStep
+            phone={phone}
+            code={code}
+            setCode={setCode}
+            verificationPurpose={verificationPurpose}
+            cooldown={cooldown}
+            canResend={canResend}
+            isLoading={isLoading}
+            onSubmit={handleResetCodeSubmit}
+            onResend={handleResendCode}
+          />
+        );
+      case 'reset-new-password':
+        return (
+          <ResetNewPasswordStep
+            password={password}
+            setPassword={setPassword}
+            confirmPassword={setConfirmPassword}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
+            showConfirmPassword={showConfirmPassword}
+            setShowConfirmPassword={setShowConfirmPassword}
+            isLoading={isLoading}
+            onResetPassword={handleResetPassword}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div 
-      className={styles.modalOverlay} 
+    <div
+      className={styles.modalOverlay}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -530,9 +613,21 @@ const AuthModal = ({ onClose }) => {
       aria-describedby="modal-description"
     >
       <div className={styles.modalContent} onClick={(event) => event.stopPropagation()}>
-        <button 
-          className={styles.closeButton} 
-          onClick={handleCloseClick} 
+        {step !== 'select' && (
+          <button
+            className={styles.backButton}
+            onClick={handleBack}
+            type="button"
+            aria-label="Назад"
+          >
+            <ArrowLeft size={14} />
+            Назад
+          </button>
+        )}
+
+        <button
+          className={styles.closeButton}
+          onClick={handleCloseClick}
           type="button"
           aria-label="Закрыть модальное окно"
         >
@@ -544,289 +639,20 @@ const AuthModal = ({ onClose }) => {
         </h2>
 
         <p id="modal-description" className={styles.subtitle}>
-          {subtitle || 'Вход или регистрация в системе'}
+          {getSubtitle()}
         </p>
-        {step === 'reset-code' && verificationPurpose === 'login' ? (
-          <p className={styles.subtitle}>Введите код подтверждения, который был отправлен на ваш номер телефона для входа в систему</p>
-        ) : null}
-        {step === 'reset-code' && verificationPurpose === 'reset' ? (
-          <p className={styles.subtitle}>{`Введите код, отправленный на ${formatPhoneNumber(phone)}`}</p>
-        ) : null}
-        {step === 'reset-code' && verificationPurpose === 'register' ? (
-          <p className={styles.subtitle}>Введите код подтверждения, который был отправлен на ваш номер телефона для завершения регистрации</p>
-        ) : null}
 
-        {error ? <div className={styles.errorMessage} data-testid="auth-error">{error}</div> : null}
-        {debugCode ? (
+        {error && <div className={styles.errorMessage} data-testid="auth-error">{error}</div>}
+        {debugCode && (
           <div className={styles.hintMessage}>
             Тестовый код (DEBUG): <b>{debugCode}</b>
           </div>
-        ) : null}
+        )}
 
-        {step === 'select' ? (
-          <div className={styles.form} role="group" aria-label="Выбор действия">
-            <Button data-testid="auth-select-login" type="button" variant="secondary" fullWidth onClick={handleSwitchToLogin}>
-              Войти
-            </Button>
-            <Button
-              data-testid="auth-select-register"
-              type="button"
-              variant="secondary"
-              fullWidth
-              onClick={handleSwitchToRegister}
-            >
-              Зарегистрироваться
-            </Button>
-          </div>
-        ) : step === 'login' ? (
-          <form className={styles.form} onSubmit={handleLogin} aria-label="Форма входа">
-            <Input
-              label="Логин"
-              type="text"
-              placeholder="Введите телефон или логин"
-              icon={<Phone size={20} />}
-              value={loginInput}
-              maxLength={INPUT_LIMITS.LOGIN}
-              onChange={(event) => setLoginInput(clampInputValue(event.target.value, INPUT_LIMITS.LOGIN))}
-              required
-            />
-
-            {renderPasswordField({
-              label: 'Пароль',
-              value: password,
-              onChange: (event) => setPassword(clampInputValue(event.target.value, INPUT_LIMITS.PASSWORD)),
-              showValue: showPassword,
-              onToggle: () => setShowPassword(!showPassword),
-            })}
-
-            <Button data-testid="auth-login-submit" type="submit" variant="primary" fullWidth disabled={isLoading}>
-              {isLoading ? 'Вход...' : 'Войти'}
-            </Button>
-
-            <div className={styles.centeredRow}>
-              <button className={styles.linkBtn} type="button" onClick={handleRequestLoginCode} disabled={isLoading}>
-                Войти по коду подтверждения
-              </button>
-            </div>
-
-            <div className={styles.centeredRow}>
-              <button className={styles.linkBtn} type="button" onClick={handleSwitchToForgot}>
-                Забыли пароль?
-              </button>
-            </div>
-
-            <div className={styles.centeredRow}>
-              <button className={styles.linkBtn} data-testid="auth-login-to-register" type="button" onClick={handleSwitchToRegister}>
-                Еще нет аккаунта? Зарегистрируйтесь
-              </button>
-            </div>
-
-            <div className={styles.centeredRow}>{renderBackLink()}</div>
-          </form>
-        ) : step === 'register' ? (
-          <form className={styles.form} onSubmit={handleRequestRegistrationCode}>
-            <Input
-              data-testid="auth-register-username"
-              label="Логин"
-              type="text"
-              placeholder="Введите логин"
-              value={username}
-              maxLength={INPUT_LIMITS.USERNAME}
-              onChange={(event) =>
-                setUsername(sanitizeTextInput(event.target.value, { maxLength: INPUT_LIMITS.USERNAME, stripHtml: true }))
-              }
-              required
-            />
-
-            <Input
-              data-testid="auth-register-phone"
-              label="Номер телефона"
-              type="tel"
-              placeholder="+7 (000) 000-00-00"
-              icon={<Phone size={20} />}
-              value={formatPhoneNumber(phone)}
-              maxLength={18}
-              onChange={(event) => {
-                const rawValue = event.target.value;
-                const currentDisplay = formatPhoneNumber(phone);
-                const isDelete = rawValue.length < currentDisplay.length;
-                
-                if (isDelete && phone.length > 0) {
-                  setPhone(phone.slice(0, -1));
-                } else if (!isDelete) {
-                  const digits = rawValue.replace(/\D/g, '');
-                  const local = (digits.length > 0 && (digits[0] === '7' || digits[0] === '8'))
-                    ? digits.slice(1)
-                    : digits;
-                  setPhone(local.slice(0, 10));
-                }
-              }}
-              required
-            />
-
-            {renderPasswordField({
-              testId: 'auth-register-password',
-              label: 'Пароль',
-              value: password,
-              onChange: (event) => setPassword(clampInputValue(event.target.value, INPUT_LIMITS.PASSWORD)),
-              required: true,
-              showValue: showPassword,
-              onToggle: () => setShowPassword(!showPassword),
-            })}
-
-            {renderPasswordField({
-              testId: 'auth-register-confirm-password',
-              label: 'Подтверждение пароля',
-              value: confirmPassword,
-              onChange: (event) => setConfirmPassword(clampInputValue(event.target.value, INPUT_LIMITS.PASSWORD)),
-              required: true,
-              showValue: showConfirmPassword,
-              onToggle: () => setShowConfirmPassword(!showConfirmPassword),
-            })}
-
-            <div className={styles.checkboxContainer}>
-              <input
-                className={styles.styledCheckbox}
-                type="checkbox"
-                id="terms-agreement"
-                checked={agreedToTerms}
-                onChange={(event) => setAgreedToTerms(event.target.checked)}
-              />
-              <label htmlFor="terms-agreement">
-                Нажимая на кнопку, я соглашаюсь с правилами пользования торговой площадки и политикой конфиденциальности
-              </label>
-            </div>
-
-            <SmsConsentCheckbox
-              checked={smsConsent}
-              onChange={(checked) => {
-                setSmsConsent(checked);
-                setSmsConsentError('');
-              }}
-              error={smsConsentError}
-            />
-
-            <Button data-testid="auth-register-request-code" type="submit" variant="primary" fullWidth disabled={isLoading}>
-              {isLoading ? 'Отправка кода...' : 'Получить код подтверждения'}
-            </Button>
-
-            <div className={styles.centeredRow}>
-              <button className={styles.linkBtn} type="button" onClick={handleRegister}>
-                Зарегистрироваться без подтверждения
-              </button>
-            </div>
-
-            <div className={styles.centeredRow}>
-              <button className={styles.linkBtn} data-testid="auth-register-to-login" type="button" onClick={handleSwitchToLogin}>
-                Уже есть аккаунт? Войдите
-              </button>
-            </div>
-
-            <div className={styles.centeredRow}>{renderBackLink()}</div>
-          </form>
-        ) : step === 'forgot' ? (
-          <form className={styles.form} onSubmit={handleForgotPassword}>
-            <Input
-              label="Номер телефона"
-              type="tel"
-              placeholder="+7 (000) 000-00-00"
-              icon={<Phone size={20} />}
-              value={formatPhoneNumber(phone)}
-              maxLength={18}
-              onChange={(event) => {
-                const rawValue = event.target.value;
-                const currentDisplay = formatPhoneNumber(phone);
-                const isDelete = rawValue.length < currentDisplay.length;
-                
-                if (isDelete && phone.length > 0) {
-                  setPhone(phone.slice(0, -1));
-                } else if (!isDelete) {
-                  const digits = rawValue.replace(/\D/g, '');
-                  const local = (digits.length > 0 && (digits[0] === '7' || digits[0] === '8'))
-                    ? digits.slice(1)
-                    : digits;
-                  setPhone(local.slice(0, 10));
-                }
-              }}
-              required
-            />
-
-            <Button type="submit" variant="primary" fullWidth disabled={isLoading}>
-              {isLoading ? 'Отправка...' : 'Получить код'}
-            </Button>
-
-            <div className={styles.centeredRow}>{renderBackLink()}</div>
-          </form>
-        ) : step === 'reset-code' ? (
-          <form className={styles.form} onSubmit={handleResetCodeSubmit}>
-            <Input
-              label="Код из SMS"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="123456"
-              icon={<Lock size={20} />}
-              value={code}
-              maxLength={INPUT_LIMITS.OTP_CODE}
-              onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, INPUT_LIMITS.OTP_CODE))}
-              required
-            />
-
-            <Button type="submit" variant="primary" fullWidth disabled={isLoading}>
-              {isLoading ? 'Проверка...' : 'Далее'}
-            </Button>
-
-            <div className={styles.row}>
-              {renderBackLink()}
-
-              <button
-                className={styles.linkBtn}
-                type="button"
-                onClick={
-                  verificationPurpose === 'login'
-                    ? handleRequestLoginCode
-                    : verificationPurpose === 'register'
-                    ? handleRequestRegistrationCode
-                    : handleRequestCode
-                }
-                disabled={!canResend || isLoading}
-                style={{ opacity: canResend ? 1 : 0.6, pointerEvents: canResend ? 'auto' : 'none' }}
-              >
-                {canResend ? 'Отправить код снова' : `Повторить через ${cooldown} сек`}
-              </button>
-            </div>
-          </form>
-        ) : step === 'reset-new-password' ? (
-          <form className={styles.form} onSubmit={handleResetPassword}>
-            {renderPasswordField({
-              label: 'Новый пароль',
-              value: password,
-              onChange: (event) => setPassword(clampInputValue(event.target.value, INPUT_LIMITS.PASSWORD)),
-              required: true,
-              showValue: showPassword,
-              onToggle: () => setShowPassword(!showPassword),
-            })}
-
-            {renderPasswordField({
-              label: 'Подтверждение нового пароля',
-              value: confirmPassword,
-              onChange: (event) => setConfirmPassword(clampInputValue(event.target.value, INPUT_LIMITS.PASSWORD)),
-              required: true,
-              showValue: showConfirmPassword,
-              onToggle: () => setShowConfirmPassword(!showConfirmPassword),
-            })}
-
-            <Button type="submit" variant="primary" fullWidth disabled={isLoading}>
-              {isLoading ? 'Сохранение...' : 'Сохранить новый пароль'}
-            </Button>
-
-            <div className={styles.centeredRow}>{renderBackLink()}</div>
-          </form>
-        ) : null}
+        {renderStep()}
       </div>
     </div>
   );
 };
 
 export default AuthModal;
-

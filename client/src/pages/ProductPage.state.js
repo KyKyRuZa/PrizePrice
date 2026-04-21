@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { apiGet } from "../utils/apiClient";
+import { apiGet } from "../utils/api/apiClient";
 import { productItemResponseSchema } from "../contracts/apiSchemas";
 
 export function useProductPage(

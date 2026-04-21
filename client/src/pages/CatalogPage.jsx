@@ -4,7 +4,7 @@ import ProductCardMain from '../components/products/ProductCardMain';
 import Filters from '../components/products/Filters';
 import SortOptions from '../components/products/SortOptions';
 import Pagination from '../components/ui/Pagination';
-import { useCatalogPageState } from '../hooks/useCatalogPageState';
+import { useCatalogPageState } from './CatalogPage.state';
 import { ALL_CATEGORY } from '../constants/filters';
 import { Filter, X, Home } from 'lucide-react';
 import styles from './CatalogPage.module.css';

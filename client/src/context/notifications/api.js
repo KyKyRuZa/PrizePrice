@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPost } from "../../utils/apiClient";
+import { apiDelete, apiGet, apiPost } from "../../utils/api/apiClient";
 import { DEFAULT_NOTIFICATIONS_LIMIT, UNREAD_POLL_LIMIT } from "./constants";
 import { notificationsResponseSchema, okResponseSchema } from "../../contracts/apiSchemas";
 

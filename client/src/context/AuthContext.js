@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-import { apiGet } from "../utils/apiClient";
-import { initializeLocalData, syncAllUserData } from "../utils/syncUserData";
+import { apiGet } from "../utils/api/apiClient";
+import { initializeLocalData, syncAllUserData } from "../utils/user/syncUserData";
 import { createAuthActions } from "./auth/actions";
 import { USER_SYNC_INTERVAL_MS } from "./auth/constants";
 import { readStoredSession } from "./auth/storage";
@@ -62,9 +62,10 @@ export const AuthProvider = ({ children }) => {
       user,
       isAuthenticated,
       isLoading,
+      setUser,
       ...actions,
     }),
-    [user, isAuthenticated, isLoading, actions]
+    [user, isAuthenticated, isLoading, setUser, actions]
   );
 
   // Инициализация localStorage для избранного/истории при входе

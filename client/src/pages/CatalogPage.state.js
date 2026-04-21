@@ -4,8 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ALL_CATEGORY, createDefaultFilters } from '../constants/filters';
 import { useSearchHistory } from '../context/SearchHistoryContext';
 import { fetchAvailableCategories, fetchCatalogProducts, fetchCategoryCounts } from '../services/catalogService';
-import { normalizeSearchQuery } from '../utils/inputSanitizers';
-import useDebounce from './useDebounce';
+import { normalizeSearchQuery } from '../utils/validation/inputSanitizers';
+import useDebounce from '../hooks/useDebounce';
 
 function parseQueryParams(search) {
   const params = new URLSearchParams(search);

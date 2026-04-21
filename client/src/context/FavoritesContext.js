@@ -1,8 +1,8 @@
 ﻿import React, { useEffect, useMemo, useCallback, useState } from 'react';
 
 import { useAuth } from './AuthContext';
-import { apiGet } from '../utils/apiClient';
-import { getProductRefId, hydrateProductRefs } from '../utils/productHydration';
+import { apiGet } from '../utils/api/apiClient';
+import { getProductRefId, hydrateProductRefs } from '../utils/product/productHydration';
 import { userDataPayloadSchema } from '../contracts/apiSchemas';
 import { createStrictContext } from './createStrictContext';
 import {

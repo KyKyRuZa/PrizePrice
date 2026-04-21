@@ -7,12 +7,12 @@ import { useFavorites } from '../context/FavoritesContext';
 import { useNotifications } from '../context/NotificationsContext';
 import { usePriceWatch } from '../context/PriceWatchContext';
 import { useSearchHistory } from '../context/SearchHistoryContext';
-import { INPUT_LIMITS, sanitizeTextInput } from '../utils/inputSanitizers';
+import { INPUT_LIMITS, sanitizeTextInput } from '../utils/validation/inputSanitizers';
 
 const PROFILE_TABS = new Set(['favorites', 'history', 'compare', 'watch', 'notifications']);
 
 export function useProfilePageState() {
-  const { user, isAuthenticated, logout, setName } = useAuth();
+  const { user, isAuthenticated, logout, setName, setUser } = useAuth();
   const { favorites, favoritesCount, removeFromFavorites, clearFavorites } = useFavorites();
   const { cart, cartCount, removeFromCart, clearCart } = useCart();
   const { history, historyCount, clear: clearHistory, remove: removeHistoryItem } = useSearchHistory();
@@ -171,6 +171,7 @@ export function useProfilePageState() {
     user,
     isAuthenticated,
     logout,
+    setUser,
     favorites,
     favoritesCount,
     clearFavorites,

@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { normalizeSearchQuery } from "../utils/inputSanitizers";
+import { normalizeSearchQuery } from "../utils/validation/inputSanitizers";
 
 const SearchPage = () => {
   const { search } = useLocation();

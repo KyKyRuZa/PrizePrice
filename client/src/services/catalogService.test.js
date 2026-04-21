@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../utils/apiClient", () => ({
+vi.mock("../utils/api/apiClient", () => ({
   apiGet: vi.fn(),
 }));
 
-import { apiGet } from "../utils/apiClient";
+import { apiGet } from "../utils/api/apiClient";
 import { fetchAvailableCategories, fetchCatalogProducts } from "./catalogService";
 
 describe("catalogService", () => {

@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../utils/apiClient", () => ({
+vi.mock("../../utils/api/apiClient", () => ({
   apiGet: vi.fn(),
   apiPost: vi.fn(),
 }));
 
-vi.mock("../../utils/syncUserData", () => ({
+vi.mock("../../utils/user/syncUserData", () => ({
   clearLocalUserData: vi.fn(),
 }));
 
-import { apiPost } from "../../utils/apiClient";
-import { clearLocalUserData } from "../../utils/syncUserData";
+import { apiPost } from "../../utils/api/apiClient";
+import { clearLocalUserData } from "../../utils/user/syncUserData";
 import { createAuthActions } from "./actions";
 
 describe("auth actions", () => {
@@ -23,7 +23,7 @@ describe("auth actions", () => {
 
   it("loginPassword persists user", async () => {
     const user = { id: 1, name: "Tester", phone: "+79991234567" };
-    vi.mocked(apiPost).mockResolvedValue({ user });
+    apiPost.mockResolvedValue({ user });
 
     const actions = createAuthActions({ setUser });
     const result = await actions.loginPassword("tester", "password123");
@@ -38,7 +38,7 @@ describe("auth actions", () => {
   });
 
   it("logout clears session and local user data", async () => {
-    vi.mocked(apiPost).mockResolvedValue({ ok: true });
+    apiPost.mockResolvedValue({ ok: true });
     localStorage.setItem("prizeprice_favorites", JSON.stringify([1, 2]));
 
     const actions = createAuthActions({ setUser });

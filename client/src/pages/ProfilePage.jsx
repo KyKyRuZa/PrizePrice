@@ -2,14 +2,14 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User, Edit2, Check, X, ArrowLeft, MessageSquare } from 'lucide-react';
 import WatchPriceModal from '../components/watch/WatchPriceModal';
-import HistoryTab from '../components/profile-tabs/HistoryTab';
-import FavoritesTab from '../components/profile-tabs/FavoritesTab';
-import CompareTab from '../components/profile-tabs/CompareTab';
-import WatchTab from '../components/profile-tabs/WatchTab';
-import NotificationsTab from '../components/profile-tabs/NotificationsTab';
+import HistoryTab from '../components/profile/tabs/HistoryTab';
+import FavoritesTab from '../components/profile/tabs/FavoritesTab';
+import CompareTab from '../components/profile/tabs/CompareTab';
+import WatchTab from '../components/profile/tabs/WatchTab';
+import NotificationsTab from '../components/profile/tabs/NotificationsTab';
 import SmsOptOutToggle from '../components/profile/SmsOptOutToggle';
-import { useProfilePageState } from '../hooks/useProfilePageState';
-import { INPUT_LIMITS } from '../utils/inputSanitizers';
+import { useProfilePageState } from './ProfilePage.state';
+import { INPUT_LIMITS } from '../utils/validation/inputSanitizers';
 import styles from './ProfilePage.module.css';
 
 const ProfilePage = () => {
@@ -18,6 +18,7 @@ const ProfilePage = () => {
     user,
     isAuthenticated,
     logout,
+    setUser,
     favoritesCount,
     cartCount,
     activeTab,
@@ -190,9 +191,7 @@ const ProfilePage = () => {
             <SmsOptOutToggle
               smsOptOut={user.sms_opt_out === true}
               onSuccess={(optedOut) => {
-                if (user) {
-                  user.sms_opt_out = optedOut;
-                }
+                setUser({ ...user, sms_opt_out: optedOut });
               }}
             />
           </div>

@@ -41,7 +41,7 @@ vi.mock('../context/AuthContext', async () => {
   };
 });
 
-vi.mock('../utils/apiClient', () => {
+vi.mock('../utils/api/apiClient', () => {
   const mockApiGet = vi.fn();
   mockApiGet.mockImplementation((path) => {
     // Ignore signal — just return mock data

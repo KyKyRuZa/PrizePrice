@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useMemo, useCallback, useState } from 'react';
 
 import { useAuth } from './AuthContext';
-import { apiGet, apiPost } from '../utils/apiClient';
+import { apiGet, apiPost } from '../utils/api/apiClient';
 import {
   okPriceWatchListResponseSchema,
   priceWatchListResponseSchema,

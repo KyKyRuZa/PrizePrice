@@ -1,5 +1,5 @@
-import { INPUT_LIMITS, sanitizeTextInput } from "../../utils/inputSanitizers";
-import { normalizePhoneInput } from "../../utils/phoneMask";
+import { INPUT_LIMITS, sanitizeTextInput } from "./inputSanitizers";
+import { normalizePhoneInput } from "./phoneMask";
 
 function assertNonEmptyString(value, errorMessage, minLength = 1) {
   if (typeof value !== "string" || value.length < minLength) {

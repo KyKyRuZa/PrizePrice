@@ -1,6 +1,6 @@
 import React from 'react';
 import { Heart, X } from 'lucide-react';
-import ProductCardMain from '../products/ProductCardMain';
+import ProductCardMain from '../../products/ProductCardMain';
 import styles from './FavoritesTab.module.css';
 
 const FavoritesTab = ({

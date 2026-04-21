@@ -1,20 +1,24 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, vi, beforeEach, expect } from 'vitest';
 
-// Mock errorTracker FIRST (before apiClient imports it)
-vi.mock('../../observability/errorTracker', () => ({
+// Mock errorTracker FIRST
+vi.mock('../../../shared/observability/errorTracker', () => ({
   captureClientException: vi.fn(),
 }));
 
-vi.mock('../../utils/apiClient', () => ({
-  apiPost: vi.fn(),
-  apiGet: vi.fn(),
-}));
+// Import apiClient and spy on its methods
+import * as apiClientModule from '../../utils/api/apiClient';
+vi.spyOn(apiClientModule, 'apiGet').mockImplementation((path) => {
+  if (path === '/me') return Promise.resolve({ user: null });
+  return Promise.resolve({});
+});
+vi.spyOn(apiClientModule, 'apiPost').mockResolvedValue({});
+
+const { apiGet, apiPost } = apiClientModule;
 
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 import { STORAGE_AUTH_SESSION, STORAGE_USER } from '../../context/auth/constants';
-import { apiGet, apiPost } from '../../utils/apiClient';
 import AuthModal from './AuthModal';
 
 const MockComponent = () => {
@@ -51,17 +55,17 @@ const clearAuthStorage = () => {
 };
 
 describe('AuthContext Tests', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    clearAuthStorage();
+   beforeEach(() => {
+     vi.clearAllMocks();
+     clearAuthStorage();
 
-    // Reset mock implementations
-    vi.mocked(apiGet).mockImplementation((path) => {
-      if (path === '/me') return Promise.resolve({ user: null });
-      return Promise.resolve({});
-    });
-    vi.mocked(apiPost).mockResolvedValue({});
-  });
+     // Reset mock implementations
+     apiGet.mockImplementation((path) => {
+       if (path === '/me') return Promise.resolve({ user: null });
+       return Promise.resolve({});
+     });
+     apiPost.mockResolvedValue({});
+   });
 
   it('should initialize with null values', async () => {
     await renderWithProvider(<MockComponent />);
@@ -113,17 +117,17 @@ describe('AuthContext Tests', () => {
 });
 
 describe('AuthModal Component Tests', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    clearAuthStorage();
+   beforeEach(() => {
+     vi.clearAllMocks();
+     clearAuthStorage();
 
-    // Reset mock implementations
-    vi.mocked(apiGet).mockImplementation((path) => {
-      if (path === '/me') return Promise.resolve({ user: null });
-      return Promise.resolve({});
-    });
-    vi.mocked(apiPost).mockResolvedValue({});
-  });
+     // Reset mock implementations
+     apiGet.mockImplementation((path) => {
+       if (path === '/me') return Promise.resolve({ user: null });
+       return Promise.resolve({});
+     });
+     apiPost.mockResolvedValue({});
+   });
 
   it('should render the modal with initial state', async () => {
     await renderModal();
@@ -195,7 +199,9 @@ describe('AuthModal Component Tests', () => {
     fireEvent.change(screen.getByTestId('auth-register-password'), { target: { value: 'password123' } });
     fireEvent.change(screen.getByTestId('auth-register-confirm-password'), { target: { value: 'differentpassword' } });
 
-    fireEvent.click(screen.getByRole('checkbox'));
+    // Check required consents
+    fireEvent.click(screen.getByTestId('terms-agreement-checkbox'));
+    fireEvent.click(screen.getByTestId('sms-consent-checkbox'));
     fireEvent.click(screen.getByTestId('auth-register-request-code'));
 
     await waitFor(() => {

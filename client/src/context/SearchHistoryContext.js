@@ -1,8 +1,8 @@
 ﻿import React, { useEffect, useMemo, useCallback, useState } from 'react';
 
 import { useAuth } from './AuthContext';
-import { apiGet } from '../utils/apiClient';
-import { normalizeSearchQuery } from '../utils/inputSanitizers';
+import { apiGet } from '../utils/api/apiClient';
+import { normalizeSearchQuery } from '../utils/validation/inputSanitizers';
 import { userDataPayloadSchema } from '../contracts/apiSchemas';
 import { createStrictContext } from './createStrictContext';
 import {

@@ -407,23 +407,10 @@ User.hasMany(SmsLog, {
   as: "smsLogs",
   foreignKey: "userId",
 });
-SmsLog.belongsTo(User, {
-  as: "user",
-  foreignKey: "userId",
-});
+ SmsLog.belongsTo(User, {
+   as: "user",
+   foreignKey: "userId",
+ });
 
-export {
-  sequelize,
-  User,
-  Product,
-  Offer,
-  Favorite,
-  CartItem,
-  SearchHistory,
-  PriceWatch,
-  PriceHistory,
-  Notification,
-  BrowsingHistory,
-  UserConsent,
-  SmsLog,
-};
+ // All models are already exported via `export const` declarations above.
+ // No need for additional export statement.

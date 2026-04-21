@@ -1,6 +1,6 @@
 import { User } from "../../models/index.js";
 import { logger } from "../../utils/logger.js";
-import { asyncHandler } from "../asyncHandler.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
 /**
  * POST /api/me/sms-opt-out

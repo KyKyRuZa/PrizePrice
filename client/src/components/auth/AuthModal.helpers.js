@@ -1,5 +1,5 @@
-﻿import { INPUT_LIMITS, sanitizeTextInput } from '../../utils/inputSanitizers';
-import { isPhoneLikeInput, normalizePhoneInput, validatePhoneNumber } from '../../utils/phoneMask';
+import { INPUT_LIMITS, sanitizeTextInput } from '../../utils/validation/inputSanitizers';
+import { isPhoneLikeInput, normalizePhoneInput, validatePhoneNumber } from '../../utils/validation/phoneMask';
 
 const INVALID_PHONE_FORMAT_MESSAGE = 'Invalid phone format. Use +7 (999) 999-99-99';
 

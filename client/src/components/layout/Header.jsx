@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useFavorites } from '../../context/FavoritesContext';
 import { useNotifications } from '../../context/NotificationsContext';
-import { INPUT_LIMITS, normalizeSearchQuery } from '../../utils/inputSanitizers';
+import { INPUT_LIMITS, normalizeSearchQuery } from '../../utils/validation/inputSanitizers';
 import AuthModal from '../auth/AuthModal';
 import { Button } from '../ui/Button';
 import styles from './Header.module.css';

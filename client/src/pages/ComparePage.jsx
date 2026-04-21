@@ -1,7 +1,7 @@
 ﻿import React, { useEffect } from 'react';
 import { ArrowLeft, Bell, ShoppingBag, Trash2, TrendingUp, X } from 'lucide-react';
 import WatchPriceModal from '../components/watch/WatchPriceModal';
-import { useComparePage } from '../hooks/useComparePage';
+import { useComparePage } from './ComparePage.state';
 import { formatComparePrice, getCompareOffers } from '../services/compareService';
 import styles from './ComparePage.module.css';
 

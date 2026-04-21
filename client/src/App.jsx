@@ -3,20 +3,16 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from
 import AppProviders from './context/AppProviders';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
-import { normalizeSearchQuery } from './utils/inputSanitizers';
+import { normalizeSearchQuery } from './utils/validation/inputSanitizers';
 import ErrorBoundary from './components/observability/ErrorBoundary';
-import './App.css';
 import './styles/global.css';
 
-// Code splitting
 const HomeLandingPage = React.lazy(() => import('./pages/HomeLandingPage'));
 const CatalogPage = React.lazy(() => import('./pages/CatalogPage'));
 const ProductPage = React.lazy(() => import('./pages/ProductPage'));
 const SearchPage = React.lazy(() => import('./pages/SearchPage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const ComparePage = React.lazy(() => import('./pages/ComparePage'));
-
-// Legal pages
 const PrivacyPolicyPage = React.lazy(() => import('./pages/legal/PrivacyPolicyPage'));
 const TermsOfServicePage = React.lazy(() => import('./pages/legal/TermsOfServicePage'));
 const SmsConsentPage = React.lazy(() => import('./pages/legal/SmsConsentPage'));
@@ -30,7 +26,6 @@ const HeaderWithRouter = () => {
       navigate(`/catalog?q=${encodeURIComponent(normalizedQuery)}`);
     }
   };
-  // Hide search on home page, show on catalog and other pages
   const showSearch = location.pathname !== '/';
   return <Header onSearch={handleSearch} showSearch={showSearch} />;
 };
@@ -87,4 +82,5 @@ function App() {
     </AppProviders>
   );
 }
+
 export default App;
