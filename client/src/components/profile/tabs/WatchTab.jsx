@@ -1,8 +1,13 @@
-import React from 'react';
-import { Bell, Settings, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bell, Settings, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './WatchTab.module.css';
 
+const ITEMS_PER_PAGE = 5;
+
 const WatchTab = ({ watchesCount, watches, setActiveTab, handleProductClick, openWatchModal, removeWatch }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(watchesCount / ITEMS_PER_PAGE);
+
   if (watchesCount <= 0) {
     return (
       <div className={styles.emptyState}>
@@ -23,7 +28,7 @@ const WatchTab = ({ watchesCount, watches, setActiveTab, handleProductClick, ope
       </div>
 
       <div className={styles.watchesList}>
-        {watches.map((it) => {
+        {watches.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((it) => {
           const product = it?.product;
           const watch = it?.watch;
           if (!product?.id) return null;
@@ -75,9 +80,31 @@ const WatchTab = ({ watchesCount, watches, setActiveTab, handleProductClick, ope
                 </button>
               </div>
             </div>
-          );
+); 
         })}
       </div>
+
+      {totalPages > 1 && (
+        <div className={styles.pagination}>
+          <button
+            className={styles.pageBtn}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <span className={styles.pageInfo}>
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            className={styles.pageBtn}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+      )}
     </>
   );
 };

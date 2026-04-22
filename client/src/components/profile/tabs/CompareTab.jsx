@@ -1,9 +1,14 @@
-import React from 'react';
-import { TrendingUp, X, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { TrendingUp, X, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatComparePrice, getCompareOffers } from '../../../services/compareService';
 import styles from './CompareTab.module.css';
 
+const ITEMS_PER_PAGE = 5;
+
 const CompareTab = ({ cartCount, cart, removeFromCart, clearCart, openExternalLink }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(cartCount / ITEMS_PER_PAGE);
+
   if (cartCount <= 0) {
     return (
       <div className={styles.emptyState}>
@@ -25,7 +30,7 @@ const CompareTab = ({ cartCount, cart, removeFromCart, clearCart, openExternalLi
       </div>
 
       <div className={styles.compareList}>
-        {cart.map((product) => {
+        {cart.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((product) => {
           const offers = [...getCompareOffers(product)].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
 
           return (
@@ -80,6 +85,28 @@ const CompareTab = ({ cartCount, cart, removeFromCart, clearCart, openExternalLi
           );
         })}
       </div>
+
+      {totalPages > 1 && (
+        <div className={styles.pagination}>
+          <button
+            className={styles.pageBtn}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <span className={styles.pageInfo}>
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            className={styles.pageBtn}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+      )}
     </>
   );
 };

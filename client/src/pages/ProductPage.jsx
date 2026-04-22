@@ -1,14 +1,17 @@
 import React, { useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useBrowsingHistory } from '../context/BrowsingHistoryContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { useCart } from '../context/CartContext';
 import { useProductPage } from './ProductPage.state';
-import styles from '../components/products/ProductDetail.module.css';
+import styles from './ProductDetail.module.css';
 import { Heart, ShoppingCart, Star, ExternalLink, TrendingDown } from 'lucide-react';
+
+import { ArrowLeft } from 'lucide-react';
 
 const ProductPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addViewedProduct } = useBrowsingHistory();
   const { addToFavorites, removeFromFavorites, isInFavorites } = useFavorites();
   const { addToCart, isInCart } = useCart();
@@ -143,6 +146,11 @@ const ProductPage = () => {
 
   return (
     <div className={styles.container}>
+      <button className={styles.backButton} onClick={() => navigate(-1)}>
+        <ArrowLeft size={20} />
+        Назад
+      </button>
+
       <div className={styles.productCard}>
         <div className={styles.productImageWrapper}>
           {product.image ? (
