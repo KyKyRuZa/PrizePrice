@@ -43,7 +43,6 @@ export const requestPasswordReset = async (req, res) => {
 
   const user = await User.findOne({ where: { phone } });
 
-  // Проверяем SMS opt-out (из настроек пользователя)
   if (user?.smsOptOut) {
     return res.status(403).json({
       error: "SMS_OPT_OUT",
@@ -52,7 +51,6 @@ export const requestPasswordReset = async (req, res) => {
     });
   }
 
-  // Проверяем SMS opt-out (из user_consents)
   if (user) {
     try {
       const consents = await getUserConsents(user.id);

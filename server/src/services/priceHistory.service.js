@@ -3,7 +3,6 @@ import { PriceHistory } from "../models/index.js";
 
 const { Op } = SequelizePkg;
 
-// Записываем историю цены только если она изменилась относительно последней записи
 export async function recordPriceHistory(productId, marketplace, price) {
   if (!productId || !marketplace || price == null) return;
 
@@ -18,7 +17,6 @@ export async function recordPriceHistory(productId, marketplace, price) {
 
   await PriceHistory.create({ productId, marketplace: String(marketplace), price: Number(price) });
 
-  // ограничим рост: оставляем последние 200 записей на товар+marketplace
   const excess = await PriceHistory.findAll({
     where: { productId, marketplace },
     attributes: ["id"],

@@ -27,7 +27,6 @@ function isTokenIssuedBeforePasswordUpdate(payload, user) {
 }
 
 function touchLastSeen(userId) {
-  // Fire-and-forget: don't await to avoid latency
   User.update(
     { lastSeen: new Date() },
     { where: { id: userId } }
@@ -37,9 +36,6 @@ function touchLastSeen(userId) {
   });
 }
 
-/**
- * Требует корректный JWT.
- */
 export async function authRequired(req, res, next) {
   const token = extractBearer(req);
   if (!token) return res.status(401).json({ error: "UNAUTHORIZED" });
@@ -47,7 +43,6 @@ export async function authRequired(req, res, next) {
   try {
     const payload = jwt.verify(token, config.jwtSecret);
 
-    // Находим пользователя в базе данных
     const user = await User.findByPk(payload.userId);
     if (!user) {
       return res.status(401).json({ error: "UNAUTHORIZED" });
@@ -56,13 +51,11 @@ export async function authRequired(req, res, next) {
       return res.status(401).json({ error: "UNAUTHORIZED" });
     }
 
-     // Добавляем информацию о пользователе в запрос
      req.user = user.toJSON();
      req.userId = payload.userId;
      req.phone = payload.phone;
      setRequestContextValue("userId", payload.userId);
 
-     // Обновляем last_seen (fire-and-forget)
      touchLastSeen(payload.userId);
 
      return next();
@@ -71,25 +64,19 @@ export async function authRequired(req, res, next) {
   }
 }
 
-/**
- * Если JWT есть и он валиден — кладёт payload в req.user. Иначе просто пропускает.
- */
 export async function authOptional(req, _res, next) {
   const token = extractBearer(req);
   if (!token) return next();
   try {
     const payload = jwt.verify(token, config.jwtSecret);
 
-    // Находим пользователя в базе данных
     const user = await User.findByPk(payload.userId);
      if (user && !isTokenIssuedBeforePasswordUpdate(payload, user)) {
-       // Добавляем информацию о пользователе в запрос
        req.user = user.toJSON();
        req.userId = payload.userId;
        req.phone = payload.phone;
        setRequestContextValue("userId", payload.userId);
 
-       // Обновляем last_seen (fire-and-forget)
        touchLastSeen(payload.userId);
      }
   } catch {

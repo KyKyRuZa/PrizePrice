@@ -100,11 +100,9 @@ export function createApp() {
     });
   }
 
-  // error handler (must be last)
   app.use(errorHandler);
 
   return app;
 }
 
-// Export the app for testing purposes
 export const app = createApp();

@@ -133,18 +133,15 @@ export async function searchProducts({
   if (search) where.name = { [Op.iLike]: `%${search}%` };
   if (category) where.category = category;
 
-  // Пагинация
   const pageNum = Math.max(1, Number(page) || 1);
   const limitNum = Math.min(100, Math.max(1, Number(limit) || 20));
   const offset = (pageNum - 1) * limitNum;
 
-  // Фильтрация по маркетплейсам и цене
   const offerWhere = {};
   if (Array.isArray(marketplaces) && marketplaces.length > 0) {
     offerWhere.marketplace = { [Op.in]: marketplaces };
   }
   
-  // Фильтрация по цене (минимальная цена среди offers)
   if (minPrice != null && minPrice !== '') {
     offerWhere.price = { ...offerWhere.price, [Op.gte]: Number(minPrice) };
   }
@@ -154,7 +151,6 @@ export async function searchProducts({
 
   const hasOfferFilters = offerWhere.marketplace || offerWhere.price;
 
-  // Получаем общее количество товаров для пагинации
   const { count } = await Product.findAndCountAll({
     where,
     distinct: true,
@@ -166,7 +162,6 @@ export async function searchProducts({
     }] : [],
   });
 
-  // count может быть массивом при include, берем число
   const total = Array.isArray(count) ? count.length : count;
 
   const rows = await Product.findAll({

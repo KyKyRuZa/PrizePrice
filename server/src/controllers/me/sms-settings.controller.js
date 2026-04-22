@@ -3,10 +3,6 @@ import { logger } from "../../utils/logger.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { recordConsent } from "../../services/consent.service.js";
 
-/**
- * POST /api/me/sms-opt-out
- * Пользователь отказывается от SMS-сообщений
- */
 export const optOutFromSms = asyncHandler(async (req, res) => {
   const userId = req.userId;
   const ip = req.ip || req.connection?.remoteAddress || 'unknown';
@@ -33,10 +29,6 @@ export const optOutFromSms = asyncHandler(async (req, res) => {
   return res.json({ ok: true });
 });
 
-/**
- * POST /api/me/sms-opt-in
- * Пользователь включает SMS-сообщения обратно
- */
 export const cancelSmsOptOut = asyncHandler(async (req, res) => {
   const userId = req.userId;
   const ip = req.ip || req.connection?.remoteAddress || 'unknown';

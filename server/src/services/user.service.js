@@ -143,7 +143,6 @@ export async function addSearchHistory(userId, query) {
   if (!q) return;
 
   try {
-    // Keep one history entry per (user_id, lower(query)); refresh timestamp on repeated searches.
     await sequelize.query(
       `
         INSERT INTO search_history (user_id, query, created_at)
@@ -156,7 +155,6 @@ export async function addSearchHistory(userId, query) {
       { bind: [userId, q] }
     );
   } catch (error) {
-    // Backward-compatible fallback when the unique index migration is not applied yet.
     logger.warn("search_history_upsert_fallback", { message: error?.message });
 
     await SearchHistory.destroy({
@@ -224,10 +222,7 @@ export async function clearCart(userId) {
 }
 
 export async function addBrowsingHistory(userId, productId) {
-  // Add entry to browsing history.
   await BrowsingHistory.create({ userId, productId });
-
-  // Keep only the latest entries for each user.
   await trimRowsByLatest(BrowsingHistory, userId, "viewedAt");
 }
 

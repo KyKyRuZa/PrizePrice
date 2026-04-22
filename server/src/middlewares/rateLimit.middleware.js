@@ -24,12 +24,12 @@ function sendTooManyRequests(res, req, retryAfterSeconds, message) {
 
 export function createRateLimit(options = {}) {
   const {
-    windowMs = 15 * 60 * 1000, // 15 minutes
-    max = 100, // limit each IP to 100 requests per windowMs
+    windowMs = 15 * 60 * 1000,
+    max = 100,
     message = 'Too many requests, please try again later.',
     skipSuccessfulRequests = false,
     skipFailedRequests = false,
-    keyGenerator = (req) => req.ip, // Use IP address by default
+    keyGenerator = (req) => req.ip,
   } = options;
 
   return async (req, res, next) => {
@@ -43,7 +43,6 @@ export function createRateLimit(options = {}) {
         return sendTooManyRequests(res, req, result.retryAfter, message);
       }
 
-      // Add rate limit info to response headers if not skipping successful requests
       if (!skipSuccessfulRequests) {
         res.setHeader('X-RateLimit-Limit', result.max);
         res.setHeader('X-RateLimit-Remaining', result.max - result.count);
@@ -149,23 +148,22 @@ export const globalApiRateLimiter = createTieredApiRateLimit({
   keyGenerator: (req, tier) => `api:${tier}:${req.ip}`,
 });
 
-// Specific rate limiters for auth endpoints
 export const authRateLimiter = createRateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: isDevelopmentRuntime ? 30 : 5,
   message: 'Too many authentication attempts, please try again later.',
   keyGenerator: (req) => `auth:${req.ip}:${req.path}`,
 });
 
 export const otpRateLimiter = createRateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: isDevelopmentRuntime ? 15 : 3,
   message: 'Too many OTP requests, please try again later.',
   keyGenerator: (req) => `otp:${req.ip}:${req.path}`,
 });
 
 export const passwordResetRateLimiter = createRateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
+  windowMs: 60 * 60 * 1000,
   max: isDevelopmentRuntime ? 15 : 5,
   message: 'Too many password reset attempts, please try again later.',
   keyGenerator: (req) => `reset:${req.ip}:${req.path}`,

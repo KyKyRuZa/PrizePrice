@@ -6,8 +6,7 @@ function logDebug(message) {
   logger.debug(message);
 }
 
-// In-memory fallback for rate limiting
-const memLimits = new Map(); // key -> { count, resetTime }
+const memLimits = new Map();
 
 let redisClient = null;
 const REDIS_INCR_WITH_TTL_SCRIPT = `
@@ -52,7 +51,6 @@ async function handleRedisRuntimeFailure(operation, error) {
 }
 
 export async function initRateLimitStorage() {
-  // Try to connect to Redis for rate limiting
   try {
     const redisInfo = await connectRedisClientForService("rate-limit");
     redisClient = redisInfo.client;
@@ -90,7 +88,6 @@ export async function incrementRateLimit(identifier, windowMs, maxRequests) {
 
   if (redisClient) {
     try {
-      // Atomic Redis increment with TTL in a single round-trip.
       const [rawCount, rawTtlMs] = await redisClient.eval(REDIS_INCR_WITH_TTL_SCRIPT, {
         keys: [key],
         arguments: [String(windowMs)],
@@ -125,12 +122,10 @@ export async function incrementRateLimit(identifier, windowMs, maxRequests) {
     throwRateLimitUnavailable();
   }
 
-  // Fallback to in-memory rate limiting (development mode).
   const record = memLimits.get(key);
   const now = Date.now();
 
   if (!record || now >= record.resetTime) {
-    // New window
     const newRecord = {
       count: 1,
       resetTime,
@@ -148,7 +143,6 @@ export async function incrementRateLimit(identifier, windowMs, maxRequests) {
     };
   }
 
-  // Existing window
   record.count += 1;
   memLimits.set(key, record);
 
@@ -174,7 +168,6 @@ export async function incrementRateLimit(identifier, windowMs, maxRequests) {
   };
 }
 
-// Test helper: resets in-memory rate-limit windows.
 export function resetRateLimitStorageForTests() {
   memLimits.clear();
 }

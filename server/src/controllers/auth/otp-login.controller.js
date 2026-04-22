@@ -97,7 +97,6 @@ export const requestCodeForLogin = async (req, res) => {
   const shouldIssueOtp = userRec && isValidPhone(phone);
 
   if (shouldIssueOtp && userRec.id) {
-    // Проверяем User.smsOptOut
     if (userRec.smsOptOut) {
       return res.status(403).json({
         error: "SMS_OPT_OUT",

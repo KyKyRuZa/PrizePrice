@@ -34,17 +34,14 @@ export async function search(req, res) {
   }).toLowerCase();
   const sort = SEARCH_SORTS.has(requestedSort) ? requestedSort : "popularity";
   
-  // Пагинация
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
   
-  // Фильтрация по маркетплейсам
   const marketplacesParam = req.query.marketplaces || "";
   const marketplaces = marketplacesParam
     ? String(marketplacesParam).split(",").map(m => m.trim()).filter(Boolean)
     : [];
   
-  // Фильтрация по цене
   const minPrice = req.query.minPrice !== undefined ? req.query.minPrice : undefined;
   const maxPrice = req.query.maxPrice !== undefined ? req.query.maxPrice : undefined;
 
@@ -59,7 +56,6 @@ export async function search(req, res) {
     maxPrice,
   });
 
-  // If user is authorized (authOptional), store history
   if (req.userId && q) {
     await addSearchHistory(req.userId, q);
   }
@@ -85,7 +81,6 @@ export async function priceHistory(req, res) {
     stripHtml: true,
   });
 
-  // basic validation
   const schema = z.object({ limit: z.number().int().min(1).max(365) });
   const parsed = schema.safeParse({ limit });
   if (!parsed.success) return res.status(400).json({ error: "VALIDATION_ERROR" });

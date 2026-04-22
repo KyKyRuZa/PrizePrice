@@ -41,7 +41,6 @@ export function resolveRouteLabel(req) {
     }
   }
 
-  // Keep unmatched routes low-cardinality to avoid metrics cardinality explosion.
   return "unmatched";
 }
 

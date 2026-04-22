@@ -51,13 +51,12 @@ export async function sendSms(phone, message, { type = "login", userId = null } 
           costCents: item.cost,
           metadata: {
             from: item.from,
-            text: message, // не храним полный текст SMS (ПДн), только шаблон
+            text: message,
             extendStatus: item.extendStatus,
           },
         });
       } catch (dbError) {
         logger.error("sms_log_create_failed", { error: dbError.message, phone, userId });
-        // Не падаем, если запись в лог не удалась
       }
 
       logger.info("sms_sent_success", {

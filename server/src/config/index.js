@@ -6,7 +6,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const serverRoot = path.resolve(__dirname, "../../");
 
-// Always load server/.env regardless of the shell working directory.
 dotenv.config({ path: path.join(serverRoot, ".env") });
 
 function parseBool(value, defaultValue = false) {
@@ -106,7 +105,6 @@ export const config = {
   port: Number(process.env.PORT || 3001),
   databaseUrl: process.env.DATABASE_URL || "postgres://prizeprice:prizeprice@localhost:5432/prizeprice",
 
-  // Redis (single/sentinel/cluster via REDIS_MODE + related env vars)
   redisMode,
   redisUrl,
   redisUrlList,
@@ -152,26 +150,21 @@ export const config = {
     parseBool(process.env.ALLOW_API_PRICE_WATCHER_IN_PRODUCTION, false),
   serviceRole: String(process.env.SERVICE_ROLE || "api").toLowerCase(),
 
-  // Passwords (bcrypt)
   bcryptSaltRounds: Number(process.env.BCRYPT_SALT_ROUNDS || 10),
   passwordMinLength: Number(process.env.PASSWORD_MIN_LENGTH || 8),
 
-  // Price watcher / notifications
   priceWatcherEnabled: parseBool(process.env.PRICE_WATCHER_ENABLED, isProduction ? false : true),
   priceWatcherIntervalSeconds: Number(process.env.PRICE_WATCHER_INTERVAL_SECONDS || 60),
-  priceWatcherNotifyCooldownMinutes: Number(process.env.PRICE_WATCHER_NOTIFY_COOLDOWN_MINUTES || 1440), // 24h
+  priceWatcherNotifyCooldownMinutes: Number(process.env.PRICE_WATCHER_NOTIFY_COOLDOWN_MINUTES || 1440),
   priceWatcherBatchSize: Number(process.env.PRICE_WATCHER_BATCH_SIZE || 50),
   priceWatcherConcurrency: Number(process.env.PRICE_WATCHER_CONCURRENCY || 25),
 
-  // Debug/admin endpoints (dev only)
   debugAdmin: !isProduction && debugAdminEnabled,
 
-  // SMS provider (SmsAero)
   smsaeroEmail: String(process.env.SMSAERO_EMAIL || "").trim(),
   smsaeroApiKey: String(process.env.SMSAERO_API_KEY || "").trim(),
   smsaeroSign: String(process.env.SMSAERO_SIGN || "PrizePrice").trim(),
 
-  // Logging
    debugLogging: parseBool(process.env.DEBUG_LOGGING, !isProduction && !isTest),
    logFilePath: String(process.env.LOG_FILE_PATH || "").trim(),
    sentryDsn: String(process.env.SENTRY_DSN || "").trim(),
@@ -179,7 +172,6 @@ export const config = {
    sentryRelease: String(process.env.SENTRY_RELEASE || process.env.npm_package_version || "").trim(),
    sentryTracesSampleRate: clampNumber(process.env.SENTRY_TRACES_SAMPLE_RATE, 0, 1, 0),
 
-   // Legal & Support
    smsConsentPolicyUrl: String(process.env.SMS_CONSENT_POLICY_URL || "/sms-consent").trim(),
    privacyPolicyUrl: String(process.env.PRIVACY_POLICY_URL || "/privacy").trim(),
    termsUrl: String(process.env.TERMS_URL || "/terms").trim(),

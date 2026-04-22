@@ -11,10 +11,9 @@ const isTestRuntime = String(config.nodeEnv || "").toLowerCase() === "test";
 const isDevelopmentRuntime = !config.isProduction && !isTestRuntime;
 const RESEND_COOLDOWN_SECONDS = isDevelopmentRuntime ? 15 : 60;
 
-// In-memory fallback
 const mem = {
-  otp: new Map(), // phone -> { code, expiresAt, lastSentAt }
-  registrationData: new Map(), // phone -> { data, expiresAt }
+  otp: new Map(), 
+  registrationData: new Map(),
 };
 
 let redisClient = null;
@@ -58,8 +57,6 @@ async function handleRedisRuntimeFailure(operation, error) {
 }
 
 export async function initOtpStorage() {
-  // In development OTP can use in-memory fallback.
-  // In production with OTP_REQUIRE_REDIS=true startup must fail fast.
   try {
     const redisInfo = await connectRedisClientForService("otp");
     redisClient = redisInfo.client;
@@ -113,7 +110,6 @@ export async function setSendCooldown(key) {
     return;
   }
 
-  // For identifiers that do not need OTP verification, we still reserve cooldown.
   mem.otp.set(key, { code: "", expiresAt: nowMs(), lastSentAt: nowMs() });
 }
 
@@ -288,7 +284,6 @@ export const constants = {
   RESEND_COOLDOWN_SECONDS,
 };
 
-// Test helper: resets in-memory OTP state.
 export function resetOtpStorageForTests() {
   mem.otp.clear();
   mem.registrationData.clear();

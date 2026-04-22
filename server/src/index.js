@@ -26,7 +26,6 @@ async function bootstrap() {
      logger.info("seed_boot_skipped");
    }
 
-   // Start active users metric updater
    startActiveUsersUpdater();
    logger.info("active_users_updater_started");
 
@@ -42,7 +41,6 @@ async function bootstrap() {
     logger.info("server_listening", { port: config.port });
   });
 
-  // Background watcher: отслеживание цены и уведомления
   const watcher = startPriceWatcher();
   let shuttingDown = false;
   const stop = async (signal, exitCode = 0) => {

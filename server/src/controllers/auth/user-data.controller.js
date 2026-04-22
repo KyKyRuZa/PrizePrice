@@ -233,7 +233,6 @@ export const updateUserData = async (req, res) => {
       mapItem: (historyItem) => keepExistingProductId(extractBrowsingProductId(historyItem), existingProductIds),
     });
 
-    // Price watch: clear all then re-import
     await clearPriceWatches(user.id);
     const validWatches = priceWatch.filter((w) => w?.productId != null);
     if (validWatches.length > 0) {

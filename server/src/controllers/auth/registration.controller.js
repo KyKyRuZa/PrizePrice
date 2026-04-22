@@ -107,7 +107,6 @@ export const requestCodeForRegistration = async (req, res) => {
 
     const { normalizedPhone, username, password } = validated;
 
-    // Проверяем согласия
     if (!req.body.pdConsent || !req.body.smsConsent) {
       return res.status(400).json({ error: "CONSENT_REQUIRED" });
     }
@@ -126,7 +125,6 @@ export const requestCodeForRegistration = async (req, res) => {
 
     const passwordHash = await hashPassword(password);
     
-    // Сохраняем данные регистрации включая согласия
     await saveRegistrationData(
       registrationOtpKey,
       JSON.stringify({
@@ -204,7 +202,6 @@ export const registerWithCode = async (req, res) => {
       passwordUpdatedAt: new Date(),
     });
 
-    // Сохраняем согласия
     const pdConsentGiven = Boolean(registrationData.pdConsentGiven);
     const smsConsentGiven = Boolean(registrationData.smsConsentGiven);
     const pdConsentText = registrationData.pdConsentText || "";
@@ -232,7 +229,6 @@ export const registerWithCode = async (req, res) => {
       });
     } catch (consentError) {
       logger.error("consent_save_failed", { userId: user.id, error: consentError.message });
-      // Не падаем, если сохранение согласия не удалось
     }
 
     const updatedUser = await getUserById(user.id);

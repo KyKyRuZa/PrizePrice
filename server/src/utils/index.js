@@ -50,7 +50,6 @@ export function sortProducts(products, sort) {
       return copy.sort((a, b) => discountOf(b) - discountOf(a));
     case "popularity":
     default:
-      // Popularity = reviews desc as simple proxy
       return copy.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
   }
 }

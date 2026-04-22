@@ -84,7 +84,6 @@ export async function upsertPriceWatch(userId, productId, { targetPrice = null, 
     { returning: true }
   );
 
-  // Some dialect/driver combos may not return full instance from upsert.
   const row = instance?.toJSON?.() || (await PriceWatch.findOne({ where: { userId, productId } }))?.toJSON?.();
   return row || null;
 }

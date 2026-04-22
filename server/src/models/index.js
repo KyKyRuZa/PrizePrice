@@ -190,7 +190,6 @@ export const BrowsingHistory = sequelize.define(
   }
 );
 
-// --- Associations ---
 Product.hasMany(Offer, { as: "offers", foreignKey: "productId" });
 Offer.belongsTo(Product, { as: "product", foreignKey: "productId" });
 
@@ -246,8 +245,6 @@ export async function seedDbIfEmpty() {
   const productCount = await Product.count();
   const offerCount = await Offer.count();
 
-  // If you already have products but offers are empty (common when updating the project),
-  // we still seed offers so the UI can calculate best prices.
   if (productCount > 0 && offerCount > 0) return;
 
   const tx = await sequelize.transaction();

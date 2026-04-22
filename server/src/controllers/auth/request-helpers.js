@@ -56,7 +56,6 @@ export function buildOtpSuccessPayload({ message, code = null, smsSent = false }
     payload.message = message;
   }
 
-  // Dev fallback: return code in response if SMS is not configured
   if (config.debugReturnOtp && code && !smsSent) {
     payload.debugCode = code;
   }
@@ -68,17 +67,14 @@ export async function issueOtpCode(otpKey, phone, { userId = null, purpose = 'lo
   const code = generateOtp();
   await saveCode(otpKey, code);
 
-  // Проверяем SMS opt-out если известен userId
   if (userId) {
     try {
-      // Сначала проверяем User.smsOptOut
       const user = await User.findByPk(userId, { attributes: ['smsOptOut'] });
       if (user?.smsOptOut) {
         logger.info("sms_blocked_user_opt_out", { userId, phone, purpose });
         return { code, smsSent: false, blocked: true };
       }
 
-      // Затем проверяем user_consents
       const consents = await getUserConsents(userId);
       const smsConsent = consents?.sms;
       if (smsConsent && !smsConsent.given) {
@@ -87,7 +83,6 @@ export async function issueOtpCode(otpKey, phone, { userId = null, purpose = 'lo
       }
     } catch (error) {
       logger.warn("consent_check_failed", { userId, error: error.message });
-      // Продолжаем отправку при ошибке проверки согласия
     }
   }
 
