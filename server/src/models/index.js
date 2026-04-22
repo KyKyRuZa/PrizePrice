@@ -1,6 +1,7 @@
 import SequelizePkg from "sequelize";
 import { config } from "../config/index.js";
 import { runPendingMigrations } from "../db/migrate.js";
+import { invalidate } from "../services/cache.service.js";
 
 const { Sequelize, DataTypes, Op } = SequelizePkg;
 
@@ -284,6 +285,9 @@ export async function seedDbIfEmpty() {
     }
 
     await tx.commit();
+
+    await invalidate("categories:list");
+    await invalidate("categories:count");
   } catch (e) {
     await tx.rollback();
     throw e;

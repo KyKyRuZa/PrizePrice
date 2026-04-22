@@ -4,11 +4,20 @@ import {
   listFavorites,
   removeFavorite,
 } from "../../services/user.service.js";
-import { listCollectionProducts, requireFiniteParam } from "./shared.js";
+import { listCollectionProducts, parsePaginationParams, requireFiniteParam } from "./shared.js";
 
 export async function favorites(req, res) {
-  const items = await listCollectionProducts(req.userId, listFavorites);
-  return res.json({ items });
+  const pagination = parsePaginationParams(req);
+  const result = await listCollectionProducts(req.userId, listFavorites, pagination);
+  return res.json({
+    items: result.items,
+    pagination: {
+      page: pagination.page,
+      limit: pagination.limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / pagination.limit),
+    },
+  });
 }
 
 export async function addFav(req, res) {

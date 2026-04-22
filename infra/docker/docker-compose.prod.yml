@@ -11,12 +11,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-prizeprice}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-prizeprice}
       POSTGRES_DB: ${POSTGRES_DB:-prizeprice}
+    command: postgres -c shared_preload_libraries=pg_stat_statements
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
       - prizeprice_pgdata:/var/lib/postgresql/data
     networks:
       - prizeprice
+    cpus: 1.0
+    mem_limit: 1024M
+    mem_reservation: 512M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-prizeprice} -d ${POSTGRES_DB:-prizeprice}"]
       interval: 10s
@@ -37,6 +41,9 @@ services:
       - prizeprice_redis_data:/data
     networks:
       - prizeprice
+    cpus: 0.5
+    mem_limit: 512M
+    mem_reservation: 256M
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -62,6 +69,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    cpus: 1.0
+    mem_limit: 1536M
+    mem_reservation: 512M
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:${PORT:-3001}/health"]
       interval: 30s
@@ -95,6 +105,9 @@ services:
       - server
     networks:
       - prizeprice
+    cpus: 0.5
+    mem_limit: 256M
+    mem_reservation: 128M
     logging:
       driver: json-file
       options:

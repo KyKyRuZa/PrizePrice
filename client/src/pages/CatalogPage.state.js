@@ -176,8 +176,10 @@ export function useCatalogPageState() {
   }, [navigate]);
 
   const handleProductClick = useCallback((product) => {
-    console.log('Товар выбран:', product?.name);
-  }, []);
+    if (product?.id) {
+      navigate(`/product/${product.id}`);
+    }
+  }, [navigate]);
 
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);

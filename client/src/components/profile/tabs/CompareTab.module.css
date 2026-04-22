@@ -11,13 +11,7 @@
   margin: 0;
 }
 
-.actionGroup {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.smallBtn {
+.clearAllButton {
   border: 1px solid #999;
   background: #fff;
   color: #333;
@@ -25,11 +19,12 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all .2s;
-  align-items: center;
   display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.smallBtn:hover {
+.clearAllButton:hover {
   border-color: #002870;
   color: #002870;
 }
@@ -37,20 +32,26 @@
 .compareList {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .compareItem {
+  position: relative;
   background: #f5f5f5;
   border-radius: 12px;
   padding: 16px;
+  transition: background 0.3s;
+}
+
+.compareItem:hover {
+  background: #e8e8e8;
 }
 
 .compareProductInfo {
   display: flex;
   gap: 16px;
   align-items: center;
-  margin-bottom: 16px;
+  flex: 1;
 }
 
 .compareProductImage {
@@ -59,6 +60,7 @@
   border-radius: 8px;
   object-fit: cover;
   background: #e8e8e8;
+  flex-shrink: 0;
 }
 
 .compareProductImagePlaceholder {
@@ -71,28 +73,89 @@
   justify-content: center;
   color: #999;
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 .compareProductMeta {
   flex: 1;
+  min-width: 0;
 }
 
 .compareProductName {
-  margin: 0 0 6px;
-  font-size: 18px;
+  margin: 0 0 8px;
+  font-size: 16px;
   color: #002870;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.compareBestPrice {
-  margin: 0;
+.compareOffersPreview {
   font-size: 14px;
-  color: #999;
+  color: #666;
 }
 
-.compareOffers {
+.offersPreviewList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.offerPreviewItem {
+  background: rgba(0, 40, 112, 0.06);
+  color: #002870;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.offerPreviewItem b {
+  color: #002870;
+  font-weight: 600;
+}
+
+.offerMore {
+  color: #999;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.noOffersText {
+  color: #999;
+  font-size: 14px;
+}
+
+.compareProductActions {
+  flex-shrink: 0;
+}
+
+.buyButton {
+  background: #002870;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.buyButton:hover {
+  background: #003a9a;
+}
+
+.compareOffersList {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
 }
 
 .compareOffer {
@@ -122,40 +185,43 @@
   font-size: 14px;
 }
 
-.offerLinkBtn,
-.removeOfferBtn {
+.offerLinkBtn {
   background: none;
   border: none;
+  color: #002870;
   cursor: pointer;
   padding: 6px;
   border-radius: 6px;
+  margin-left: auto;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-}
-
-.offerLinkBtn {
-  color: #002870;
 }
 
 .offerLinkBtn:hover {
   background: rgba(0, 40, 112, 0.1);
 }
 
-.removeOfferBtn {
-  color: #ff4444;
-}
-
-.removeOfferBtn:hover {
-  background: rgba(255, 68, 68, 0.1);
-}
-
-.noOffers {
+.removeItemBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
   color: #999;
-  font-size: 14px;
-  text-align: center;
-  padding: 10px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.removeItemBtn:hover {
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
 }
 
 .emptyState {
@@ -176,4 +242,34 @@
 
 .emptyState p {
   font-size: 16px;
+}
+
+@media (max-width: 600px) {
+  .compareProductInfo {
+    flex-wrap: wrap;
+  }
+
+  .compareProductActions {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .buyButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .compareOffer {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .offerMarketplace {
+    min-width: auto;
+    flex: 1;
+  }
+
+  .offerLinkBtn {
+    margin-left: 0;
+  }
 }

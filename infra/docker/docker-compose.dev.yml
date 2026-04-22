@@ -11,6 +11,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-prizeprice}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-prizeprice}
       POSTGRES_DB: ${POSTGRES_DB:-prizeprice}
+    command: postgres -c shared_preload_libraries=pg_stat_statements
     ports:
       - "${POSTGRES_PORT_HOST:-5442}:5432"
     volumes:

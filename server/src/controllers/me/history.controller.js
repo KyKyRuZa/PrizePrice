@@ -24,7 +24,7 @@ export async function importHistory(req, res) {
   const queries = parsed.data.queries
     .map((query) => sanitizeSearchQuery(query, INPUT_LIMITS.SEARCH_QUERY))
     .filter(Boolean);
-  for (const query of queries) await addSearchHistory(req.userId, query);
+  await Promise.all(queries.map((query) => addSearchHistory(req.userId, query)));
 
   const items = await getSearchHistory(req.userId);
   return res.json({ ok: true, items });

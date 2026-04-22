@@ -32,26 +32,75 @@
   color: #002870;
 }
 
-.watchesGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 25px;
+.watchesList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.relativeCard {
-  position: relative;
-}
-
-.watchMeta {
-  margin-top: 10px;
-  padding: 10px 12px;
+.watchItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
   background: #f5f5f5;
-  border-radius: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.watchItem:hover {
+  background: #e8e8e8;
+}
+
+.watchProductInfo {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex: 1;
+}
+
+.watchProductImage {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #e8e8e8;
+  flex-shrink: 0;
+}
+
+.watchProductImagePlaceholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #999;
-  font-size: 13px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.watchProductMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.watchProductName {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #002870;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.watchBadges {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .metaBadge {
@@ -60,13 +109,58 @@
   padding: 6px 10px;
   border-radius: 999px;
   font-weight: 600;
+  font-size: 13px;
+}
+
+.badgeActive {
+  background: rgba(0, 166, 80, 0.1);
+  color: #00a650;
+}
+
+.badgePaused {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
 }
 
 .watchActions {
-  margin-left: auto;
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  background: none;
+  border: none;
+  color: #002870;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionBtn:hover {
+  background: rgba(0, 40, 112, 0.1);
+}
+
+.actionBtnDelete {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionBtnDelete:hover {
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
 }
 
 .emptyState {
@@ -87,4 +181,21 @@
 
 .emptyState p {
   font-size: 16px;
+}
+
+@media (max-width: 600px) {
+  .watchItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .watchProductInfo {
+    width: 100%;
+  }
+
+  .watchActions {
+    margin-top: 12px;
+    width: 100%;
+    justify-content: flex-end;
+  }
 }

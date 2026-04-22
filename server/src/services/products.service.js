@@ -1,8 +1,17 @@
 import SequelizePkg from "sequelize";
 import { Offer, Product } from "../models/index.js";
 import { computeBestPrice } from "../utils/index.js";
+import { getOrSet, redisGet, redisSet } from "./cache.service.js";
 
 const { Sequelize, Op } = SequelizePkg;
+
+const CACHE_TTL_CATEGORIES = 900;
+const CACHE_TTL_SEARCH = 120;
+
+function makeSearchCacheKey(params) {
+  const { q, category, sort, page, limit, marketplaces, minPrice, maxPrice } = params;
+  return `search:${[q, category, sort, page, limit, (marketplaces || []).join(","), minPrice, maxPrice].join(":")}`;
+}
 
 function getSortOrder(sort) {
   switch (sort) {
@@ -39,43 +48,55 @@ function mapProductWithOffers(productInstance) {
 }
 
 export async function listCategories() {
-  const rows = await Product.findAll({
-    attributes: ["category"],
-    group: ["category"],
-    order: [["category", "ASC"]],
-    raw: true,
-  });
-  return rows.map((r) => r.category);
+  return getOrSet(
+    "categories:list",
+    async () => {
+      const rows = await Product.findAll({
+        attributes: ["category"],
+        group: ["category"],
+        order: [["category", "ASC"]],
+        raw: true,
+      });
+      return rows.map((r) => r.category);
+    },
+    CACHE_TTL_CATEGORIES
+  );
 }
 
 export async function countCategories() {
-  const rows = await Product.findAll({
-    attributes: [
-      "category",
-      [Sequelize.fn("COUNT", Sequelize.col("Product.id")), "count"],
-      [Sequelize.fn("MAX", Sequelize.col("offers.price")), "maxPrice"],
-    ],
-    include: [
-      {
-        model: Offer,
-        as: "offers",
-        attributes: [],
-        required: false,
-      },
-    ],
-    group: ["category"],
-    order: [["category", "ASC"]],
-    raw: true,
-  });
+  return getOrSet(
+    "categories:count",
+    async () => {
+      const rows = await Product.findAll({
+        attributes: [
+          "category",
+          [Sequelize.fn("COUNT", Sequelize.col("Product.id")), "count"],
+          [Sequelize.fn("MAX", Sequelize.col("offers.price")), "maxPrice"],
+        ],
+        include: [
+          {
+            model: Offer,
+            as: "offers",
+            attributes: [],
+            required: false,
+          },
+        ],
+        group: ["category"],
+        order: [["category", "ASC"]],
+        raw: true,
+      });
 
-  const result = {};
-  rows.forEach((row) => {
-    result[row.category] = {
-      count: Number(row.count),
-      maxPrice: row.maxPrice ? Number(row.maxPrice) : null,
-    };
-  });
-  return result;
+      const result = {};
+      rows.forEach((row) => {
+        result[row.category] = {
+          count: Number(row.count),
+          maxPrice: row.maxPrice ? Number(row.maxPrice) : null,
+        };
+      });
+      return result;
+    },
+    CACHE_TTL_CATEGORIES
+  );
 }
 
 export async function getProductById(id) {
@@ -128,6 +149,12 @@ export async function searchProducts({
   minPrice,
   maxPrice,
 }) {
+  const searchParams = { q, category, sort, page, limit, marketplaces, minPrice, maxPrice };
+  const cacheKey = makeSearchCacheKey(searchParams);
+
+  const cached = await redisGet(cacheKey);
+  if (cached) return cached;
+
   const search = String(q || "").trim();
   const where = {};
   if (search) where.name = { [Op.iLike]: `%${search}%` };
@@ -185,7 +212,7 @@ export async function searchProducts({
 
   const result = rows.map(mapProductWithOffers);
 
-  return {
+  const response = {
     items: result,
     pagination: {
       page: pageNum,
@@ -195,6 +222,9 @@ export async function searchProducts({
       hasMore: offset + limitNum < total,
     },
   };
+
+  await redisSet(cacheKey, response, CACHE_TTL_SEARCH);
+  return response;
 }
 
 export async function recommendedProducts() {

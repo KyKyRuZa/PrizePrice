@@ -44,7 +44,17 @@ export function requireFiniteParam(req, res, paramName) {
   return requireFiniteNumber(req?.params?.[paramName], res);
 }
 
-export async function listCollectionProducts(userId, listIdsFn) {
-  const ids = await listIdsFn(userId);
-  return getProductsByIds(ids);
+export function parsePaginationParams(req) {
+  const page = Math.max(1, Number(req?.query?.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(req?.query?.limit) || 20));
+  const offset = (page - 1) * limit;
+  return { page, limit, offset };
+}
+
+export async function listCollectionProducts(userId, listIdsFn, pagination = {}) {
+  const result = await listIdsFn(userId, pagination);
+  const ids = Array.isArray(result) ? result : (result?.ids || []);
+  const total = result?.total ?? ids.length;
+  const items = await getProductsByIds(ids);
+  return { items, total };
 }

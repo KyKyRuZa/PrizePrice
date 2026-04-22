@@ -124,8 +124,10 @@ export function useProfilePageState() {
   );
 
   const handleProductClick = useCallback((product) => {
-    console.log('Товар выбран:', product?.name);
-  }, []);
+    if (product?.id) {
+      navigate(`/product/${product.id}`);
+    }
+  }, [navigate]);
 
   const formatHistoryDate = useCallback((item) => {
     const raw = item?.created_at || item?.createdAt || item?.date;

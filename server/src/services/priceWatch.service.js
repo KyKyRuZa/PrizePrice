@@ -17,6 +17,7 @@ export async function listPriceWatches(userId) {
   });
 
   const productIds = watches.map((w) => w.productId).filter((x) => Number.isFinite(Number(x)));
+
   const bestByProduct = new Map();
   if (productIds.length) {
     const offers = await Offer.findAll({

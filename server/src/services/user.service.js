@@ -41,14 +41,24 @@ function toUserWithPassword(user) {
   };
 }
 
-async function listProductIds(model, userId) {
+async function listProductIds(model, userId, { limit, offset } = {}) {
+  const limitNum = Math.min(100, Math.max(1, Number(limit) || 50));
+  const offsetNum = Math.max(0, Number(offset) || 0);
+
   const rows = await model.findAll({
     where: { userId },
     attributes: ["productId"],
     order: [["createdAt", "DESC"]],
+    limit: limitNum,
+    offset: offsetNum,
     raw: true,
   });
   return rows.map((row) => row.productId);
+}
+
+async function countProductIds(model, userId) {
+  const count = await model.count({ where: { userId } });
+  return count;
 }
 
 async function addProductToCollection(model, userId, productId) {
@@ -189,8 +199,10 @@ export async function clearSearchHistory(userId) {
   await SearchHistory.destroy({ where: { userId } });
 }
 
-export async function listFavorites(userId) {
-  return listProductIds(Favorite, userId);
+export async function listFavorites(userId, { limit, offset } = {}) {
+  const ids = await listProductIds(Favorite, userId, { limit, offset });
+  const total = await countProductIds(Favorite, userId);
+  return { ids, total };
 }
 
 export async function addFavorite(userId, productId) {
@@ -205,8 +217,10 @@ export async function clearFavorites(userId) {
   await clearProductCollection(Favorite, userId);
 }
 
-export async function listCart(userId) {
-  return listProductIds(CartItem, userId);
+export async function listCart(userId, { limit, offset } = {}) {
+  const ids = await listProductIds(CartItem, userId, { limit, offset });
+  const total = await countProductIds(CartItem, userId);
+  return { ids, total };
 }
 
 export async function addToCart(userId, productId) {

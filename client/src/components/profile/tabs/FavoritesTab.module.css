@@ -1,28 +1,17 @@
-.favoritesGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 25px;
-}
-
-.removeFavoriteButton {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
+.sectionTopRow {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #ff4444;
-  z-index: 10;
-  transition: all 0.3s;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.clearAllButton{
+.sectionHeading {
+  margin: 0;
+}
+
+.clearAllButton {
   border: 1px solid #999;
   background: #fff;
   color: #333;
@@ -30,21 +19,124 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+
+.clearAllButton:hover {
+  border-color: #002870;
+  color: #002870;
+}
+
+.favoritesList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.favoriteItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.favoriteItem:hover {
+  background: #e8e8e8;
+}
+
+.favoriteProductInfo {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex: 1;
+}
+
+.favoriteProductImage {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #e8e8e8;
+}
+
+.favoriteProductImagePlaceholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.favoriteProductMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.favoriteProductName {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #002870;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.favoriteProductDesc {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.favoriteBestPrice {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.favoriteBestPrice b {
+  color: #002870;
+  font-size: 16px;
+}
+
+.favoriteNoPrice {
+  margin: 0;
+  font-size: 14px;
+  color: #999;
+}
+
+.removeFavoriteButton {
+  background: none;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #999;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
 .removeFavoriteButton:hover {
   background: #ff4444;
   color: white;
-  transform: scale(1.1);
-}
-
-.endAlignedRow {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 15px;
-}
-
-.relativeCard {
-  position: relative;
 }
 
 .emptyState {
@@ -65,4 +157,26 @@
 
 .emptyState p {
   font-size: 16px;
+}
+
+@media (max-width: 600px) {
+  .favoriteItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .favoriteProductInfo {
+    width: 100%;
+  }
+
+  .removeFavoriteButton {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+
+  .favoriteItem {
+    position: relative;
+    padding-right: 50px;
+  }
 }

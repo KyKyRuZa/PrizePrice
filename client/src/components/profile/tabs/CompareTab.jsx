@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, TrendingUp, X } from 'lucide-react';
+import { TrendingUp, X, ExternalLink } from 'lucide-react';
 import { formatComparePrice, getCompareOffers } from '../../../services/compareService';
 import styles from './CompareTab.module.css';
 
@@ -18,21 +18,27 @@ const CompareTab = ({ cartCount, cart, removeFromCart, clearCart, openExternalLi
     <>
       <div className={styles.sectionTopRow}>
         <h3 className={styles.sectionHeading}>Сравнение цен</h3>
-        <div className={styles.actionGroup}>
-          <button className={styles.smallBtn} onClick={clearCart} title="Очистить сравнение">
-            <X size={16} />
-            Очистить
-          </button>
-        </div>
+        <button className={styles.clearAllButton} onClick={clearCart} title="Очистить сравнение">
+          <X size={16} />
+          Очистить
+        </button>
       </div>
 
       <div className={styles.compareList}>
         {cart.map((product) => {
           const offers = [...getCompareOffers(product)].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
-          const best = offers[0];
 
           return (
-            <div key={product.id} className={styles.compareItem}>
+            <div
+              key={product.id}
+              className={styles.compareItem}
+              onClick={() => {
+                const best = offers[0];
+                if (best?.link) {
+                  openExternalLink(best.link);
+                }
+              }}
+            >
               <div className={styles.compareProductInfo}>
                 {product.image ? (
                   <img src={product.image} alt={product.name} className={styles.compareProductImage} />
@@ -41,37 +47,35 @@ const CompareTab = ({ cartCount, cart, removeFromCart, clearCart, openExternalLi
                 )}
                 <div className={styles.compareProductMeta}>
                   <h4 className={styles.compareProductName}>{product.name}</h4>
-                  {best?.price != null ? (
-                    <p className={styles.compareBestPrice}>
-                      Лучшая: <b>{formatComparePrice(best.price)}</b> на {best.marketplace}
-                    </p>
-                  ) : null}
+                  <div className={styles.compareOffersPreview}>
+                    {offers.length === 0 ? (
+                      <span className={styles.noOffersText}>Нет предложений</span>
+                    ) : (
+                      <div className={styles.offersPreviewList}>
+                        {offers.slice(0, 3).map((offer, idx) => (
+                          <span key={idx} className={styles.offerPreviewItem}>
+                            {offer.marketplace}: <b>{formatComparePrice(offer.price)}</b>
+                          </span>
+                        ))}
+                        {offers.length > 3 && (
+                          <span className={styles.offerMore}>ещё {offers.length - 3}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className={styles.compareOffers}>
-                {offers.length === 0 ? (
-                  <p className={styles.noOffers}>Нет предложений</p>
-                ) : (
-                  offers.map((offer, idx) => (
-                    <div key={`${product.id}-${idx}`} className={styles.compareOffer}>
-                      <span className={styles.offerMarketplace}>{offer.marketplace}</span>
-                      <span className={styles.offerPrice}>{formatComparePrice(offer.price)}</span>
-                      {offer.discount ? (
-                        <span className={styles.offerDiscount}>-{offer.discount}%</span>
-                      ) : null}
-                      {offer.link ? (
-                        <button className={styles.offerLinkBtn} onClick={() => openExternalLink(offer.link)}>
-                          <ShoppingBag size={14} />
-                        </button>
-                      ) : null}
-                      <button className={styles.removeOfferBtn} onClick={() => removeFromCart(product.id)}>
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
+              <button
+                className={styles.removeItemBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeFromCart(product.id);
+                }}
+                title="Убрать из сравнения"
+              >
+                <X size={18} />
+              </button>
             </div>
           );
         })}

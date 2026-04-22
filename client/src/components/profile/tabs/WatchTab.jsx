@@ -1,7 +1,5 @@
 import React from 'react';
-import { Bell } from 'lucide-react';
-import ProductCardMain from '../../products/ProductCardMain';
-import WatchPriceModal from '../../watch/WatchPriceModal';
+import { Bell, Settings, Trash2 } from 'lucide-react';
 import styles from './WatchTab.module.css';
 
 const WatchTab = ({ watchesCount, watches, setActiveTab, handleProductClick, openWatchModal, removeWatch }) => {
@@ -24,27 +22,57 @@ const WatchTab = ({ watchesCount, watches, setActiveTab, handleProductClick, ope
         </div>
       </div>
 
-      <div className={styles.watchesGrid}>
+      <div className={styles.watchesList}>
         {watches.map((it) => {
           const product = it?.product;
           const watch = it?.watch;
           if (!product?.id) return null;
 
           return (
-            <div key={product.id} className={styles.relativeCard}>
-              <ProductCardMain product={product} onClick={handleProductClick} />
-              <div className={styles.watchMeta}>
-                {watch?.targetPrice != null ? (
-                  <span className={styles.metaBadge}>Цель: {Number(watch.targetPrice)}₽</span>
-                ) : null}
-                {watch?.dropPercent != null ? (
-                  <span className={styles.metaBadge}>Падение: {Number(watch.dropPercent)}%</span>
-                ) : null}
-                <span className={styles.metaBadge}>{watch?.active ? 'Активно' : 'Пауза'}</span>
-                <span className={styles.watchActions}>
-                  <button className={styles.smallBtn} onClick={() => openWatchModal(product, watch)}>Настроить</button>
-                  <button className={styles.smallBtn} onClick={() => removeWatch(product.id)}>Удалить</button>
-                </span>
+            <div key={product.id} className={styles.watchItem} onClick={() => handleProductClick(product)}>
+              <div className={styles.watchProductInfo}>
+                {product.image ? (
+                  <img src={product.image} alt={product.name} className={styles.watchProductImage} />
+                ) : (
+                  <div className={styles.watchProductImagePlaceholder}>Фото</div>
+                )}
+                <div className={styles.watchProductMeta}>
+                  <h4 className={styles.watchProductName}>{product.name}</h4>
+                  <div className={styles.watchBadges}>
+                    {watch?.targetPrice != null && (
+                      <span className={styles.metaBadge}>Цель: {Number(watch.targetPrice)}₽</span>
+                    )}
+                    {watch?.dropPercent != null && (
+                      <span className={styles.metaBadge}>Падение: {Number(watch.dropPercent)}%</span>
+                    )}
+                    <span className={`${styles.metaBadge} ${watch?.active ? styles.badgeActive : styles.badgePaused}`}>
+                      {watch?.active ? 'Активно' : 'Пауза'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.watchActions}>
+                <button
+                  className={styles.actionBtn}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openWatchModal(product, watch);
+                  }}
+                  title="Настроить"
+                >
+                  <Settings size={18} />
+                </button>
+                <button
+                  className={styles.actionBtnDelete}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeWatch(product.id);
+                  }}
+                  title="Удалить"
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
             </div>
           );
