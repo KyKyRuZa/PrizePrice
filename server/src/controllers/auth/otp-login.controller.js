@@ -97,6 +97,15 @@ export const requestCodeForLogin = async (req, res) => {
   const shouldIssueOtp = userRec && isValidPhone(phone);
 
   if (shouldIssueOtp && userRec.id) {
+    // Проверяем User.smsOptOut
+    if (userRec.smsOptOut) {
+      return res.status(403).json({
+        error: "SMS_OPT_OUT",
+        message: "Вы отказались от SMS-сообщений. Вход по коду невозможен. Войдите по паролю или напишите в поддержку: support@prizeprise.ru",
+        supportEmail: "support@prizeprise.ru",
+      });
+    }
+
     try {
       const consents = await getUserConsents(userRec.id);
       const smsConsent = consents?.sms;
@@ -104,7 +113,7 @@ export const requestCodeForLogin = async (req, res) => {
         return res.status(403).json({
           error: "SMS_OPT_OUT",
           message: "Вы отказались от SMS-сообщений. Вход по коду невозможен. Войдите по паролю или напишите в поддержку: support@prizeprise.ru",
-          supportEmail: process.env.SUPPORT_EMAIL || "support@prizeprise.ru",
+          supportEmail: "support@prizeprise.ru",
         });
       }
     } catch (error) {

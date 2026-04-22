@@ -44,7 +44,6 @@ vi.mock('../context/AuthContext', async () => {
 vi.mock('../utils/api/apiClient', () => {
   const mockApiGet = vi.fn();
   mockApiGet.mockImplementation((path) => {
-    // Ignore signal — just return mock data
     if (path === '/products/categories') {
       return Promise.resolve({ categories: ['electronics'] });
     }
@@ -175,7 +174,6 @@ describe('CatalogPage Component', () => {
 
   it('displays product count', async () => {
     await renderCatalogPage();
-    // Элемент "Найдено товаров:" удалён — проверяем, что заголовок страницы присутствует
     expect(screen.getByRole('heading', { level: 1, name: /Каталог товаров/i })).toBeInTheDocument();
   });
 });

@@ -32,14 +32,12 @@ const CatalogPage = () => {
     handlePageChange,
   } = useCatalogPageState();
 
-  // Определяем, есть ли параметры (поиск или фильтры)
   const hasParams = !!searchQuery 
     || filters.category !== ALL_CATEGORY 
     || filters.minPrice 
     || filters.maxPrice 
     || (filters.inStock && filters.inStock !== 'all');
 
-  // SEO: обновляем document.title и meta-теги
   useEffect(() => {
     const title = hasParams
       ? `Результаты поиска: "${searchQuery}" — Каталог | PrizePrice`
@@ -51,7 +49,6 @@ const CatalogPage = () => {
 
     document.title = title;
 
-    // meta description
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement('meta');
@@ -60,7 +57,6 @@ const CatalogPage = () => {
     }
     metaDesc.setAttribute('content', description);
 
-    // canonical
     const canonicalUrl = `https://prizeprise.ru/catalog${hasParams ? location.search : ''}`;
     let linkCanonical = document.querySelector('link[rel="canonical"]');
     if (!linkCanonical) {
@@ -70,7 +66,6 @@ const CatalogPage = () => {
     }
     linkCanonical.href = canonicalUrl;
 
-    // robots (noindex при наличии параметров)
     let metaRobots = document.querySelector('meta[name="robots"]');
     if (hasParams) {
       if (!metaRobots) {
@@ -83,7 +78,6 @@ const CatalogPage = () => {
       metaRobots.remove();
     }
 
-    // Structured Data: CollectionPage (только на основной странице каталога)
     document.head.querySelectorAll('script[data-seo="collectionpage"]').forEach(el => el.remove());
 
     let collectionScript = null;
@@ -101,7 +95,6 @@ const CatalogPage = () => {
       document.head.appendChild(collectionScript);
     }
 
-    // Cleanup
     return () => {
       if (collectionScript) {
         collectionScript.remove();
@@ -109,7 +102,6 @@ const CatalogPage = () => {
     };
   }, [searchQuery, filteredProducts.length, hasParams, location.search]);
 
-  // Закрываем фильтры при изменении размера экрана
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768) {
@@ -121,7 +113,6 @@ const CatalogPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Закрываем фильтры при клике на Escape
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
@@ -133,7 +124,6 @@ const CatalogPage = () => {
     return () => document.removeEventListener('keydown', handleEscape);
   }, []);
 
-  // Блокируем скролл при открытых фильтрах
   useEffect(() => {
     if (isFiltersOpen) {
       document.body.style.overflow = 'hidden';
@@ -148,7 +138,6 @@ const CatalogPage = () => {
   return (
     <div className={styles.catalogContainer}>
       <div className={styles.content}>
-        {/* Заголовок страницы с кнопкой "На главную" */}
         <div className={styles.pageHeader}>
           <div className={styles.headerTop}>
             <h1 className={styles.pageTitle}>
@@ -170,7 +159,6 @@ const CatalogPage = () => {
           </div>
         </div>
 
-        {/* Mobile filter toggle button */}
         <button
           className={styles.mobileFilterButton}
           onClick={() => setIsFiltersOpen(true)}
@@ -181,7 +169,6 @@ const CatalogPage = () => {
           <span>Фильтры</span>
         </button>
 
-        {/* Overlay for mobile filters */}
         {isFiltersOpen && (
           <div
             className={styles.filterOverlay}
@@ -192,7 +179,6 @@ const CatalogPage = () => {
 
         <div className={styles.mainLayout}>
           <div className={`${styles.filtersSection} ${isFiltersOpen ? styles.filtersOpen : ''}`}>
-            {/* Mobile header — показывается только на мобильных */}
             <div className={styles.filtersHeader}>
               <h3>Фильтры</h3>
               <button
@@ -209,7 +195,6 @@ const CatalogPage = () => {
               filters={filters}
               onFilterChange={(newFilters) => {
                 handleFilterChange(newFilters);
-                // На мобильных закрываем фильтры после выбора
                 if (window.innerWidth <= 768) {
                   setIsFiltersOpen(false);
                 }
@@ -220,7 +205,6 @@ const CatalogPage = () => {
           </div>
 
           <div className={styles.productsSection}>
-            {/* Информация о поиске */}
             {searchQuery && (
               <div className={styles.searchResultsInfo}>
                 <div className={styles.searchQueryText}>
@@ -232,10 +216,8 @@ const CatalogPage = () => {
               </div>
             )}
 
-            {/* Заголовок и сортировка */}
             <div className={styles.resultsHeader}>
               <div>
-                {/* h1 уже выше, этот заголовок можно скрыть или оставить для консистентности */}
                 <h2 className={styles.resultsTitle}>
                   {searchQuery ? 'Найденные товары' : 'Все товары'}
                 </h2>
@@ -243,7 +225,6 @@ const CatalogPage = () => {
               <SortOptions sortBy={sortBy} onSortChange={setSortBy} />
             </div>
 
-            {/* Товары или состояния загрузки/ошибки */}
             {isLoadingProducts ? (
               <div className={styles.emptyState}>
                 <h3>Загрузка товаров...</h3>
@@ -266,7 +247,6 @@ const CatalogPage = () => {
               </div>
             )}
 
-            {/* Пагинация */}
             {pagination && pagination.totalPages > 1 && (
               <Pagination
                 page={currentPage}

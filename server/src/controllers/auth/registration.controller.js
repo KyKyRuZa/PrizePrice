@@ -273,6 +273,31 @@ export const registerWithUsername = async (req, res) => {
       passwordUpdatedAt: new Date(),
     });
 
+    const pdConsentText = "Я даю согласие на обработку моих персональных данных (имя, телефон, email, история поиска, избранное и др.) в соответствии с Политикой конфиденциальности";
+    const smsConsentText = "Я даю согласие на получение SMS-сообщений от PrizePrice (в том числе кодов подтверждения при восстановлении пароля) в соответствии с Политикой конфиденциальности";
+
+    try {
+      await recordConsent({
+        userId: user.id,
+        type: 'pd',
+        given: true,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'] || '',
+        consentText: pdConsentText,
+      });
+
+      await recordConsent({
+        userId: user.id,
+        type: 'sms',
+        given: true,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'] || '',
+        consentText: smsConsentText,
+      });
+    } catch (consentError) {
+      logger.error("consent_save_failed", { userId: user.id, error: consentError.message });
+    }
+
     const updatedUser = await getUserById(user.id);
     setAuthCookies(res, user);
     return res.json({ user: updatedUser });

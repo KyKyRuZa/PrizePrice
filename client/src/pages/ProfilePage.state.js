@@ -9,7 +9,7 @@ import { usePriceWatch } from '../context/PriceWatchContext';
 import { useSearchHistory } from '../context/SearchHistoryContext';
 import { INPUT_LIMITS, sanitizeTextInput } from '../utils/validation/inputSanitizers';
 
-const PROFILE_TABS = new Set(['favorites', 'history', 'compare', 'watch', 'notifications']);
+const PROFILE_TABS = new Set(['favorites', 'history', 'compare', 'watch', 'notifications', 'setting']);
 
 export function useProfilePageState() {
   const { user, isAuthenticated, logout, setName, setUser } = useAuth();
@@ -44,9 +44,6 @@ export function useProfilePageState() {
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(() => user?.name || '');
   const [nameError, setNameError] = useState('');
-
-  // No need for separate effect to setActiveTab from URL — handled by useState initialization
-  // Back/forward navigation will re-run the component, initializing state correctly
 
   useEffect(() => {
     if (activeTab === 'notifications') {

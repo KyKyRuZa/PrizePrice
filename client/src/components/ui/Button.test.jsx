@@ -12,7 +12,6 @@ describe('Button Component', () => {
   it('applies the correct variant', () => {
     render(<Button variant="primary">Primary Button</Button>);
     const button = screen.getByRole('button', { name: /Primary Button/i });
-    // We can't easily test styled-component classes, so we'll test behavior instead
     expect(button).toBeInTheDocument();
   });
 
@@ -24,8 +23,6 @@ describe('Button Component', () => {
 
   it('shows loading state with spinner', () => {
     render(<Button loading={true}>Loading Button</Button>);
-    // The spinner is a Loader2 icon, which renders as an SVG element
-    // Check if the button contains an SVG element (the spinner)
     const button = screen.getByRole('button', { name: /Loading Button/i });
     const spinner = button.querySelector('svg');
     expect(spinner).toBeInTheDocument();

@@ -2,12 +2,10 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, vi, beforeEach, expect } from 'vitest';
 
-// Mock errorTracker FIRST
 vi.mock('../../../shared/observability/errorTracker', () => ({
   captureClientException: vi.fn(),
 }));
 
-// Import apiClient and spy on its methods
 import * as apiClientModule from '../../utils/api/apiClient';
 vi.spyOn(apiClientModule, 'apiGet').mockImplementation((path) => {
   if (path === '/me') return Promise.resolve({ user: null });
@@ -41,7 +39,6 @@ const MockComponent = () => {
 
 const renderWithProvider = async (ui) => {
   render(<AuthProvider>{ui}</AuthProvider>);
-  // AuthContext now calls GET /me on init, just wait for it to settle
   await new Promise((r) => setTimeout(r, 50));
 };
 
@@ -59,7 +56,6 @@ describe('AuthContext Tests', () => {
      vi.clearAllMocks();
      clearAuthStorage();
 
-     // Reset mock implementations
      apiGet.mockImplementation((path) => {
        if (path === '/me') return Promise.resolve({ user: null });
        return Promise.resolve({});
@@ -121,7 +117,6 @@ describe('AuthModal Component Tests', () => {
      vi.clearAllMocks();
      clearAuthStorage();
 
-     // Reset mock implementations
      apiGet.mockImplementation((path) => {
        if (path === '/me') return Promise.resolve({ user: null });
        return Promise.resolve({});
@@ -199,7 +194,6 @@ describe('AuthModal Component Tests', () => {
     fireEvent.change(screen.getByTestId('auth-register-password'), { target: { value: 'password123' } });
     fireEvent.change(screen.getByTestId('auth-register-confirm-password'), { target: { value: 'differentpassword' } });
 
-    // Check required consents
     fireEvent.click(screen.getByTestId('terms-agreement-checkbox'));
     fireEvent.click(screen.getByTestId('sms-consent-checkbox'));
     fireEvent.click(screen.getByTestId('auth-register-request-code'));

@@ -20,7 +20,6 @@ const ComparePage = () => {
     getExistingWatch,
   } = useComparePage();
 
-  // SEO для страницы сравнения
   useEffect(() => {
     document.title = 'Сравнение цен — PrizePrice';
     

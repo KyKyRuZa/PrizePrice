@@ -12,7 +12,6 @@ import {
 } from './ProductCardMain.helpers';
 import styles from './ProductCardMain.module.css';
 
-// Lazy load для модалки
 const WatchPriceModal = React.lazy(() => import('../watch/WatchPriceModal'));
 
 const STAR_COUNT = 5;

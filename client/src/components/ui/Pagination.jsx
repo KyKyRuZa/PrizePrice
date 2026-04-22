@@ -7,9 +7,8 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
 
   const currentPage = Math.max(1, Math.min(page, totalPages));
   
-  // Показываем страницы вокруг текущей
   const getVisiblePages = () => {
-    const delta = 2; // Сколько страниц показывать слева и справа от текущей
+    const delta = 2;
     const range = [];
     const rangeWithDots = [];
     let l;
@@ -39,7 +38,6 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
 
   return (
     <nav className={styles.pagination} role="navigation" aria-label="Пагинация страниц">
-      {/* Первая страница */}
       <button
         className={styles.pageButton}
         onClick={() => onPageChange(1)}
@@ -50,7 +48,6 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
         <ChevronsLeft size={18} aria-hidden="true" />
       </button>
 
-      {/* Предыдущая страница */}
       <button
         className={styles.pageButton}
         onClick={() => onPageChange(currentPage - 1)}
@@ -61,7 +58,6 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
         <ChevronLeft size={18} aria-hidden="true" />
       </button>
 
-      {/* Номера страниц */}
       {visiblePages.map((pageNum, index) => (
         pageNum === '...' ? (
           <span key={`dots-${index}`} className={styles.dots}>...</span>
@@ -79,7 +75,6 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
         )
       ))}
 
-      {/* Следующая страница */}
       <button
         className={styles.pageButton}
         onClick={() => onPageChange(currentPage + 1)}
@@ -90,7 +85,6 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
         <ChevronRight size={18} aria-hidden="true" />
       </button>
 
-      {/* Последняя страница */}
       <button
         className={styles.pageButton}
         onClick={() => onPageChange(totalPages)}

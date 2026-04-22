@@ -12,7 +12,6 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    // Можно отправить в errorTracker, но он пустой — оставляем комментарий
   }
 
   handleGoHome = () => {

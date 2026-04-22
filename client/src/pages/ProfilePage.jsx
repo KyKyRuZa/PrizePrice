@@ -1,15 +1,14 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Edit2, Check, X, ArrowLeft, MessageSquare } from 'lucide-react';
+import { LogOut, User, ArrowLeft } from 'lucide-react';
 import WatchPriceModal from '../components/watch/WatchPriceModal';
 import HistoryTab from '../components/profile/tabs/HistoryTab';
 import FavoritesTab from '../components/profile/tabs/FavoritesTab';
 import CompareTab from '../components/profile/tabs/CompareTab';
 import WatchTab from '../components/profile/tabs/WatchTab';
 import NotificationsTab from '../components/profile/tabs/NotificationsTab';
-import SmsOptOutToggle from '../components/profile/SmsOptOutToggle';
+import SettingTab from '../components/profile/tabs/SettingTab';
 import { useProfilePageState } from './ProfilePage.state';
-import { INPUT_LIMITS } from '../utils/validation/inputSanitizers';
 import styles from './ProfilePage.module.css';
 
 const ProfilePage = () => {
@@ -24,17 +23,10 @@ const ProfilePage = () => {
     activeTab,
     setActiveTab,
     watchModalProduct,
-    editingName,
-    newName,
-    nameError,
     paginatedHistory,
     historyPagesCount,
     historyPage,
     goToHistoryPage,
-    handleNameInputChange,
-    handleNameUpdate,
-    startNameEditing,
-    cancelNameEditing,
     handleHistorySearch,
     handleProductClick,
     formatHistoryDate,
@@ -43,7 +35,6 @@ const ProfilePage = () => {
     openWatchModal,
     closeWatchModal,
     openExternalLink,
-    // tabs props
     favorites,
     clearFavorites,
     cart,
@@ -61,7 +52,6 @@ const ProfilePage = () => {
     removeNotification,
   } = useProfilePageState();
 
-  // SEO: обновляем document.title и meta-теги
   useEffect(() => {
     const title = 'Профиль пользователя — PrizePrice';
     const description = 'Личный кабинет PrizePrice: история поиска, избранные товары, сравнение цен, отслеживание скидок и уведомления.';
@@ -120,7 +110,6 @@ const ProfilePage = () => {
   const createdAt = user.created_at || user.createdAt;
   const registrationDate = createdAt ? new Date(createdAt).toLocaleDateString('ru-RU') : '—';
 
-  // Аватар с инициалом
   const avatarInitial = displayName ? displayName.charAt(0).toUpperCase() : '?';
 
   const tabs = [
@@ -129,6 +118,7 @@ const ProfilePage = () => {
     { key: 'compare', label: 'Сравнение' },
     { key: 'watch', label: 'Отслеживание' },
     { key: 'notifications', label: 'Уведомления' },
+    { key: 'setting', label: 'Настройки' }
   ];
 
   return (
@@ -148,52 +138,15 @@ const ProfilePage = () => {
           </div>
 
           <div className={styles.userInfo}>
-            {editingName ? (
-              <div className={styles.nameRow}>
-                <input
-                  className={`${styles.nameInput} ${nameError ? styles.error : ''}`}
-                  type="text"
-                  value={newName}
-                  maxLength={INPUT_LIMITS.DISPLAY_NAME}
-                  onChange={(e) => handleNameInputChange(e.target.value)}
-                  placeholder="Введите ваше имя"
-                  autoFocus
-                />
-                <button className={styles.primaryActionBtn} onClick={handleNameUpdate}>
-                  <Check size={16} /> Сохранить
-                </button>
-                <button className={styles.secondaryActionBtn} onClick={cancelNameEditing}>
-                  <X size={16} /> Отмена
-                </button>
-                {nameError && <div className={styles.nameError}>{nameError}</div>}
-              </div>
-            ) : (
-              <div className={styles.nameRow}>
-                <h1 className={styles.userName}>{displayName}</h1>
-                <button className={styles.editNameBtn} onClick={startNameEditing} aria-label="Редактировать имя">
-                  <Edit2 size={18} />
-                </button>
-              </div>
-            )}
+            <div className={styles.nameRow}>
+              <h1 className={styles.userName}>{displayName}</h1>
+            </div>
 
             <div className={styles.userDetails}>
               {user.phone && <div>Телефон: {user.phone}</div>}
               {user.email && <div>Email: {user.email}</div>}
               <div>Дата регистрации: {registrationDate}</div>
             </div>
-          </div>
-
-          <div className={styles.userDetails}>
-            <div className={styles.settingsTitle}>
-              <MessageSquare size={18} style={{ marginRight: 8 }} />
-              SMS-уведомления
-            </div>
-            <SmsOptOutToggle
-              smsOptOut={user.sms_opt_out === true}
-              onSuccess={(optedOut) => {
-                setUser({ ...user, sms_opt_out: optedOut });
-              }}
-            />
           </div>
 
           <button className={styles.logoutButton} onClick={handleLogout}>
@@ -271,6 +224,10 @@ const ProfilePage = () => {
                 removeNotification={removeNotification}
                 openExternalLink={openExternalLink}
               />
+            )}
+
+            {activeTab === 'setting' && (
+              <SettingTab user={user} onUserUpdate={setUser} />
             )}
           </div>
         </div>

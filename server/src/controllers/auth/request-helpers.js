@@ -2,6 +2,7 @@ import { config } from "../../config/index.js";
 import { constants as otpConstants, generateOtp, saveCode } from "../../services/otp.service.js";
 import { sendSms, isConfigured as isSmsConfigured } from "../../services/sms.provider.js";
 import { getUserConsents } from "../../services/consent.service.js";
+import { User } from "../../models/index.js";
 import { INPUT_LIMITS, isValidLoginInput, sanitizeTextInput } from "../../utils/sanitize.js";
 import { parsePhone } from "./shared.js";
 import { logger } from "../../utils/logger.js";
@@ -70,10 +71,18 @@ export async function issueOtpCode(otpKey, phone, { userId = null, purpose = 'lo
   // Проверяем SMS opt-out если известен userId
   if (userId) {
     try {
+      // Сначала проверяем User.smsOptOut
+      const user = await User.findByPk(userId, { attributes: ['smsOptOut'] });
+      if (user?.smsOptOut) {
+        logger.info("sms_blocked_user_opt_out", { userId, phone, purpose });
+        return { code, smsSent: false, blocked: true };
+      }
+
+      // Затем проверяем user_consents
       const consents = await getUserConsents(userId);
       const smsConsent = consents?.sms;
       if (smsConsent && !smsConsent.given) {
-        logger.info("sms_blocked_opt_out", { userId, phone, purpose });
+        logger.info("sms_blocked_consent_opt_out", { userId, phone, purpose });
         return { code, smsSent: false, blocked: true };
       }
     } catch (error) {

@@ -46,17 +46,14 @@ export function useCatalogPageState() {
   const [categoryCounts, setCategoryCounts] = useState({});
   const ITEMS_PER_PAGE = 20;
 
-  // Объединяем параметры для debounce (поиск, фильтры, сортировка)
   const filterParams = useMemo(() => ({
     searchQuery,
     filters,
     sortBy,
   }), [searchQuery, filters, sortBy]);
 
-  // Debounce — 300мс, чтобы не слать запрос при каждом вводе
   const debouncedParams = useDebounce(filterParams, 250);
 
-  // Синхронизация с URL (back/forward)
   useEffect(() => {
     const { searchQuery: q, category, minPrice, maxPrice, inStock, sort, page } = parseQueryParams(location.search);
     setSearchQuery(q);
@@ -71,7 +68,6 @@ export function useCatalogPageState() {
     setCurrentPage(page);
   }, [location.search]);
 
-  // Загрузка категорий (один раз при mount)
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
@@ -102,7 +98,6 @@ export function useCatalogPageState() {
     };
   }, []);
 
-  // Загрузка товаров — с отменой предыдущего запроса и игнорированием устаревших ответов
   useEffect(() => {
     let isMounted = true;
     let controller = new AbortController();
@@ -152,7 +147,6 @@ export function useCatalogPageState() {
     };
   }, [debouncedParams, currentPage, availableCategories]);
 
-  // Добавление запроса в историю поиска
   useEffect(() => {
     const query = normalizeSearchQuery(searchQuery);
     if (!query) return;
@@ -190,7 +184,6 @@ export function useCatalogPageState() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Синхронизация URL при изменении состояния (UI -> URL)
   useEffect(() => {
     const params = new URLSearchParams();
     if (searchQuery) params.set('q', searchQuery);

@@ -21,7 +21,6 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
     marketplace: true,
   });
 
-  // Real max price from current category stats
   const currentCategoryStats = categoryCounts[filters.category] || null;
   const categoryMaxPrice = currentCategoryStats?.maxPrice || null;
   const displayMaxPrice = categoryMaxPrice ? categoryMaxPrice.toLocaleString('ru-RU') : null;

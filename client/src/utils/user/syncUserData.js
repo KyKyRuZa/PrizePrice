@@ -1,10 +1,6 @@
 ﻿import { okResponseSchema, userDataPayloadSchema } from '../../contracts/apiSchemas';
 import { apiGet, apiPost } from '../api/apiClient';
 
-/**
- * Centralized user data synchronization utility
- * Manages synchronization between local storage and server for all user data types
- */
 
 const STORAGE_KEYS = {
   FAVORITES: 'prizeprice_favorites',
@@ -106,9 +102,6 @@ const runSyncOperation = async (errorMessage, operation) => {
   }
 };
 
-/**
- * Merge local and server data with conflict resolution
- */
 const mergeData = (localData, serverData, getId) => {
   if (!Array.isArray(localData) || !Array.isArray(serverData)) {
     return serverData || localData || [];
@@ -154,9 +147,6 @@ const mergeData = (localData, serverData, getId) => {
   return orderedIds.map((id) => byId.get(id));
 };
 
-/**
- * Synchronize all user data with the server
- */
 export const syncAllUserData = async () => {
   return runSyncOperation('Error synchronizing user data:', async () => {
     const localSnapshot = readLocalSnapshot();
@@ -173,9 +163,6 @@ export const syncAllUserData = async () => {
   });
 };
 
-/**
- * Upload local changes to server
- */
 export const uploadLocalChanges = async () => {
   return runSyncOperation('Error uploading local changes:', async () => {
     const localSnapshot = readLocalSnapshot();
@@ -186,9 +173,6 @@ export const uploadLocalChanges = async () => {
   });
 };
 
-/**
- * Download server data and merge with local data
- */
 export const downloadAndMergeServerData = async () => {
   return runSyncOperation('Error downloading and merging server data:', async () => {
     const serverData = await getServerUserData();
@@ -201,9 +185,6 @@ export const downloadAndMergeServerData = async () => {
   });
 };
 
-/**
- * Initialize local storage with server data if authenticated
- */
 export const initializeLocalData = async () => {
   return runSyncOperation('Error initializing local data:', async () => {
     const serverData = await getServerUserData();
@@ -216,9 +197,6 @@ export const initializeLocalData = async () => {
   });
 };
 
-/**
- * Clear all local user data
- */
 export const clearLocalUserData = () => {
   for (const channel of DATA_CHANNELS) {
     localStorage.removeItem(channel.storageKey);

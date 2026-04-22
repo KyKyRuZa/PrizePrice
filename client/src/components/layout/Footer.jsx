@@ -6,7 +6,7 @@ import styles from './Footer.module.css';
 const Footer = () => {
   const privacyPolicyUrl = import.meta.env.VITE_PRIVACY_POLICY_URL || '/privacy';
   const termsUrl = import.meta.env.VITE_TERMS_URL || '/terms';
-  const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'support@prizeprise.ru';
+  const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'prizeprise@gmail.com';
 
   return (
     <footer className={styles.footer}>

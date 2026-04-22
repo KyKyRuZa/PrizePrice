@@ -17,13 +17,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Проверяем сессию при загрузке через /api/me (куки отправляются автоматически)
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
       const stored = readStoredSession();
-      // Если есть сохранённый пользователь из предыдущей сессии, показываем его сразу
       if (stored.user) {
         setUser(stored.user);
       }
@@ -68,7 +66,6 @@ export const AuthProvider = ({ children }) => {
     [user, isAuthenticated, isLoading, setUser, actions]
   );
 
-  // Инициализация localStorage для избранного/истории при входе
   useEffect(() => {
     if (isAuthenticated) {
       initializeLocalData().catch((error) => {
@@ -81,7 +78,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
-  // Периодическая синхронизация
   useEffect(() => {
     let intervalId = null;
 

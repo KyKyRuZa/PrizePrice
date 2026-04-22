@@ -43,7 +43,16 @@ export const requestPasswordReset = async (req, res) => {
 
   const user = await User.findOne({ where: { phone } });
 
-  // Проверяем SMS opt-out
+  // Проверяем SMS opt-out (из настроек пользователя)
+  if (user?.smsOptOut) {
+    return res.status(403).json({
+      error: "SMS_OPT_OUT",
+      message: "Вы отказались от SMS-сообщений. Восстановление пароля через SMS невозможно. Обратитесь в поддержку: support@prizeprise.ru",
+      supportEmail: "support@prizeprise.ru",
+    });
+  }
+
+  // Проверяем SMS opt-out (из user_consents)
   if (user) {
     try {
       const consents = await getUserConsents(user.id);
@@ -52,7 +61,7 @@ export const requestPasswordReset = async (req, res) => {
         return res.status(403).json({
           error: "SMS_OPT_OUT",
           message: "Вы отказались от SMS-сообщений. Восстановление пароля через SMS невозможно. Обратитесь в поддержку: support@prizeprise.ru",
-          supportEmail: process.env.SUPPORT_EMAIL || "support@prizeprise.ru",
+          supportEmail: "support@prizeprise.ru",
         });
       }
     } catch (error) {

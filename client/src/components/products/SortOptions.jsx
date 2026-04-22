@@ -16,7 +16,6 @@ const SortOptions = ({ sortBy, onSortChange }) => {
 
   const selectedOption = sortOptions.find(opt => opt.id === sortBy) || sortOptions[0];
 
-  // Close on ESC key
   React.useEffect(() => {
     if (!isOpen) return;
 
@@ -30,7 +29,6 @@ const SortOptions = ({ sortBy, onSortChange }) => {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen]);
 
-  // Close on outside click
   React.useEffect(() => {
     if (!isOpen) return;
 

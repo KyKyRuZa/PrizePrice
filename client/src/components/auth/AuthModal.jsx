@@ -207,6 +207,11 @@ const AuthModal = ({ onClose }) => {
       setVerificationCodeStep('login', data);
     } catch (err) {
       if (handleRateLimitError(err, 'Слишком часто. Попробуйте снова через')) return;
+      const errorCode = getErrorCode(err);
+      if (errorCode === 'SMS_OPT_OUT') {
+        setError('Вы отказались от SMS. Войдите по паролю или напишите: support@prizeprise.ru');
+        return;
+      }
       setError('Не удалось отправить код. Проверьте, что backend запущен.');
     } finally {
       setIsLoading(false);
@@ -295,7 +300,7 @@ const AuthModal = ({ onClose }) => {
       phone,
       password,
       confirmPassword,
-      agreedToTerms,
+      pdConsent: agreedToTerms,
       smsConsent,
     });
 
@@ -333,7 +338,7 @@ const AuthModal = ({ onClose }) => {
       phone,
       password,
       confirmPassword,
-      agreedToTerms,
+      pdConsent: agreedToTerms,
       smsConsent,
     });
     if (registrationPayload.error) {
@@ -397,6 +402,12 @@ const AuthModal = ({ onClose }) => {
       setError('');
     } catch (err) {
       if (handleRateLimitError(err, 'Слишком часто. Попробуйте снова через')) return;
+      const errorCode = getErrorCode(err);
+      if (errorCode === 'SMS_OPT_OUT') {
+        const supportEmail = err?.data?.supportEmail || 'support@prizeprise.ru';
+        setError(`Вы отказались от SMS. Восстановление пароля невозможно. Обратитесь: ${supportEmail}`);
+        return;
+      }
       setError('Ошибка при отправке кода. Попробуйте еще раз.');
     } finally {
       setIsLoading(false);

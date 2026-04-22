@@ -6,11 +6,9 @@ import styles from './HomeLandingPage.module.css';
 const HomeLandingPage = () => {
   const navigate = useNavigate();
 
-  // SEO: обновляем document.title и meta-теги
   useEffect(() => {
     document.title = 'Сравнивайте цены на Wildberries, Ozon и Яндекс Маркете — PrizePrice';
     
-    // meta description
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement('meta');
@@ -19,7 +17,6 @@ const HomeLandingPage = () => {
     }
     metaDesc.setAttribute('content', 'PrizePrice — сервис сравнения цен на товары. Сравнивайте предложения с Wildberries, Ozon и Яндекс Маркета, отслеживайте скидки, экономьте.');
 
-    // canonical
     let linkCanonical = document.querySelector('link[rel="canonical"]');
     if (!linkCanonical) {
       linkCanonical = document.createElement('link');
@@ -28,7 +25,6 @@ const HomeLandingPage = () => {
     }
     linkCanonical.href = 'https://prizeprise.ru/';
 
-    // Structured Data: WebSite + SearchAction
     const webSiteScript = document.createElement('script');
     webSiteScript.type = 'application/ld+json';
     webSiteScript.text = JSON.stringify({
@@ -44,7 +40,6 @@ const HomeLandingPage = () => {
     });
     document.head.appendChild(webSiteScript);
 
-    // Structured Data: Organization
     const orgScript = document.createElement('script');
     orgScript.type = 'application/ld+json';
     orgScript.text = JSON.stringify({
@@ -56,7 +51,6 @@ const HomeLandingPage = () => {
     });
     document.head.appendChild(orgScript);
 
-    // Cleanup: удаляем добавленные SEO-скрипты при unmount
     return () => {
       document.head.querySelectorAll('script[data-seo="home-website"]').forEach(el => el.remove());
       document.head.querySelectorAll('script[data-seo="home-org"]').forEach(el => el.remove());
@@ -76,7 +70,6 @@ const HomeLandingPage = () => {
 
   return (
     <div className={styles.landingContainer}>
-      {/* Hero Section */}
       <section className={styles.hero}>
         <div className={styles.heroContent}>
           <h1 className={styles.heroTitle}>
@@ -114,7 +107,6 @@ const HomeLandingPage = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
       <section className={styles.howItWorks}>
         <div className={styles.container}>
           <h2 className={styles.sectionTitle}>Как это работает</h2>
@@ -144,7 +136,6 @@ const HomeLandingPage = () => {
         </div>
       </section>
 
-      {/* Benefits Section */}
       <section className={styles.benefits}>
         <div className={styles.container}>
           <h2 className={styles.sectionTitle}>Почему выбирают PrizePrice</h2>

@@ -35,7 +35,6 @@ const ProductPage = () => {
         : [];
   }, [product]);
 
-  // SEO: обновляем мета-теги и structured data
   useEffect(() => {
     if (!product) return;
 
@@ -58,7 +57,6 @@ const ProductPage = () => {
 
     document.title = title;
 
-    // meta description
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement('meta');
@@ -67,7 +65,6 @@ const ProductPage = () => {
     }
     metaDesc.setAttribute('content', description);
 
-    // canonical
     const canonicalUrl = `https://prizeprise.ru/product/${product.id}`;
     let linkCanonical = document.querySelector('link[rel="canonical"]');
     if (!linkCanonical) {
@@ -77,8 +74,6 @@ const ProductPage = () => {
     }
     linkCanonical.href = canonicalUrl;
 
-    // Structured Data: Product
-    // Удаляем старые скрипты Product
     document.head.querySelectorAll('script[data-seo="product"]').forEach(el => el.remove());
 
     const productScript = document.createElement('script');
@@ -107,9 +102,7 @@ const ProductPage = () => {
      });
     document.head.appendChild(productScript);
 
-    // Cleanup
     return () => {
-      // Удаляем продукт-скрипт
       document.head.querySelectorAll('script[data-seo="product"]').forEach(el => el.remove());
     };
   }, [product, offers]);

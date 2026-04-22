@@ -1,17 +1,13 @@
 import SequelizePkg from "sequelize";
 import { config } from "../config/index.js";
-import { products as seedProducts } from "../data/products.data.js";
 import { runPendingMigrations } from "../db/migrate.js";
 
 const { Sequelize, DataTypes, Op } = SequelizePkg;
 
-// Sequelize instance
 export const sequelize = new Sequelize(config.databaseUrl, {
   dialect: "postgres",
   logging: false,
 });
-
-// --- Models ---
 
 export const User = sequelize.define(
   "User",
@@ -300,6 +296,11 @@ export async function seedDbIfEmpty() {
 export const UserConsent = sequelize.define(
   "UserConsent",
   {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -338,8 +339,11 @@ export const UserConsent = sequelize.define(
   },
   {
     tableName: "user_consents",
-    timestamps: { createdAt: "created_at", updatedAt: false },
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: false,
     underscored: true,
+    indexes: [{ unique: true, fields: ["user_id", "consent_type"] }],
   }
 );
 
@@ -398,7 +402,9 @@ export const SmsLog = sequelize.define(
   },
   {
     tableName: "sms_logs",
-    timestamps: { createdAt: "created_at", updatedAt: false },
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: false,
     underscored: true,
   }
 );
@@ -411,6 +417,3 @@ User.hasMany(SmsLog, {
    as: "user",
    foreignKey: "userId",
  });
-
- // All models are already exported via `export const` declarations above.
- // No need for additional export statement.

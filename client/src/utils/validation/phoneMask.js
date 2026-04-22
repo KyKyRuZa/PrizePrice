@@ -2,11 +2,6 @@ import { INPUT_LIMITS } from './inputSanitizers';
 
 const PHONE_INPUT_RE = /^\+?[\d\s\-()]{10,32}$/;
 
-/**
- * Форматирует цифры локальной части номера в формат +7 (XXX) XXX-XX-XX
- * digits — только цифры номера БЕЗ кода страны (до 10 цифр)
- * НЕ добавляет и НЕ убирает цифры автоматически
- */
 export const formatPhoneNumber = (digits) => {
   const clean = String(digits ?? '').replace(/\D/g, '').slice(0, 10);
 
@@ -37,7 +32,6 @@ export const formatPhoneNumber = (digits) => {
 export const normalizePhoneInput = (value) => {
   const input = String(value ?? '').trim();
   
-  // Только цифры
   if (/^\d+$/.test(input)) {
     if (input.length === 10) return `+7${input}`;
     if (input.length === 11 && (input[0] === '7' || input[0] === '8')) {
@@ -66,12 +60,9 @@ export const isPhoneLikeInput = (value) => /^[+\d\s\-()]+$/.test(String(value ??
 export const validatePhoneNumber = (phone) => {
   const input = String(phone ?? '').trim();
   
-  // Только цифры — ровно 10
   if (/^\d{10}$/.test(input)) return true;
   
-  // 11 цифр с 7 или 8
   if (/^\d{11}$/.test(input) && (input[0] === '7' || input[0] === '8')) return true;
   
-  // Форматированный
   return Boolean(normalizePhoneInput(phone));
 };

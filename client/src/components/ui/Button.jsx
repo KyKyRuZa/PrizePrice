@@ -36,5 +36,4 @@ export const Button = ({
   );
 };
 
-// Для обратной совместимости
 export default Button;

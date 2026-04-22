@@ -23,7 +23,6 @@ const Header = ({ onSearch, showSearch = true }) => {
   const { cartCount } = useCart();
   const navigate = useNavigate();
 
-  // Слушаем событие очистки поиска
   useEffect(() => {
     const handleClearSearch = () => {
       setSearchQuery('');
@@ -33,7 +32,6 @@ const Header = ({ onSearch, showSearch = true }) => {
     return () => window.removeEventListener('clear-search', handleClearSearch);
   }, []);
 
-  // Закрываем мобильное меню при изменении размера экрана
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768) {
@@ -45,7 +43,6 @@ const Header = ({ onSearch, showSearch = true }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Блокируем скролл при открытом мобильном меню
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -170,7 +167,6 @@ const Header = ({ onSearch, showSearch = true }) => {
           )}
         </nav>
 
-        {/* Burger menu button for mobile */}
         <button
           className={styles.burgerButton}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -182,7 +178,6 @@ const Header = ({ onSearch, showSearch = true }) => {
         </button>
       </div>
 
-      {/* Overlay for mobile menu - closes menu on click */}
       {isMobileMenuOpen && (
         <div
           className={styles.mobileMenuOverlay}
@@ -191,7 +186,6 @@ const Header = ({ onSearch, showSearch = true }) => {
         />
       )}
 
-      {/* Mobile menu dropdown */}
       {isMobileMenuOpen && (
         <div className={styles.mobileMenu} role="menu" aria-label="Мобильное меню">
           {showSearch && (
