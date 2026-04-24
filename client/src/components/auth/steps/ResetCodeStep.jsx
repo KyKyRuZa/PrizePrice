@@ -6,10 +6,8 @@ import { Button } from '../../ui/Button';
 import styles from '../AuthModal.module.css';
 
 const ResetCodeStep = ({
-  phone,
   code,
   setCode,
-  verificationPurpose,
   cooldown,
   canResend,
   isLoading,

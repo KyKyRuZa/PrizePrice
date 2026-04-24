@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Phone } from 'lucide-react';
 import { clampInputValue, INPUT_LIMITS } from '../../../utils/validation/inputSanitizers';
+import { formatPhoneNumber, createPhoneInputHandler, normalizeToRawDigits } from '../../../utils/validation/phoneMask';
+import { detectLoginInputType } from '../AuthModal.helpers';
 import { Input } from '../../ui/Input';
 import { Button } from '../../ui/Button';
 import PasswordField from './PasswordField';
@@ -14,23 +16,44 @@ const LoginStep = ({
   showPassword,
   setShowPassword,
   isLoading,
-  canResend,
-  cooldown,
   onLogin,
   onRequestLoginCode,
   onSwitchToForgot,
   onSwitchToRegister,
 }) => {
+  const loginInputType = detectLoginInputType(loginInput);
+  const isPhone = loginInputType === 'phone';
+
+  const handlePhoneChange = createPhoneInputHandler(loginInput, setLoginInput);
+
+  const handleLoginChange = (e) => {
+    const value = e.target.value;
+    setLoginInput(value.slice(0, INPUT_LIMITS.LOGIN));
+  };
+
+  const handleChange = isPhone ? handlePhoneChange : handleLoginChange;
+
+  useEffect(() => {
+    if (isPhone) {
+      const rawDigits = normalizeToRawDigits(loginInput);
+      if (rawDigits !== loginInput) {
+        setLoginInput(rawDigits);
+      }
+    }
+  }, [isPhone, loginInput, setLoginInput]);
+
   return (
     <form className={styles.form} onSubmit={onLogin} aria-label="Форма входа">
       <Input
-        label="Логин"
+        label={isPhone ? 'Телефон' : 'Логин'}
         type="text"
-        placeholder="Введите телефон или логин"
+        placeholder={isPhone ? '+7 (999) 999-99-99' : 'Введите телефон или логин'}
         icon={<Phone size={20} />}
-        value={loginInput}
-        maxLength={INPUT_LIMITS.LOGIN}
-        onChange={(e) => setLoginInput(clampInputValue(e.target.value, INPUT_LIMITS.LOGIN))}
+        value={isPhone ? formatPhoneNumber(loginInput) : loginInput}
+        maxLength={isPhone ? 18 : INPUT_LIMITS.LOGIN}
+        inputMode={isPhone ? 'tel' : 'text'}
+        autoComplete={isPhone ? 'tel' : 'username'}
+        onChange={handleChange}
         required
       />
 

@@ -17,12 +17,21 @@ export const normalizeLoginInputValue = (rawLogin) => {
   return { login: normalizedPhone || login, isPhoneLike: true, isValid: Boolean(normalizedPhone) };
 };
 
+export const detectLoginInputType = (value) => {
+  const sanitized = sanitizeTextInput(String(value ?? ''), { maxLength: INPUT_LIMITS.LOGIN, stripHtml: true });
+  if (!sanitized) return 'empty';
+  return isPhoneLikeInput(sanitized) ? 'phone' : 'login';
+};
+
 export const getLoginInputError = (normalizedLogin, emptyMessage = 'Пожалуйста, введите email, телефон или логин') => {
   if (!normalizedLogin.login) {
     return emptyMessage;
   }
   if (normalizedLogin.isPhoneLike && !normalizedLogin.isValid) {
     return INVALID_PHONE_FORMAT_MESSAGE;
+  }
+  if (!normalizedLogin.isPhoneLike && /^\d/.test(normalizedLogin.login)) {
+    return 'Логин не может начинаться с цифры';
   }
   return '';
 };
@@ -103,10 +112,13 @@ export const validateRegistrationPayload = ({
   password,
   confirmPassword,
   pdConsent,
-  smsConsent,
 }) => {
   if (!username || !phone || !password || !confirmPassword) {
     return { error: 'Пожалуйста, заполните все поля', phone: '' };
+  }
+
+  if (/^\d/.test(username)) {
+    return { error: 'Логин не может начинаться с цифры', phone: '' };
   }
 
   const normalizedPhone = validateAndNormalizePhone(phone);

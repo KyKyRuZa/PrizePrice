@@ -57,6 +57,8 @@ export const normalizePhoneInput = (value) => {
 
 export const isPhoneLikeInput = (value) => /^[+\d\s\-()]+$/.test(String(value ?? '').trim());
 
+export const normalizeToRawDigits = (value) => String(value ?? '').replace(/\D/g, '').slice(0, 10);
+
 export const validatePhoneNumber = (phone) => {
   const input = String(phone ?? '').trim();
   

@@ -8,8 +8,7 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from "./notifications/api";
-import { DEFAULT_NOTIFICATIONS_LIMIT, UNREAD_POLL_INTERVAL_MS, UNREAD_POLL_LIMIT } from "./notifications/constants";
-import { useSyncedRef } from "./shared/contextUtils";
+import { DEFAULT_NOTIFICATIONS_LIMIT, UNREAD_POLL_INTERVAL_MS } from "./notifications/constants";
 
 export const [NotificationsContext, useNotifications] = createStrictContext({
   name: "NotificationsProvider",
@@ -20,7 +19,6 @@ export const NotificationsProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
   const [items, setItems] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const itemsRef = useSyncedRef(items);
 
   const refresh = useCallback(async ({ limit = DEFAULT_NOTIFICATIONS_LIMIT, unreadOnly = false } = {}) => {
     if (!isAuthenticated) {

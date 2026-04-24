@@ -117,14 +117,14 @@ const AuthModal = ({ onClose }) => {
     return normalizedLogin;
   };
 
-  const getValidatedCodeOrError = () => {
-    const codeError = getOtpCodeError(code);
-    if (codeError) {
-      setError(codeError);
-      return '';
-    }
-    return normalizeOtpCode(code);
-  };
+   const getValidatedCodeOrError = () => {
+     const codeError = getOtpCodeError(code);
+     if (codeError) {
+       setError(codeError);
+       return '';
+     }
+     return normalizeOtpCode(code);
+   };
 
   const clearFlowState = () => {
     setCode('');
@@ -544,24 +544,22 @@ const AuthModal = ({ onClose }) => {
             onRegister={handleSwitchToRegister}
           />
         );
-      case 'login':
-        return (
-          <LoginStep
-            loginInput={loginInput}
-            setLoginInput={setLoginInput}
-            password={password}
-            setPassword={setPassword}
-            showPassword={showPassword}
-            setShowPassword={setShowPassword}
-            isLoading={isLoading}
-            canResend={canResend}
-            cooldown={cooldown}
-            onLogin={handleLogin}
-            onRequestLoginCode={handleRequestLoginCode}
-            onSwitchToForgot={handleSwitchToForgot}
-            onSwitchToRegister={handleSwitchToRegister}
-          />
-        );
+       case 'login':
+         return (
+           <LoginStep
+             loginInput={loginInput}
+             setLoginInput={setLoginInput}
+             password={password}
+             setPassword={setPassword}
+             showPassword={showPassword}
+             setShowPassword={setShowPassword}
+             isLoading={isLoading}
+             onLogin={handleLogin}
+             onRequestLoginCode={handleRequestLoginCode}
+             onSwitchToForgot={handleSwitchToForgot}
+             onSwitchToRegister={handleSwitchToRegister}
+           />
+         );
       case 'register':
         return (
           <RegisterStep
@@ -598,26 +596,25 @@ const AuthModal = ({ onClose }) => {
             onForgotPassword={handleForgotPassword}
           />
         );
-      case 'reset-code':
-        return (
-          <ResetCodeStep
-            phone={phone}
-            code={code}
-            setCode={setCode}
-            verificationPurpose={verificationPurpose}
-            cooldown={cooldown}
-            canResend={canResend}
-            isLoading={isLoading}
-            onSubmit={handleResetCodeSubmit}
-            onResend={handleResendCode}
-          />
-        );
+       case 'reset-code':
+         return (
+           <ResetCodeStep
+             code={code}
+             setCode={setCode}
+             cooldown={cooldown}
+             canResend={canResend}
+             isLoading={isLoading}
+             onSubmit={handleResetCodeSubmit}
+             onResend={handleResendCode}
+           />
+         );
       case 'reset-new-password':
         return (
           <ResetNewPasswordStep
             password={password}
             setPassword={setPassword}
-            confirmPassword={setConfirmPassword}
+            confirmPassword={confirmPassword}
+            setConfirmPassword={setConfirmPassword}
             showPassword={showPassword}
             setShowPassword={setShowPassword}
             showConfirmPassword={showConfirmPassword}
@@ -634,13 +631,12 @@ const AuthModal = ({ onClose }) => {
   return (
     <div
       className={styles.modalOverlay}
-      onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
     >
-      <div className={styles.modalContent} onClick={(event) => event.stopPropagation()}>
+      <div className={styles.modalContent}>
         {step !== 'select' && (
           <button
             className={styles.backButton}
