@@ -107,12 +107,12 @@ export async function issueOtpCode(otpKey, phone, { userId = null, purpose = 'lo
 function getSmsTemplate(purpose) {
   switch (purpose) {
     case 'registration':
-      return 'PrizePrice: ваш код подтверждения для регистрации: {code}. Код действителен 5 минут.';
+      return 'PrizePrice: ваш код подтверждения для регистрации: {code}. Код действителен 5 минут';
     case 'password_reset':
-      return 'PrizePrice: код для восстановления пароля: {code}. Не передавайте его никому.';
+      return 'PrizePrice: код для восстановления пароля: {code}. Код действителен 5 минут';
     case 'login':
     default:
-      return 'PrizePrice: ваш код для входа: {code}. Код действителен 5 минут.';
+      return 'PrizePrice: ваш код для входа: {code}. Код действителен 5 минут';
   }
 }
 
