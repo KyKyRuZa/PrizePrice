@@ -377,33 +377,59 @@ const AuthModal = ({ onClose }) => {
     }
   };
 
-  const handleForgotPassword = async (event) => {
-    event.preventDefault();
-    setError('');
+   const handleForgotPassword = async (event) => {
+     event.preventDefault();
+     setError('');
 
-    const formattedPhone = getNormalizedPhoneOrError();
-    if (!formattedPhone) return;
+     const formattedPhone = getNormalizedPhoneOrError();
+     if (!formattedPhone) return;
 
-    setIsLoading(true);
-    try {
-      const data = await requestPasswordReset(formattedPhone);
-      setVerificationCodeStep('register', data);
-      setError('');
-    } catch (err) {
-      if (handleRateLimitError(err, 'Слишком часто. Попробуйте снова через')) return;
-      const errorCode = getErrorCode(err);
-      if (errorCode === 'SMS_OPT_OUT') {
-        const supportEmail = err?.data?.supportEmail || 'prizeprise@gmail.com';
-        setError(`Вы отказались от SMS. Восстановление пароля невозможно. Обратитесь: ${supportEmail}`);
-        return;
-      }
-      setError('Ошибка при отправке кода. Попробуйте еще раз.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+     setIsLoading(true);
+     try {
+       const data = await requestPasswordReset(formattedPhone);
+       setVerificationCodeStep('reset', data);
+       setError('');
+     } catch (err) {
+       if (handleRateLimitError(err, 'Слишком часто. Попробуйте снова через')) return;
+       const errorCode = getErrorCode(err);
+       if (errorCode === 'SMS_OPT_OUT') {
+         const supportEmail = err?.data?.supportEmail || 'prizeprise@gmail.com';
+         setError(`Вы отказались от SMS. Восстановление пароля невозможно. Обратитесь: ${supportEmail}`);
+         return;
+       }
+       setError('Ошибка при отправке кода. Попробуйте еще раз.');
+     } finally {
+       setIsLoading(false);
+     }
+   };
 
-  const handleResetPassword = async (event) => {
+   const handleRequestPasswordResetCode = async (event) => {
+     event?.preventDefault();
+     setError('');
+     setDebugCode('');
+
+     const formattedPhone = getNormalizedPhoneOrError();
+     if (!formattedPhone) return;
+
+     setIsLoading(true);
+     try {
+       const data = await requestPasswordReset(formattedPhone);
+       setVerificationCodeStep('reset', data);
+     } catch (err) {
+       if (handleRateLimitError(err, 'Слишком часто. Попробуйте снова через')) return;
+       const errorCode = getErrorCode(err);
+       if (errorCode === 'SMS_OPT_OUT') {
+         const supportEmail = err?.data?.supportEmail || 'prizeprise@gmail.com';
+         setError(`Вы отказались от SMS. Восстановление пароля невозможно. Обратитесь: ${supportEmail}`);
+         return;
+       }
+       setError('Ошибка при отправке кода. Попробуйте еще раз.');
+     } finally {
+       setIsLoading(false);
+     }
+   };
+
+   const handleResetPassword = async (event) => {
     event.preventDefault();
     setError('');
 
@@ -470,15 +496,17 @@ const AuthModal = ({ onClose }) => {
     setStep('reset-new-password');
   };
 
-  const handleResendCode = () => {
-    if (verificationPurpose === 'login') {
-      handleRequestLoginCode({ preventDefault: () => {} });
-    } else if (verificationPurpose === 'register') {
-      handleRequestRegistrationCode({ preventDefault: () => {} });
-    } else {
-      handleRequestCode({ preventDefault: () => {} });
-    }
-  };
+   const handleResendCode = () => {
+     if (verificationPurpose === 'login') {
+       handleRequestLoginCode({ preventDefault: () => {} });
+     } else if (verificationPurpose === 'register') {
+       handleRequestRegistrationCode({ preventDefault: () => {} });
+     } else if (verificationPurpose === 'reset') {
+       handleRequestPasswordResetCode({ preventDefault: () => {} });
+     } else {
+       handleRequestCode({ preventDefault: () => {} });
+     }
+   };
 
   const getSubtitle = () => {
     if (step === 'login') {

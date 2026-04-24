@@ -26,6 +26,7 @@ export const userSchema = z
     createdAt: timestampSchema.optional(),
     hasPassword: z.boolean(),
     passwordUpdatedAt: timestampSchema.nullable().optional(),
+    sms_opt_out: z.boolean().optional(),
   })
   .passthrough();
 

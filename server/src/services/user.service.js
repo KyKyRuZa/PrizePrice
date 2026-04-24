@@ -26,6 +26,7 @@ function toPublicUser(user) {
     createdAt: user.createdAt,
     hasPassword: Boolean(user.passwordHash),
     passwordUpdatedAt: user.passwordUpdatedAt ?? null,
+    sms_opt_out: user.smsOptOut,
   };
 }
 
