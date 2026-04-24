@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState, Suspense } from 'react';
+import React, { useMemo, useState, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Heart, Star, TrendingUp } from 'lucide-react';
 
@@ -19,12 +19,15 @@ const STAR_COUNT = 5;
 const ProductCardMain = ({ product, onClick }) => {
   const { addToFavorites, removeFromFavorites, isInFavorites } = useFavorites();
   const { addToCart, isInCart } = useCart();
-  const { getWatch } = usePriceWatch();
+  const { watches } = usePriceWatch();
   const navigate = useNavigate();
 
   const isFavorite = isInFavorites(product.id);
   const inCart = isInCart(product.id);
-  const existingWatch = useMemo(() => getWatch(product.id), [getWatch, product.id]);
+  const existingWatch = useMemo(() => {
+    const pid = Number(product.id);
+    return watches.find((it) => Number(it?.watch?.productId ?? it?.productId) === pid) || null;
+  }, [product.id, watches]);
   const [showWatch, setShowWatch] = useState(false);
 
   const marketplaceRows = useMemo(() => buildMarketplaceRows(product.prices), [product.prices]);

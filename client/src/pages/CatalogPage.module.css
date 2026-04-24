@@ -189,6 +189,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
+  content-visibility: auto;
+  contain-intrinsic-size: 1200px;
 }
 
 .emptyState {
@@ -357,9 +359,9 @@
      height: 40px;
    }
 
-  .filtersSection.filtersOpen {
-    transform: translateX(0);
-  }
+   .filtersSection.filtersOpen {
+     transform: translateX(0);
+   }
 
    .pageHeader {
      margin-top: 70px; /* space for mobile filter button */
@@ -370,44 +372,44 @@
      margin: 0;
    }
 
-  .resultsCount {
-    margin-top: 8px;
-  }
+   .resultsCount {
+     margin-top: 8px;
+   }
 
-  .productsSection {
-    padding: 15px;
-  }
+   .productsSection {
+     padding: 15px;
+   }
 
-  .productsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-  }
+   .productsGrid {
+     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+     gap: 15px;
+   }
 
-  .resultsHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
+   .resultsHeader {
+     flex-direction: column;
+     align-items: flex-start;
+     gap: 10px;
+   }
 
-  /* Ensure filter content stays within panel */
-  .filtersContainer {
-    padding-bottom: 80px;
-  }
+   /* Ensure filter content stays within panel */
+   .filtersContainer {
+     padding-bottom: 80px;
+   }
 
-  .resetButton {
-    position: sticky;
-    bottom: 0;
-    background: white;
-    border-top: 2px solid #e0e0e0;
-    border-radius: 0;
-    padding: 15px;
-    margin-top: 20px;
-  }
+   .resetButton {
+     position: sticky;
+     bottom: 0;
+     background: white;
+     border-top: 2px solid #e0e0e0;
+     border-radius: 0;
+     padding: 15px;
+     margin-top: 20px;
+   }
 
-  .backToHomeButton {
-    width: 40px;
-    height: 40px;
-  }
+   .backToHomeButton {
+     width: 40px;
+     height: 40px;
+   }
 }
 
 /* ==================== SMALL MOBILE (≤480px) ==================== */
@@ -425,6 +427,7 @@
 
    .pageTitle {
      font-size: 1.25rem;
+     margin: 0;
    }
 
   .pageTitle {

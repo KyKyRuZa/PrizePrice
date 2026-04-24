@@ -40,7 +40,7 @@ const ScrollToTop = () => {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const toggleVisibility = () => setVisible(window.scrollY > 300);
-    window.addEventListener('scroll', toggleVisibility);
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
   if (!visible) return null;
@@ -58,20 +58,20 @@ function App() {
         <div className="app-container">
           <HeaderWithRouter />
           <main id="main-content" className="main-content" role="main" tabIndex="-1">
-            <Suspense fallback={<PageLoader />}>
-               <ErrorBoundary>
-                 <Routes>
-                   <Route path="/" element={<HomeLandingPage />} />
-                   <Route path="/catalog" element={<CatalogPage />} />
-                   <Route path="/product/:id" element={<ProductPage />} />
-                   <Route path="/search" element={<SearchPage />} />
-                   <Route path="/profile" element={<ProfilePage />} />
-                   <Route path="/compare" element={<ComparePage />} />
-                   <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                   <Route path="/terms" element={<TermsOfServicePage />} />
-                 </Routes>
-               </ErrorBoundary>
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<HomeLandingPage />} />
+                  <Route path="/catalog" element={<CatalogPage />} />
+                  <Route path="/product/:id" element={<ProductPage />} />
+                  <Route path="/search" element={<SearchPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/compare" element={<ComparePage />} />
+                  <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                  <Route path="/terms" element={<TermsOfServicePage />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
           </main>
           <Footer />
           <ScrollToTop />

@@ -217,6 +217,8 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: 15px;
+  content-visibility: auto;
+  contain-intrinsic-size: 600px;
 }
 
 .offersTable th,

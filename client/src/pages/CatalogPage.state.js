@@ -74,11 +74,14 @@ export function useCatalogPageState() {
 
     async function loadCategories() {
       try {
-        const categories = await fetchAvailableCategories({ signal: controller.signal });
+        const [categories, counts] = await Promise.all([
+          fetchAvailableCategories({ signal: controller.signal }),
+          fetchCategoryCounts({ signal: controller.signal })
+        ]);
+        
         if (!isMounted) return;
         setAvailableCategories(categories);
 
-        const counts = await fetchCategoryCounts({ signal: controller.signal });
         if (isMounted && counts) {
           const total = Object.values(counts).reduce((sum, entry) => sum + (entry.count || 0), 0);
           const overallMax = Object.values(counts).reduce((max, entry) => Math.max(max, entry.maxPrice || 0), 0);

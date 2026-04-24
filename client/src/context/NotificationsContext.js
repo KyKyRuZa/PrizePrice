@@ -1,15 +1,14 @@
-﻿import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 
 import { useAuth } from "./AuthContext";
 import { createStrictContext } from "./createStrictContext";
 import {
   deleteNotification,
   fetchNotifications,
-  fetchUnreadCount,
   markAllNotificationsRead,
   markNotificationRead,
 } from "./notifications/api";
-import { DEFAULT_NOTIFICATIONS_LIMIT, UNREAD_POLL_INTERVAL_MS } from "./notifications/constants";
+import { DEFAULT_NOTIFICATIONS_LIMIT, UNREAD_POLL_INTERVAL_MS, UNREAD_POLL_LIMIT } from "./notifications/constants";
 import { useSyncedRef } from "./shared/contextUtils";
 
 export const [NotificationsContext, useNotifications] = createStrictContext({
@@ -25,28 +24,16 @@ export const NotificationsProvider = ({ children }) => {
 
   const refresh = useCallback(async ({ limit = DEFAULT_NOTIFICATIONS_LIMIT, unreadOnly = false } = {}) => {
     if (!isAuthenticated) {
-      setItems([]);
+      if (!unreadOnly) setItems([]);
       setUnreadCount(0);
       return;
     }
 
     const data = await fetchNotifications({ limit, unreadOnly });
-    setItems(Array.isArray(data?.items) ? data.items : []);
+    if (!unreadOnly) {
+      setItems(Array.isArray(data?.items) ? data.items : []);
+    }
     setUnreadCount(Number(data?.unreadCount ?? 0));
-  }, [isAuthenticated]);
-
-  const refreshUnread = useCallback(async () => {
-    if (!isAuthenticated) {
-      setUnreadCount(0);
-      return;
-    }
-
-    try {
-      const data = await fetchUnreadCount();
-      setUnreadCount(Number(data?.unreadCount ?? 0));
-    } catch {
-      // ignore
-    }
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -56,9 +43,11 @@ export const NotificationsProvider = ({ children }) => {
       return undefined;
     }
 
-    refreshUnread();
+    // Первоначальная загрузка всех уведомлений
+    refresh();
 
-    const timer = setInterval(() => refreshUnread(), UNREAD_POLL_INTERVAL_MS);
+    // Интервал обновляет только счетчик unread (одним запросом)
+    const timer = setInterval(() => refresh({ unreadOnly: true }), UNREAD_POLL_INTERVAL_MS);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
@@ -76,10 +65,10 @@ export const NotificationsProvider = ({ children }) => {
 
     if (isAuthenticated) {
       markNotificationRead(notificationId)
-        .then(() => refreshUnread())
+        .then(() => refresh({ unreadOnly: true }))
         .catch(() => null);
     }
-  }, [isAuthenticated, refreshUnread]);
+  }, [isAuthenticated, refresh]);
 
   const markAll = useCallback(async () => {
     setItems((prev) => (Array.isArray(prev) ? prev.map((item) => ({ ...item, read: true })) : prev));
@@ -87,10 +76,10 @@ export const NotificationsProvider = ({ children }) => {
 
     if (isAuthenticated) {
       markAllNotificationsRead()
-        .then(() => refreshUnread())
+        .then(() => refresh({ unreadOnly: true }))
         .catch(() => null);
     }
-  }, [isAuthenticated, refreshUnread]);
+  }, [isAuthenticated, refresh]);
 
   const remove = useCallback(async (id) => {
     const notificationId = Number(id);
@@ -98,30 +87,23 @@ export const NotificationsProvider = ({ children }) => {
 
     setItems((prev) => (Array.isArray(prev) ? prev.filter((item) => item.id !== notificationId) : prev));
 
-    const existing = (itemsRef.current || []).find((item) => item.id === notificationId);
-    if (existing && !existing.read) setUnreadCount((count) => Math.max(0, count - 1));
-
     if (isAuthenticated) {
       deleteNotification(notificationId)
-        .then(() => refreshUnread())
+        .then(() => refresh({ unreadOnly: true }))
         .catch(() => null);
     }
-  }, [isAuthenticated, itemsRef, refreshUnread]);
+  }, [isAuthenticated, refresh]);
 
-   const value = useMemo(
-     () => ({
-       items,
-       unreadCount,
-       refresh,
-       refreshUnread,
-       markRead,
-       markAll,
-       remove,
-     }),
-     [items, unreadCount, refresh, refreshUnread, markRead, markAll, remove]
-   );
+  const value = useMemo(() => ({
+    items,
+    unreadCount,
+    refresh,
+    markRead,
+    markAll,
+    remove,
+  }), [items, unreadCount, refresh, markRead, markAll, remove]);
 
   return React.createElement(NotificationsContext.Provider, { value }, children);
 };
 
-export default { NotificationsProvider, useNotifications, NotificationsContext };
+export default NotificationsProvider;
