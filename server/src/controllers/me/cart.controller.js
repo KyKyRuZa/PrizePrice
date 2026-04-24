@@ -1,18 +1,10 @@
 import { addToCart, listCart, removeFromCart } from "../../services/user.service.js";
-import { listCollectionProducts, parsePaginationParams, requireFiniteParam } from "./shared.js";
+import { buildPaginationResponse, listCollectionProducts, parsePaginationParams, requireFiniteParam } from "./shared.js";
 
 export async function cart(req, res) {
   const pagination = parsePaginationParams(req);
   const result = await listCollectionProducts(req.userId, listCart, pagination);
-  return res.json({
-    items: result.items,
-    pagination: {
-      page: pagination.page,
-      limit: pagination.limit,
-      total: result.total,
-      totalPages: Math.ceil(result.total / pagination.limit),
-    },
-  });
+  return res.json(buildPaginationResponse(result, pagination));
 }
 
 export async function addCart(req, res) {

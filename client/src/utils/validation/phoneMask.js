@@ -66,3 +66,21 @@ export const validatePhoneNumber = (phone) => {
   
   return Boolean(normalizePhoneInput(phone));
 };
+
+export const createPhoneInputHandler = (phone, setPhone) => {
+  return (event) => {
+    const rawValue = event.target.value;
+    const currentDisplay = formatPhoneNumber(phone);
+    const isDelete = rawValue.length < currentDisplay.length;
+
+    if (isDelete && phone.length > 0) {
+      setPhone(phone.slice(0, -1));
+    } else if (!isDelete) {
+      const digits = rawValue.replace(/\D/g, '');
+      const local = (digits.length > 0 && (digits[0] === '7' || digits[0] === '8'))
+        ? digits.slice(1)
+        : digits;
+      setPhone(local.slice(0, 10));
+    }
+  };
+};

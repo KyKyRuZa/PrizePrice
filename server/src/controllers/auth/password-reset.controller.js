@@ -12,12 +12,12 @@ import { hashPassword, validatePassword } from "../../utils/passwords.js";
 import { sendInvalidOtp, sendTooManyRequests } from "../auth.errors.js";
 import {
   buildOtpSuccessPayload,
+  checkSmsConsentOrError,
   issueOtpCode,
   maybeIssueDebugOtp,
   parseBodyOrValidationError,
   parsePhoneOrValidationError,
 } from "./request-helpers.js";
-import { getUserConsents } from "../../services/consent.service.js";
 import { otpCodeSchema, passwordInputSchema, phoneInputSchema } from "./validation.js";
 
 const requestPasswordResetSchema = z.object({ phone: phoneInputSchema });
@@ -41,31 +41,12 @@ export const requestPasswordReset = async (req, res) => {
   }
   await setSendCooldown(resetOtpKey);
 
-  const user = await User.findOne({ where: { phone } });
+   const user = await User.findOne({ where: { phone } });
 
-  if (user?.smsOptOut) {
-    return res.status(403).json({
-      error: "SMS_OPT_OUT",
-      message: "Вы отказались от SMS-сообщений. Восстановление пароля через SMS невозможно. Обратитесь в поддержку: support@prizeprise.ru",
-      supportEmail: "support@prizeprise.ru",
-    });
-  }
-
-  if (user) {
-    try {
-      const consents = await getUserConsents(user.id);
-      const smsConsent = consents?.sms;
-      if (smsConsent && !smsConsent.given) {
-        return res.status(403).json({
-          error: "SMS_OPT_OUT",
-          message: "Вы отказались от SMS-сообщений. Восстановление пароля через SMS невозможно. Обратитесь в поддержку: support@prizeprise.ru",
-          supportEmail: "support@prizeprise.ru",
-        });
-      }
-    } catch (error) {
-      logger.warn("consent_check_failed_reset", { userId: user.id, error: error.message });
-    }
-  }
+   if (user) {
+     const consentError = await checkSmsConsentOrError(user, res, 'password_reset');
+     if (consentError) return;
+   }
 
   const { code, smsSent } = user
     ? await issueOtpCode(resetOtpKey, phone, { userId: user.id, purpose: 'password_reset' })

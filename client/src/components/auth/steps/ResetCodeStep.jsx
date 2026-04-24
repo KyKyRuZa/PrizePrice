@@ -1,7 +1,6 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
 import { INPUT_LIMITS } from '../../../utils/validation/inputSanitizers';
-import { formatPhoneNumber } from '../../../utils/validation/phoneMask';
 import { Input } from '../../ui/Input';
 import { Button } from '../../ui/Button';
 import styles from '../AuthModal.module.css';
@@ -17,23 +16,8 @@ const ResetCodeStep = ({
   onSubmit,
   onResend,
 }) => {
-  const getSubtitle = () => {
-    if (verificationPurpose === 'login') {
-      return 'Введите код подтверждения, который был отправлен на ваш номер телефона для входа в систему';
-    }
-    if (verificationPurpose === 'reset') {
-      return `Введите код, отправленный на ${formatPhoneNumber(phone)}`;
-    }
-    if (verificationPurpose === 'register') {
-      return 'Введите код подтверждения, который был отправлен на ваш номер телефона для завершения регистрации';
-    }
-    return '';
-  };
-
   return (
     <form className={styles.form} onSubmit={onSubmit}>
-      <p className={styles.subtitle}>{getSubtitle()}</p>
-
       <Input
         label="Код из SMS"
         type="text"

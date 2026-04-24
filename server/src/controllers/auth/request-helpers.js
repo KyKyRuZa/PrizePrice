@@ -7,42 +7,76 @@ import { INPUT_LIMITS, isValidLoginInput, sanitizeTextInput } from "../../utils/
 import { parsePhone } from "./shared.js";
 import { logger } from "../../utils/logger.js";
 
+function getSmsOptOutMessage(purpose) {
+  switch (purpose) {
+    case 'password_reset':
+      return "Вы отказались от SMS-сообщений. Восстановление пароля через SMS невозможно. Обратитесь в поддержку: prizeprise@gmail.com";
+    case 'login':
+    default:
+      return "Вы отказались от SMS-сообщений. Вход по коду невозможен. Войдите по паролю или напишите в поддержку: prizeprise@gmail.com";
+  }
+}
+
+export async function checkSmsConsentOrError(user, res, purpose = 'login') {
+  if (!user) return true;
+
+  if (user.smsOptOut) {
+    return res.status(403).json({
+      error: "SMS_OPT_OUT",
+      message: getSmsOptOutMessage(purpose),
+      supportEmail: "prizeprise@gmail.com",
+    });
+  }
+
+  try {
+    const consents = await getUserConsents(user.id);
+    const smsConsent = consents?.sms;
+    if (smsConsent && !smsConsent.given) {
+      return res.status(403).json({
+        error: "SMS_OPT_OUT",
+        message: getSmsOptOutMessage(purpose),
+        supportEmail: "prizeprise@gmail.com",
+      });
+    }
+  } catch (error) {
+    logger.warn(`consent_check_failed_${purpose}`, { userId: user.id, error: error.message });
+  }
+
+  return null;
+}
+
 export function sendValidationError(res) {
   return res.status(400).json({ error: "VALIDATION_ERROR" });
 }
 
-export function parseBodyOrValidationError(schema, body, res) {
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
+function validateOrError(validationFn, res) {
+  const result = validationFn();
+  if (!result) {
     sendValidationError(res);
     return null;
   }
+  return result;
+}
 
-  return parsed.data;
+export function parseBodyOrValidationError(schema, body, res) {
+  return validateOrError(() => {
+    const parsed = schema.safeParse(body);
+    return parsed.success ? parsed.data : null;
+  }, res);
 }
 
 export function parsePhoneOrValidationError(rawPhone, res) {
-  const phone = parsePhone(rawPhone);
-  if (!phone) {
-    sendValidationError(res);
-    return null;
-  }
-
-  return phone;
+  return validateOrError(() => parsePhone(rawPhone), res);
 }
 
 export function sanitizeLoginOrValidationError(rawLogin, res) {
-  const input = sanitizeTextInput(rawLogin, {
-    maxLength: INPUT_LIMITS.LOGIN,
-    stripHtml: true,
-  });
-
-  if (!input || !isValidLoginInput(input)) {
-    sendValidationError(res);
-    return null;
-  }
-
-  return input;
+  return validateOrError(() => {
+    const input = sanitizeTextInput(rawLogin, {
+      maxLength: INPUT_LIMITS.LOGIN,
+      stripHtml: true,
+    });
+    return input && isValidLoginInput(input) ? input : null;
+  }, res);
 }
 
 export function buildOtpSuccessPayload({ message, code = null, smsSent = false } = {}) {

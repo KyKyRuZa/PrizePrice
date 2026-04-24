@@ -1,4 +1,4 @@
-﻿import dotenv from "dotenv";
+import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -175,5 +175,5 @@ export const config = {
    smsConsentPolicyUrl: String(process.env.SMS_CONSENT_POLICY_URL || "/sms-consent").trim(),
    privacyPolicyUrl: String(process.env.PRIVACY_POLICY_URL || "/privacy").trim(),
    termsUrl: String(process.env.TERMS_URL || "/terms").trim(),
-   supportEmail: String(process.env.SUPPORT_EMAIL || "support@prizeprise.ru").trim(),
+    supportEmail: String(process.env.SUPPORT_EMAIL || "prizeprise@gmail.com").trim(),
  };

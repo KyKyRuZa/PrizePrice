@@ -58,3 +58,15 @@ export async function listCollectionProducts(userId, listIdsFn, pagination = {})
   const items = await getProductsByIds(ids);
   return { items, total };
 }
+
+export function buildPaginationResponse(result, pagination) {
+  return {
+    items: result.items,
+    pagination: {
+      page: pagination.page,
+      limit: pagination.limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / pagination.limit),
+    },
+  };
+}

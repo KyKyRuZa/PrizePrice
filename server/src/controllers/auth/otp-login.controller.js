@@ -8,7 +8,6 @@ import {
 } from "../../services/otp.service.js";
 import { findOrCreateUserByPhone, getUserById } from "../../services/user.service.js";
 import { verifyPassword } from "../../utils/passwords.js";
-import { logger } from "../../utils/logger.js";
 import {
   sendInvalidAuthFlow,
   sendInvalidOtp,
@@ -20,12 +19,12 @@ import {
 } from "./shared.js";
 import {
   buildOtpSuccessPayload,
+  checkSmsConsentOrError,
   issueOtpCode,
   parseBodyOrValidationError,
   parsePhoneOrValidationError,
   sanitizeLoginOrValidationError,
 } from "./request-helpers.js";
-import { getUserConsents } from "../../services/consent.service.js";
 import {
   loginInputSchema,
   otpCodeSchema,
@@ -86,43 +85,24 @@ export const requestCodeForLogin = async (req, res) => {
 
   const requestKey = `login_request:${String(sanitizedInput).trim().toLowerCase()}`;
 
-  const allowed = await canSendCode(requestKey);
-  if (!allowed.ok) {
-    return sendTooManyRequests(res, req, allowed.retryAfter);
-  }
-  await setSendCooldown(requestKey);
+   const allowed = await canSendCode(requestKey);
+   if (!allowed.ok) {
+     return sendTooManyRequests(res, req, allowed.retryAfter);
+   }
+   await setSendCooldown(requestKey);
 
-  const userRec = await findUserByLoginInput(sanitizedInput);
-  const phone = userRec?.phone;
-  const shouldIssueOtp = userRec && isValidPhone(phone);
+   const userRec = await findUserByLoginInput(sanitizedInput);
+   const phone = userRec?.phone;
+   const shouldIssueOtp = userRec && isValidPhone(phone);
 
-  if (shouldIssueOtp && userRec.id) {
-    if (userRec.smsOptOut) {
-      return res.status(403).json({
-        error: "SMS_OPT_OUT",
-        message: "Вы отказались от SMS-сообщений. Вход по коду невозможен. Войдите по паролю или напишите в поддержку: support@prizeprise.ru",
-        supportEmail: "support@prizeprise.ru",
-      });
-    }
+   if (shouldIssueOtp && userRec.id) {
+     const consentError = await checkSmsConsentOrError(userRec, res, 'login');
+     if (consentError) return;
+   }
 
-    try {
-      const consents = await getUserConsents(userRec.id);
-      const smsConsent = consents?.sms;
-      if (smsConsent && !smsConsent.given) {
-        return res.status(403).json({
-          error: "SMS_OPT_OUT",
-          message: "Вы отказались от SMS-сообщений. Вход по коду невозможен. Войдите по паролю или напишите в поддержку: support@prizeprise.ru",
-          supportEmail: "support@prizeprise.ru",
-        });
-      }
-    } catch (error) {
-      logger.warn("consent_check_failed_login", { userId: userRec.id, error: error.message });
-    }
-  }
-
-  const { code, smsSent } = shouldIssueOtp
-    ? await issueOtpCode(`login_${phone}`, phone, { userId: userRec.id, purpose: 'login' })
-    : { code: null, smsSent: false };
+   const { code, smsSent } = shouldIssueOtp
+     ? await issueOtpCode(`login_${phone}`, phone, { userId: userRec.id, purpose: 'login' })
+     : { code: null, smsSent: false };
 
   return res.json(
     buildOtpSuccessPayload({

@@ -175,9 +175,9 @@ export const getResetPasswordErrorMessage = (errorCode) => {
   if (errorCode === 'VALIDATION_ERROR') {
     return 'Проверьте номер телефона, код и новый пароль.';
   }
-  if (errorCode === 'SMS_OPT_OUT') {
-    return 'Вы отказались от SMS. Восстановление пароля невозможно. Обратитесь: support@prizeprise.ru';
-  }
+   if (errorCode === 'SMS_OPT_OUT') {
+     return 'Вы отказались от SMS. Восстановление пароля невозможно. Обратитесь: prizeprise@gmail.com';
+   }
   if (typeof errorCode === 'string' && errorCode.startsWith('PASSWORD_')) {
     return 'Новый пароль не соответствует требованиям.';
   }

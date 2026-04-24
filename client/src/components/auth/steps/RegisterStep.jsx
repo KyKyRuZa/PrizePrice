@@ -1,7 +1,7 @@
 import React from 'react';
 import { Phone } from 'lucide-react';
 import { INPUT_LIMITS, clampInputValue, sanitizeTextInput } from '../../../utils/validation/inputSanitizers';
-import { formatPhoneNumber } from '../../../utils/validation/phoneMask';
+import { formatPhoneNumber, createPhoneInputHandler } from '../../../utils/validation/phoneMask';
 import { Input } from '../../ui/Input';
 import { Button } from '../../ui/Button';
 import PasswordField from './PasswordField';
@@ -31,21 +31,7 @@ const RegisterStep = ({
   onRegister,
   onSwitchToLogin,
 }) => {
-  const handlePhoneChange = (event) => {
-    const rawValue = event.target.value;
-    const currentDisplay = formatPhoneNumber(phone);
-    const isDelete = rawValue.length < currentDisplay.length;
-
-    if (isDelete && phone.length > 0) {
-      setPhone(phone.slice(0, -1));
-    } else if (!isDelete) {
-      const digits = rawValue.replace(/\D/g, '');
-      const local = (digits.length > 0 && (digits[0] === '7' || digits[0] === '8'))
-        ? digits.slice(1)
-        : digits;
-      setPhone(local.slice(0, 10));
-    }
-  };
+  const handlePhoneChange = createPhoneInputHandler(phone, setPhone);
 
   return (
     <form className={styles.form} onSubmit={onRequestCode}>
