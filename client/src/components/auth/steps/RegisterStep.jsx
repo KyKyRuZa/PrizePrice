@@ -104,14 +104,24 @@ const RegisterStep = ({
           />
           <span className={styles.customCheckbox}></span>
           <span className={styles.text}>
-            Нажимая на кнопку, я соглашаюсь с правилами пользования торговой площадкой и {' '}
+            Нажимая на кнопку, я соглашаюсь с{' '} 
+            <a
+              href={'/terms'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.link}
+            >
+              пользовательским соглашением
+            </a>
+            {' '} 
+            и {' '}
             <a
               href={'/privacy'}
               target="_blank"
               rel="noopener noreferrer"
               className={styles.link}
             >
-              Политикой конфиденциальности
+              политикой конфиденциальности
             </a>
           </span>
         </label>
@@ -140,7 +150,7 @@ const RegisterStep = ({
               rel="noopener noreferrer"
               className={styles.link}
             >
-              Политикой конфиденциальности
+              политикой конфиденциальности
             </a>
           </span>
         </label>

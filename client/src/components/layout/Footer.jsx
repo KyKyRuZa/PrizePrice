@@ -6,7 +6,6 @@ import styles from './Footer.module.css';
 const Footer = () => {
   const privacyPolicyUrl = import.meta.env.VITE_PRIVACY_POLICY_URL || '/privacy';
   const termsUrl = import.meta.env.VITE_TERMS_URL || '/terms';
-  const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'prizeprise@gmail.com';
 
   return (
     <footer className={styles.footer}>
@@ -24,25 +23,28 @@ const Footer = () => {
 
         <div className={styles.supportSection}>
           <p>{SUPPORT_TEXT}</p>
-          <p style={{ marginTop: '8px' }}>
-            По вопросам: <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
-          </p>
         </div>
 
         <div className={styles.footerGrid}>
-          <div className={styles.footerSection}>
-            <h3>Компания</h3>
+                    <div className={styles.footerSection}>
+            <h3>Реквизиты</h3>
             <ul>
-              <li><a href="#">О нас</a></li>
-              <li><a href="#">Контакты</a></li>
+              <li>ИНН: 1684029254</li>
+              <li>ОГРН/ОГРНИП: 1251600051229</li>
+              <li>Адрес: 420059, Россия, Республика Татарстан, г. Казань, ул. Халева, д. 11, кв. 60</li>
             </ul>
           </div>
-
           <div className={styles.footerSection}>
-            <h3>Помощь</h3>
+            <h3>Документы</h3>
             <ul>
               <li><Link to={privacyPolicyUrl}>Политика конфиденциальности</Link></li>
               <li><Link to={termsUrl}>Пользовательское соглашение</Link></li>
+            </ul>
+          </div>
+          <div className={styles.footerSection}>
+            <h3>Контакты</h3>
+            <ul>
+              <li>Email: prizeprise@gmail.com</li>
             </ul>
           </div>
         </div>
