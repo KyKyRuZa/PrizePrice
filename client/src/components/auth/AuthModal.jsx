@@ -290,80 +290,69 @@ const AuthModal = ({ onClose }) => {
     clearFlowState();
   };
 
-  const handleRequestRegistrationCode = async (event) => {
-    event.preventDefault();
-    setError('');
-    setSmsConsentError('');
+   const validateRegistrationData = () => {
+     const registrationPayload = validateRegistrationPayload({
+       username,
+       phone,
+       password,
+       confirmPassword,
+       pdConsent: agreedToTerms,
+       smsConsent,
+     });
 
-    const registrationPayload = validateRegistrationPayload({
-      username,
-      phone,
-      password,
-      confirmPassword,
-      pdConsent: agreedToTerms,
-      smsConsent,
-    });
+     if (registrationPayload.error) {
+       if (registrationPayload.error.includes('SMS')) {
+         setSmsConsentError(registrationPayload.error);
+       } else {
+         setError(registrationPayload.error);
+       }
+       return null;
+     }
 
-    if (registrationPayload.error) {
-      if (registrationPayload.error.includes('SMS')) {
-        setSmsConsentError(registrationPayload.error);
-        return;
-      }
-      setError(registrationPayload.error);
-      return;
-    }
+     return registrationPayload.phone;
+   };
 
-    const formattedPhone = registrationPayload.phone;
+   const handleRequestRegistrationCode = async (event) => {
+     event.preventDefault();
+     setError('');
+     setSmsConsentError('');
 
-    setIsLoading(true);
-    try {
-      const data = await requestCodeForRegistration(username, formattedPhone, password, confirmPassword, smsConsent);
-      setVerificationCodeStep('register', data);
-    } catch (err) {
-      const errorCode = getErrorCode(err);
-      if (handleRateLimitError(err, 'Слишком часто. Попробуйте снова через')) return;
-      setError(getRegistrationErrorMessage(errorCode));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+     const formattedPhone = validateRegistrationData();
+     if (!formattedPhone) return;
 
-  const handleRegister = async (event) => {
-    event.preventDefault();
-    setError('');
-    setSmsConsentError('');
+     setIsLoading(true);
+     try {
+       const data = await requestCodeForRegistration(username, formattedPhone, password, confirmPassword, smsConsent);
+       setVerificationCodeStep('register', data);
+     } catch (err) {
+       const errorCode = getErrorCode(err);
+       if (handleRateLimitError(err, 'Слишком часто. Попробуйте снова через')) return;
+       setError(getRegistrationErrorMessage(errorCode));
+     } finally {
+       setIsLoading(false);
+     }
+   };
 
-    const registrationPayload = validateRegistrationPayload({
-      username,
-      phone,
-      password,
-      confirmPassword,
-      pdConsent: agreedToTerms,
-      smsConsent,
-    });
-    if (registrationPayload.error) {
-      if (registrationPayload.error.includes('SMS')) {
-        setSmsConsentError(registrationPayload.error);
-        return;
-      }
-      setError(registrationPayload.error);
-      return;
-    }
+   const handleRegister = async (event) => {
+     event.preventDefault();
+     setError('');
+     setSmsConsentError('');
 
-    const formattedPhone = registrationPayload.phone;
+     const formattedPhone = validateRegistrationData();
+     if (!formattedPhone) return;
 
-    setIsLoading(true);
-    try {
-      await registerWithUsername(username, formattedPhone, password, smsConsent);
-      onClose();
-    } catch (err) {
-      const errorCode = getErrorCode(err);
-      if (handleRateLimitError(err, 'Слишком много попыток. Попробуйте снова через')) return;
-      setError(getRegistrationErrorMessage(errorCode));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+     setIsLoading(true);
+     try {
+       await registerWithUsername(username, formattedPhone, password, smsConsent);
+       onClose();
+     } catch (err) {
+       const errorCode = getErrorCode(err);
+       if (handleRateLimitError(err, 'Слишком много попыток. Попробуйте снова через')) return;
+       setError(getRegistrationErrorMessage(errorCode));
+     } finally {
+       setIsLoading(false);
+     }
+   };
 
   const handleRegisterWithCode = async (event) => {
     event.preventDefault();
@@ -445,28 +434,28 @@ const AuthModal = ({ onClose }) => {
     }
   };
 
-  const handleSwitchToLogin = () => {
-    setStep('login');
-    clearVerificationContext();
-  };
+   const handleSwitchToRegister = () => {
+     setStep('register');
+     clearVerificationContext();
+     setUsername('');
+     setPhone('');
+     setPassword('');
+     setConfirmPassword('');
+     setAgreedToTerms(false);
+     setSmsConsent(false);
+     setSmsConsentError('');
+   };
 
-  const handleSwitchToRegister = () => {
-    setStep('register');
-    clearVerificationContext();
-    setUsername('');
-    setPhone('');
-    setPassword('');
-    setConfirmPassword('');
-    setAgreedToTerms(false);
-    setSmsConsent(false);
-    setSmsConsentError('');
-  };
+   const handleSwitchToForgot = () => {
+     setStep('forgot');
+     clearVerificationContext();
+     setCode('');
+   };
 
-  const handleSwitchToForgot = () => {
-    setStep('forgot');
-    clearVerificationContext();
-    setCode('');
-  };
+   const handleSwitchToLogin = () => {
+     setStep('login');
+     clearVerificationContext();
+   };
 
   const handleResetCodeSubmit = (event) => {
     event.preventDefault();
