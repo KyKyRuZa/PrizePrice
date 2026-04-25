@@ -44,6 +44,7 @@ export async function search(req, res) {
   
   const minPrice = req.query.minPrice !== undefined ? req.query.minPrice : undefined;
   const maxPrice = req.query.maxPrice !== undefined ? req.query.maxPrice : undefined;
+  const minRating = req.query.minRating !== undefined ? req.query.minRating : undefined;
 
   const { items, pagination } = await searchProducts({ 
     q, 
@@ -54,6 +55,7 @@ export async function search(req, res) {
     marketplaces,
     minPrice,
     maxPrice,
+    minRating,
   });
 
   if (req.userId && q) {

@@ -28,7 +28,6 @@ const RegisterStep = ({
   setShowConfirmPassword,
   isLoading,
   onRequestCode,
-  onRegister,
   onSwitchToLogin,
 }) => {
   const handlePhoneChange = createPhoneInputHandler(phone, setPhone);
@@ -146,12 +145,6 @@ const RegisterStep = ({
       <Button data-testid="auth-register-request-code" type="submit" variant="primary" fullWidth disabled={isLoading}>
         {isLoading ? 'Отправка кода...' : 'Получить код подтверждения'}
       </Button>
-
-      <div className={styles.centeredRow}>
-        <button className={styles.linkBtn} type="button" onClick={onRegister}>
-          Зарегистрироваться без подтверждения
-        </button>
-      </div>
 
       <div className={styles.centeredRow}>
         <button

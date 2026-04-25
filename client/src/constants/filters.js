@@ -14,7 +14,7 @@ export const MARKETPLACE_DISPLAY_MAP = Object.freeze({
   'yandex': 'Яндекс.Маркет',
 });
 
-export const RATING_OPTIONS = Object.freeze([4.5, 4.0, 3.5, 3.0]);
+export const RATING_OPTIONS = Object.freeze([5.0, 4.5, 4.0]);
 export const DEFAULT_MAX_PRICE = 9999999999;
 
 export const createDefaultFilters = () => ({

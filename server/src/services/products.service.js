@@ -9,20 +9,20 @@ const CACHE_TTL_CATEGORIES = 900;
 const CACHE_TTL_SEARCH = 120;
 
 function makeSearchCacheKey(params) {
-  const { q, category, sort, page, limit, marketplaces, minPrice, maxPrice } = params;
-  return `search:${[q, category, sort, page, limit, (marketplaces || []).join(","), minPrice, maxPrice].join(":")}`;
+  const { q, category, sort, page, limit, marketplaces, minPrice, maxPrice, minRating } = params;
+  return `search:${[q, category, sort, page, limit, (marketplaces || []).join(","), minPrice, maxPrice, minRating].join(":")}`;
 }
 
 function getSortOrder(sort) {
   switch (sort) {
     case "price_asc":
-      return [[Sequelize.literal("(SELECT MIN(o.price) FROM offers o WHERE o.product_id = \"Product\".id)"), "ASC"]];
+      return [[Sequelize.literal("(SELECT MIN(o.price) FROM offers o WHERE o.product_id = products.id)"), "ASC"]];
     case "price_desc":
-      return [[Sequelize.literal("(SELECT MIN(o.price) FROM offers o WHERE o.product_id = \"Product\".id)"), "DESC"]];
+      return [[Sequelize.literal("(SELECT MIN(o.price) FROM offers o WHERE o.product_id = products.id)"), "DESC"]];
     case "rating":
       return [["rating", "DESC"]];
     case "discount":
-      return [[Sequelize.literal("(SELECT MAX(o.discount) FROM offers o WHERE o.product_id = \"Product\".id)"), "DESC"]];
+      return [[Sequelize.literal("(SELECT MAX(o.discount) FROM offers o WHERE o.product_id = products.id)"), "DESC"]];
     case "popularity":
     default:
       return [["id", "ASC"]];
@@ -44,7 +44,87 @@ function mapProductWithOffers(productInstance) {
     isBestPrice: productInstance.isBestPrice,
     prices: offers,
     bestPrice: computeBestPrice(offers),
+    canonicalName: productInstance.canonicalName || null,
   };
+}
+
+function groupProductsByCanonical(products) {
+  const groups = new Map();
+
+  for (const product of products) {
+    const pJson = product.toJSON();
+    const canonical = pJson.canonicalName || `__id__${pJson.id}`;
+
+    if (!groups.has(canonical)) {
+      groups.set(canonical, {
+        id: pJson.id,
+        name: pJson.name,
+        category: pJson.category,
+        image: pJson.image,
+        rating: pJson.rating,
+        reviews: pJson.reviews,
+        isBestPrice: pJson.isBestPrice,
+        offersMap: new Map(),
+      });
+    }
+
+    const group = groups.get(canonical);
+    const offers = product.offers || [];
+
+    for (const offer of offers) {
+      const oJson = offer.toJSON();
+      const mp = oJson.marketplace;
+      const existing = group.offersMap.get(mp);
+      if (!existing || oJson.price < existing.price) {
+        group.offersMap.set(mp, oJson);
+      }
+    }
+
+    if (pJson.reviews > group.reviews) {
+      group.rating = pJson.rating;
+      group.reviews = pJson.reviews;
+    }
+  }
+
+  const result = [];
+  for (const [canonical, data] of groups.entries()) {
+    const offers = Array.from(data.offersMap.values()).sort((a, b) => a.price - b.price);
+    result.push({
+      id: data.id,
+      name: data.name,
+      category: data.category,
+      image: data.image,
+      rating: data.rating,
+      reviews: data.reviews,
+      isBestPrice: offers.some((o) => o.discount && o.discount > 0),
+      prices: offers,
+      bestPrice: computeBestPrice(offers),
+      canonicalName: canonical.startsWith("__id__") ? null : canonical,
+    });
+  }
+
+  return result;
+}
+
+function sortGroupedProducts(products, sort) {
+  const sorted = [...products];
+  switch (sort) {
+    case "price_asc":
+      return sorted.sort((a, b) => a.bestPrice - b.bestPrice);
+    case "price_desc":
+      return sorted.sort((a, b) => b.bestPrice - a.bestPrice);
+    case "rating":
+      return sorted.sort((a, b) => b.rating - a.rating);
+    case "discount":
+      return sorted.sort((a, b) => {
+        const aMax = Math.max(...a.prices.map((p) => p.discount || 0));
+        const bMax = Math.max(...b.prices.map((p) => p.discount || 0));
+        return bMax - aMax;
+      });
+    case "popularity":
+    default:
+      return sorted.sort((a, b) => a.id - b.id);
+  }
 }
 
 export async function listCategories() {
@@ -112,6 +192,22 @@ export async function getProductById(id) {
   });
   if (!p) return null;
 
+  if (p.canonicalName) {
+    const allProducts = await Product.findAll({
+      where: { canonicalName: p.canonicalName },
+      include: [
+        {
+          model: Offer,
+          as: "offers",
+          attributes: ["marketplace", "price", "oldPrice", "discount", "link"],
+          required: false,
+        },
+      ],
+    });
+    const grouped = groupProductsByCanonical(allProducts);
+    return grouped[0] || null;
+  }
+
   return mapProductWithOffers(p);
 }
 
@@ -132,24 +228,35 @@ export async function getProductsByIds(ids = []) {
         required: false,
       },
     ],
-    order: [["id", "ASC"], [{ model: Offer, as: "offers" }, "price", "ASC"]],
   });
 
-  const byId = new Map(rows.map((row) => [row.id, mapProductWithOffers(row)]));
-  return normalizedIds.map((id) => byId.get(id)).filter(Boolean);
+  const grouped = groupProductsByCanonical(rows);
+
+  const seen = new Set();
+  const result = [];
+  for (const item of grouped) {
+    const key = item.canonicalName || `__id__${item.id}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(item);
+    }
+  }
+
+  return result;
 }
 
-export async function searchProducts({ 
-  q = "", 
-  category = "", 
-  sort = "popularity", 
-  page = 1, 
+export async function searchProducts({
+  q = "",
+  category = "",
+  sort = "popularity",
+  page = 1,
   limit = 20,
   marketplaces = [],
   minPrice,
   maxPrice,
+  minRating,
 }) {
-  const searchParams = { q, category, sort, page, limit, marketplaces, minPrice, maxPrice };
+  const searchParams = { q, category, sort, page, limit, marketplaces, minPrice, maxPrice, minRating };
   const cacheKey = makeSearchCacheKey(searchParams);
 
   const cached = await redisGet(cacheKey);
@@ -159,67 +266,76 @@ export async function searchProducts({
   const where = {};
   if (search) where.name = { [Op.iLike]: `%${search}%` };
   if (category) where.category = category;
+  if (minRating != null && minRating !== "" && Number(minRating) > 0) {
+    where.rating = { [Op.gte]: Number(minRating) };
+  }
 
   const pageNum = Math.max(1, Number(page) || 1);
   const limitNum = Math.min(100, Math.max(1, Number(limit) || 20));
-  const offset = (pageNum - 1) * limitNum;
 
   const offerWhere = {};
   if (Array.isArray(marketplaces) && marketplaces.length > 0) {
     offerWhere.marketplace = { [Op.in]: marketplaces };
   }
-  
-  if (minPrice != null && minPrice !== '') {
+
+  if (minPrice != null && minPrice !== "") {
     offerWhere.price = { ...offerWhere.price, [Op.gte]: Number(minPrice) };
   }
-  if (maxPrice != null && maxPrice !== '') {
+  if (maxPrice != null && maxPrice !== "") {
     offerWhere.price = { ...offerWhere.price, [Op.lte]: Number(maxPrice) };
   }
 
   const hasOfferFilters = offerWhere.marketplace || offerWhere.price;
 
-  const { count } = await Product.findAndCountAll({
-    where,
-    distinct: true,
-    include: hasOfferFilters ? [{
-      model: Offer,
-      as: "offers",
-      where: offerWhere,
-      required: true,
-    }] : [],
-  });
-
-  const total = Array.isArray(count) ? count.length : count;
-
   const rows = await Product.findAll({
     where,
-    limit: limitNum,
-    offset,
-    order: getSortOrder(sort),
-    include: hasOfferFilters ? [{
-      model: Offer,
-      as: "offers",
-      attributes: ["marketplace", "price", "oldPrice", "discount", "link"],
-      where: offerWhere,
-      required: true,
-    }] : [{
-      model: Offer,
-      as: "offers",
-      attributes: ["marketplace", "price", "oldPrice", "discount", "link"],
-      required: false,
-    }],
+    include: hasOfferFilters
+      ? [
+          {
+            model: Offer,
+            as: "offers",
+            where: offerWhere,
+            required: true,
+            attributes: ["marketplace", "price", "oldPrice", "discount", "link"],
+          },
+        ]
+      : [
+          {
+            model: Offer,
+            as: "offers",
+            required: false,
+            attributes: ["marketplace", "price", "oldPrice", "discount", "link"],
+          },
+        ],
   });
 
-  const result = rows.map(mapProductWithOffers);
+  const grouped = groupProductsByCanonical(rows);
+  const sorted = sortGroupedProducts(grouped, sort);
+
+  const total = grouped.length;
+  const start = (pageNum - 1) * limitNum;
+  const paginated = sorted.slice(start, start + limitNum);
+
+  const items = paginated.map((p) => ({
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    image: p.image,
+    rating: p.rating,
+    reviews: p.reviews,
+    isBestPrice: p.isBestPrice,
+    prices: p.prices,
+    bestPrice: p.bestPrice,
+  }));
 
   const response = {
-    items: result,
+    items,
     pagination: {
       page: pageNum,
       limit: limitNum,
       total,
       totalPages: Math.ceil(total / limitNum),
-      hasMore: offset + limitNum < total,
+      hasMore: start + limitNum < total,
     },
   };
 
@@ -228,19 +344,8 @@ export async function searchProducts({
 }
 
 export async function recommendedProducts() {
-  const topRows = await Product.findAll({
-    where: { isBestPrice: true },
-    attributes: ["id"],
-    order: [["reviews", "DESC"]],
-    limit: 12,
-    raw: true,
-  });
-
-  const ids = topRows.map((row) => row.id);
-  if (!ids.length) return [];
-
   const rows = await Product.findAll({
-    where: { id: { [Op.in]: ids } },
+    where: { isBestPrice: true },
     include: [
       {
         model: Offer,
@@ -249,9 +354,11 @@ export async function recommendedProducts() {
         required: false,
       },
     ],
-    order: [["id", "ASC"], [{ model: Offer, as: "offers" }, "price", "ASC"]],
+    order: [["reviews", "DESC"]],
+    limit: 50,
   });
 
-  const byId = new Map(rows.map((row) => [row.id, mapProductWithOffers(row)]));
-  return ids.map((id) => byId.get(id)).filter(Boolean);
+  const grouped = groupProductsByCanonical(rows);
+  const sorted = sortGroupedProducts(grouped, "popularity");
+  return sorted.slice(0, 12);
 }

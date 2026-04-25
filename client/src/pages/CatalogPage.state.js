@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { ALL_CATEGORY, createDefaultFilters } from '../constants/filters';
+import { ALL_CATEGORY, createDefaultFilters, DEFAULT_MARKETPLACES } from '../constants/filters';
 import { useSearchHistory } from '../context/SearchHistoryContext';
 import { fetchAvailableCategories, fetchCatalogProducts, fetchCategoryCounts } from '../services/catalogService';
 import { normalizeSearchQuery } from '../utils/validation/inputSanitizers';
@@ -13,10 +13,11 @@ function parseQueryParams(search) {
   const category = params.get('category') || ALL_CATEGORY;
   const minPrice = params.get('minPrice') || '';
   const maxPrice = params.get('maxPrice') || '';
+  const minRating = params.get('minRating') || '0';
   const inStock = params.get('inStock') || 'all';
   const sort = params.get('sort') || 'popularity';
   const page = parseInt(params.get('page') || '1', 10);
-  return { searchQuery: query, category, minPrice, maxPrice, inStock, sort, page };
+  return { searchQuery: query, category, minPrice, maxPrice, minRating, inStock, sort, page };
 }
 
 export function useCatalogPageState() {
@@ -32,8 +33,9 @@ export function useCatalogPageState() {
     category: initialParams.category,
     minPrice: initialParams.minPrice,
     maxPrice: initialParams.maxPrice,
+    minRating: initialParams.minRating || 0,
     inStock: initialParams.inStock,
-    marketplaces: [],
+    marketplaces: [...DEFAULT_MARKETPLACES],
   });
   const [sortBy, setSortBy] = useState(initialParams.sort);
   const [currentPage, setCurrentPage] = useState(initialParams.page);
@@ -55,14 +57,15 @@ export function useCatalogPageState() {
   const debouncedParams = useDebounce(filterParams, 250);
 
   useEffect(() => {
-    const { searchQuery: q, category, minPrice, maxPrice, inStock, sort, page } = parseQueryParams(location.search);
+    const { searchQuery: q, category, minPrice, maxPrice, minRating, inStock, sort, page } = parseQueryParams(location.search);
     setSearchQuery(q);
     setFilters({
       category,
       minPrice,
       maxPrice,
+      minRating: Number(minRating),
       inStock,
-      marketplaces: [],
+      marketplaces: [...DEFAULT_MARKETPLACES],
     });
     setSortBy(sort);
     setCurrentPage(page);
@@ -195,6 +198,7 @@ export function useCatalogPageState() {
     if (filters.category && filters.category !== ALL_CATEGORY) params.set('category', filters.category);
     if (filters.minPrice) params.set('minPrice', filters.minPrice);
     if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
+    if (filters.minRating && Number(filters.minRating) > 0) params.set('minRating', String(filters.minRating));
     if (filters.inStock && filters.inStock !== 'all') params.set('inStock', filters.inStock);
     if (sortBy !== 'popularity') params.set('sort', sortBy);
     if (currentPage > 1) params.set('page', String(currentPage));

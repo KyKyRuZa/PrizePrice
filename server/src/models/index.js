@@ -42,6 +42,7 @@ export const Product = sequelize.define(
     rating: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
     reviews: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     isBestPrice: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: "is_best_price" },
+    canonicalName: { type: DataTypes.TEXT, allowNull: true, field: "canonical_name" },
   },
   {
     tableName: "products",
@@ -251,6 +252,16 @@ export async function seedDbIfEmpty() {
   const tx = await sequelize.transaction();
   try {
     if (productCount === 0) {
+      // Compute canonicalName: lowercase, remove special chars, trim spaces
+      const computeCanonical = (name) => {
+        if (!name) return null;
+        return name
+          .toLowerCase()
+          .replace(/[^\w\sа-яё]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      };
+
       await Product.bulkCreate(
         seedProducts.map((p) => ({
           id: p.id,
@@ -260,6 +271,7 @@ export async function seedDbIfEmpty() {
           rating: p.rating || 0,
           reviews: p.reviews || 0,
           isBestPrice: Boolean(p.isBestPrice),
+          canonicalName: computeCanonical(p.name),
         })),
         { transaction: tx }
       );

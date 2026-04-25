@@ -75,6 +75,9 @@ export async function fetchCatalogProducts({
   if (filters?.maxPrice != null && filters.maxPrice !== '') {
     params.set("maxPrice", String(filters.maxPrice));
   }
+  if (filters?.minRating != null && Number(filters.minRating) > 0) {
+    params.set("minRating", String(filters.minRating));
+  }
 
   const response = await apiGet(`/products/search?${params.toString()}`, {
     schema: productListResponseSchema,

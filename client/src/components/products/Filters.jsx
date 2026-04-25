@@ -5,13 +5,12 @@ import {
   createDefaultFilters,
   DEFAULT_MARKETPLACES,
   RATING_OPTIONS,
-  DEFAULT_MAX_PRICE,
 } from '../../constants/filters';
 import {
   toggleMarketplaceSelection,
 } from './Filters.helpers';
 import styles from './Filters.module.css';
-import { ChevronDown, ChevronUp, CreditCard } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const Filters = memo(function Filters({ filters, onFilterChange, categories = [], categoryCounts = {} }) {
   const [expandedSections, setExpandedSections] = useState({
@@ -41,7 +40,7 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
   const handlePriceChange = (type, rawValue) => {
     const processedValue = String(rawValue).replace(/[^0-9]/g, '');
     const nextFilters = { ...filters };
-    
+
     if (type === 'min') {
       nextFilters.minPrice = processedValue;
       if (processedValue && filters.maxPrice && Number(processedValue) > Number(filters.maxPrice)) {
@@ -53,12 +52,15 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
         nextFilters.minPrice = '';
       }
     }
-    
+
     onFilterChange(nextFilters);
   };
 
   const handleRatingSelect = (rating) => {
-    onFilterChange({ ...filters, minRating: rating });
+    onFilterChange({
+      ...filters,
+      minRating: filters.minRating === rating ? 0 : rating,
+    });
   };
 
   const handleMarketplaceToggle = (marketplace) => {
@@ -67,7 +69,11 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
   };
 
   const handleResetFilters = () => {
-    onFilterChange(createDefaultFilters());
+    const defaults = createDefaultFilters();
+    onFilterChange({
+      ...defaults,
+      category: filters.category,
+    });
   };
 
   const renderSectionIcon = (isExpanded) => {
@@ -157,14 +163,17 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
 
               return (
                 <div key={rating} className={styles.ratingOption} data-selected={isSelected} onClick={() => handleRatingSelect(rating)}>
-                  <div className={styles.ratingStars}>
-                    {Array.from({ length: 5 }, (_, index) => (
-                      <span key={index + 1} className={styles.star} data-filled={index + 1 <= rating}>
-                        ★
-                      </span>
-                    ))}
-                  </div>
-                  <span className={styles.ratingText} data-selected={isSelected}>{rating} и выше</span>
+                  <div className={styles.checkbox} data-checked={isSelected} />
+                   <div className={styles.ratingStars}>
+                     {Array.from({ length: 5 }, (_, index) => (
+                       <span key={index + 1} className={styles.star} data-filled={index + 1 <= rating}>
+                         ★
+                       </span>
+                     ))}
+                   </div>
+                   <span className={styles.ratingText} data-selected={isSelected}>
+                     {rating === 5 ? rating : `${rating} и выше`}
+                   </span>
                 </div>
               );
             })}
@@ -205,4 +214,3 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
 });
 
 export default Filters;
-
