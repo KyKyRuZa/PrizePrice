@@ -8,10 +8,7 @@ const SortOptions = ({ sortBy, onSortChange }) => {
 
   const sortOptions = [
     { id: 'popularity', label: 'По популярности' },
-    { id: 'price_asc', label: 'По возрастанию цены' },
-    { id: 'price_desc', label: 'По убыванию цены' },
-    { id: 'rating', label: 'По рейтингу' },
-    { id: 'discount', label: 'По скидке' }
+    { id: 'rating', label: 'По рейтингу' }
   ];
 
   const selectedOption = sortOptions.find(opt => opt.id === sortBy) || sortOptions[0];
@@ -61,20 +58,21 @@ const SortOptions = ({ sortBy, onSortChange }) => {
 
       {isOpen && (
         <div className={styles.sortDropdown} role="listbox">
-          {sortOptions.map(option => (
-            <button
-              key={option.id}
-              className={`${styles.sortOption} ${option.id === sortBy ? styles.active : ''}`}
-              onClick={() => {
-                onSortChange(option.id);
-                setIsOpen(false);
-              }}
-              role="option"
-              aria-selected={option.id === sortBy}
-            >
-              {option.label}
-            </button>
-          ))}
+           {sortOptions.map(option => (
+             <button
+               key={option.id}
+               className={`${styles.sortOption} ${option.id === sortBy ? styles.active : ''}`}
+               onClick={(e) => {
+                 e.stopPropagation();
+                 onSortChange(option.id);
+                 setIsOpen(false);
+               }}
+               role="option"
+               aria-selected={option.id === sortBy}
+             >
+               {option.label}
+             </button>
+           ))}
         </div>
       )}
     </div>

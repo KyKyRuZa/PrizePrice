@@ -119,6 +119,8 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
                   placeholder="От 0"
                   value={filters.minPrice}
                   onChange={(event) => handlePriceChange('min', event.target.value)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
                   maxLength="10"
                   data-error={isPriceRangeError}
                 />
@@ -197,7 +199,7 @@ const Filters = memo(function Filters({ filters, onFilterChange, categories = []
         ) : null}
       </div>
 
-      <button className={styles.resetButton} onClick={handleResetFilters}>Сбросить все фильтры</button>
+      <button className={styles.resetButton} onClick={(e) => { e.stopPropagation(); handleResetFilters(); }}>Сбросить все фильтры</button>
     </div>
   );
 });

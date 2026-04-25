@@ -172,7 +172,10 @@ const CatalogPage = () => {
         {isFiltersOpen && (
           <div
             className={styles.filterOverlay}
-            onClick={() => setIsFiltersOpen(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsFiltersOpen(false);
+            }}
             role="presentation"
           />
         )}
@@ -193,12 +196,7 @@ const CatalogPage = () => {
 
             <Filters
               filters={filters}
-              onFilterChange={(newFilters) => {
-                handleFilterChange(newFilters);
-                if (window.innerWidth <= 768) {
-                  setIsFiltersOpen(false);
-                }
-              }}
+              onFilterChange={handleFilterChange}
               categories={availableCategories}
               categoryCounts={categoryCounts}
             />
