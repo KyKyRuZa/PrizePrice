@@ -42,7 +42,6 @@ export const Product = sequelize.define(
     rating: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
     reviews: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     isBestPrice: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: "is_best_price" },
-    canonicalName: { type: DataTypes.TEXT, allowNull: true, field: "canonical_name" },
   },
   {
     tableName: "products",
@@ -220,6 +219,23 @@ User.hasMany(BrowsingHistory, { as: "browsingHistory", foreignKey: "userId" });
 BrowsingHistory.belongsTo(User, { as: "user", foreignKey: "userId" });
 BrowsingHistory.belongsTo(Product, { as: "product", foreignKey: "productId" });
 
+export const ProductCanonicalGroup = sequelize.define(
+  "ProductCanonicalGroup",
+  {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    canonicalName: { type: DataTypes.TEXT, allowNull: false, field: "canonical_name" },
+    productIds: { type: DataTypes.ARRAY(DataTypes.INTEGER), allowNull: false, defaultValue: [], field: "product_ids" },
+    marketplaces: { type: DataTypes.ARRAY(DataTypes.TEXT), allowNull: false, defaultValue: [], field: "marketplaces" },
+  },
+  {
+    tableName: "product_canonical_groups",
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: false,
+    underscored: true,
+  }
+);
+
 export const db = {
   sequelize,
   User,
@@ -232,6 +248,7 @@ export const db = {
   PriceHistory,
   Notification,
   BrowsingHistory,
+  ProductCanonicalGroup,
   Op,
 };
 
@@ -249,63 +266,11 @@ export async function seedDbIfEmpty() {
 
   if (productCount > 0 && offerCount > 0) return;
 
-  const tx = await sequelize.transaction();
-  try {
-    if (productCount === 0) {
-      // Compute canonicalName: lowercase, remove special chars, trim spaces
-      const computeCanonical = (name) => {
-        if (!name) return null;
-        return name
-          .toLowerCase()
-          .replace(/[^\w\sа-яё]/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-      };
-
-      await Product.bulkCreate(
-        seedProducts.map((p) => ({
-          id: p.id,
-          name: p.name,
-          category: p.category,
-          image: p.image || "",
-          rating: p.rating || 0,
-          reviews: p.reviews || 0,
-          isBestPrice: Boolean(p.isBestPrice),
-          canonicalName: computeCanonical(p.name),
-        })),
-        { transaction: tx }
-      );
-    }
-
-    if (offerCount === 0) {
-      const offers = [];
-      for (const p of seedProducts) {
-        for (const o of p.prices || []) {
-          offers.push({
-            productId: p.id,
-            marketplace: o.marketplace,
-            price: o.price,
-            oldPrice: o.oldPrice ?? null,
-            discount: o.discount ?? null,
-            link: o.link || "#",
-          });
-        }
-      }
-      if (offers.length) {
-        await Offer.bulkCreate(offers, { transaction: tx });
-      }
-    }
-
-    await tx.commit();
-
-    await invalidate("categories:list");
-    await invalidate("categories:count");
-  } catch (e) {
-    await tx.rollback();
-    throw e;
-  }
+  // Seed data is not available in this project; seeding is disabled.
+  // If you need to populate the database, use a dedicated seed script.
+  console.warn("seedDbIfEmpty: products/offers are empty, but no seed data defined. Skipping automatic seed.");
+  return;
 }
-
 export const UserConsent = sequelize.define(
   "UserConsent",
   {

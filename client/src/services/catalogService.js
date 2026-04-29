@@ -1,7 +1,7 @@
 import { apiGet } from "../utils/api/apiClient";
 import { normalizeSearchQuery } from "../utils/validation/inputSanitizers";
 import { categoriesResponseSchema, productListResponseSchema } from "../contracts/apiSchemas";
-import { mapMarketplacesToDB } from "../constants/filters";
+import { mapMarketplacesToDB, ALL_CATEGORY } from "../constants/filters";
 
 export function resolveCategoryFilter(category, availableCategories) {
   if (!category) return "";
@@ -38,6 +38,7 @@ export async function fetchCatalogProducts({
 }) {
   const normalizedQuery = normalizeSearchQuery(searchQuery);
   const normalizedCategory = resolveCategoryFilter(filters?.category, availableCategories);
+  const isAllCategory = filters?.category === ALL_CATEGORY;
   const useRecommended =
     !normalizedQuery &&
     !normalizedCategory &&
@@ -47,7 +48,7 @@ export async function fetchCatalogProducts({
     !hasMarketplaceFilter(filters?.marketplaces) &&
     sortBy === "popularity";
 
-  if (useRecommended) {
+  if (useRecommended && !isAllCategory) {
     const response = await apiGet("/products/recommended", { schema: productListResponseSchema, signal });
     return {
       items: Array.isArray(response?.items) ? response.items : [],
@@ -79,14 +80,23 @@ export async function fetchCatalogProducts({
     params.set("minRating", String(filters.minRating));
   }
 
-  const response = await apiGet(`/products/search?${params.toString()}`, {
-    schema: productListResponseSchema,
-    signal,
-  });
+   const response = await apiGet(`/products/search?${params.toString()}`, {
+     schema: productListResponseSchema,
+     signal,
+   });
 
-  return {
-    items: Array.isArray(response?.items) ? response.items : [],
-    pagination: response?.pagination || null,
-  };
+  if (process.env.NODE_ENV === 'development') {
+    console.groupCollapsed('🔍 Catalog API Debug');
+    console.log('Query:', normalizedQuery);
+    console.log('Params:', params.toString());
+    console.log('Items:', response?.items?.map(i => ({ id: i.id, name: i.name, prices: i.prices?.length, canonical: i.canonicalName })) || []);
+    console.log('Total:', response?.pagination?.total);
+    console.groupEnd();
+  }
+
+   return {
+     items: Array.isArray(response?.items) ? response.items : [],
+     pagination: response?.pagination || null,
+   };
 }
 

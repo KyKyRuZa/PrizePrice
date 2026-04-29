@@ -149,15 +149,15 @@ export const getUserData = async (req, res) => {
       return res.status(401).json({ error: "UNAUTHORIZED" });
     }
 
-    const favorites = await listFavorites(user.id);
-    const cart = await listCart(user.id);
+    const favoritesResult = await listFavorites(user.id);
+    const cartResult = await listCart(user.id);
     const searchHistory = await getSearchHistory(user.id);
     const browsingHistory = await getBrowsingHistory(user.id);
     const priceWatch = await listPriceWatches(user.id);
 
     return res.json({
-      favorites,
-      cart,
+      favorites: favoritesResult.ids,
+      cart: cartResult.ids,
       searchHistory,
       browsingHistory,
       priceWatch,

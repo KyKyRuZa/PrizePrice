@@ -1,5 +1,5 @@
 import SequelizePkg from "sequelize";
-import { Offer, Product } from "../models/index.js";
+import { Offer, Product, ProductCanonicalGroup } from "../models/index.js";
 import { computeBestPrice } from "../utils/index.js";
 import { getOrSet, redisGet, redisSet } from "./cache.service.js";
 
@@ -44,50 +44,68 @@ function mapProductWithOffers(productInstance) {
     isBestPrice: productInstance.isBestPrice,
     prices: offers,
     bestPrice: computeBestPrice(offers),
-    canonicalName: productInstance.canonicalName || null,
+    canonicalName: null,
   };
 }
 
-function groupProductsByCanonical(products) {
+async function getCanonicalGroupsMap(productIds) {
+  // Since product_canonical_groups is small (few dozen groups), fetch all and build map.
+  // This avoids array overlap query complexities and ensures correct mapping.
+  if (!productIds.length) return new Map();
+
+  const allGroups = await ProductCanonicalGroup.findAll();
+  const productToGroup = new Map();
+  for (const group of allGroups) {
+    const rawPids = group.productIds || [];
+    const pids = Array.isArray(rawPids) ? rawPids.map(pid => Number(pid)) : [];
+    for (const pid of pids) {
+      productToGroup.set(pid, group);
+    }
+  }
+  return productToGroup;
+}
+
+function groupProducts(products, productToGroupMap) {
   const groups = new Map();
 
   for (const product of products) {
-    const pJson = product.toJSON();
-    const canonical = pJson.canonicalName || `__id__${pJson.id}`;
+    const group = productToGroupMap.get(product.id);
+    const canonicalName = group ? group.canonicalName : null;
+    const key = canonicalName || `__id__${product.id}`;
 
-    if (!groups.has(canonical)) {
-      groups.set(canonical, {
-        id: pJson.id,
-        name: pJson.name,
-        category: pJson.category,
-        image: pJson.image,
-        rating: pJson.rating,
-        reviews: pJson.reviews,
-        isBestPrice: pJson.isBestPrice,
+    if (!groups.has(key)) {
+      groups.set(key, {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        image: product.image,
+        rating: product.rating,
+        reviews: product.reviews,
+        isBestPrice: product.isBestPrice,
         offersMap: new Map(),
       });
     }
 
-    const group = groups.get(canonical);
+    const groupData = groups.get(key);
     const offers = product.offers || [];
 
     for (const offer of offers) {
       const oJson = offer.toJSON();
       const mp = oJson.marketplace;
-      const existing = group.offersMap.get(mp);
+      const existing = groupData.offersMap.get(mp);
       if (!existing || oJson.price < existing.price) {
-        group.offersMap.set(mp, oJson);
+        groupData.offersMap.set(mp, oJson);
       }
     }
 
-    if (pJson.reviews > group.reviews) {
-      group.rating = pJson.rating;
-      group.reviews = pJson.reviews;
+    if (product.reviews > groupData.reviews) {
+      groupData.rating = product.rating;
+      groupData.reviews = product.reviews;
     }
   }
 
   const result = [];
-  for (const [canonical, data] of groups.entries()) {
+  for (const [key, data] of groups.entries()) {
     const offers = Array.from(data.offersMap.values()).sort((a, b) => a.price - b.price);
     result.push({
       id: data.id,
@@ -99,7 +117,7 @@ function groupProductsByCanonical(products) {
       isBestPrice: offers.some((o) => o.discount && o.discount > 0),
       prices: offers,
       bestPrice: computeBestPrice(offers),
-      canonicalName: canonical.startsWith("__id__") ? null : canonical,
+      canonicalName: key.startsWith("__id__") ? null : key,
     });
   }
 
@@ -192,9 +210,16 @@ export async function getProductById(id) {
   });
   if (!p) return null;
 
-  if (p.canonicalName) {
+  const groups = await ProductCanonicalGroup.findAll({
+    where: { productIds: { [Op.overlap]: [id] } },
+  });
+
+  if (groups.length > 0) {
+    const group = groups[0];
+    const rawPids = group.productIds || [];
+    const pids = Array.isArray(rawPids) ? rawPids.map(pid => Number(pid)) : [];
     const allProducts = await Product.findAll({
-      where: { canonicalName: p.canonicalName },
+      where: { id: { [Op.in]: pids } },
       include: [
         {
           model: Offer,
@@ -204,7 +229,11 @@ export async function getProductById(id) {
         },
       ],
     });
-    const grouped = groupProductsByCanonical(allProducts);
+    const productToGroup = new Map();
+    for (const pid of pids) {
+      productToGroup.set(pid, group);
+    }
+    const grouped = groupProducts(allProducts, productToGroup);
     return grouped[0] || null;
   }
 
@@ -230,19 +259,10 @@ export async function getProductsByIds(ids = []) {
     ],
   });
 
-  const grouped = groupProductsByCanonical(rows);
+  const productToGroup = await getCanonicalGroupsMap(rows.map((p) => p.id));
+  const grouped = groupProducts(rows, productToGroup);
 
-  const seen = new Set();
-  const result = [];
-  for (const item of grouped) {
-    const key = item.canonicalName || `__id__${item.id}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      result.push(item);
-    }
-  }
-
-  return result;
+  return grouped;
 }
 
 export async function searchProducts({
@@ -309,35 +329,36 @@ export async function searchProducts({
         ],
   });
 
-  const grouped = groupProductsByCanonical(rows);
-  const sorted = sortGroupedProducts(grouped, sort);
+   const productToGroup = await getCanonicalGroupsMap(rows.map((p) => p.id));
+   let grouped = groupProducts(rows, productToGroup);
+   const sorted = sortGroupedProducts(grouped, sort);
+   const total = sorted.length;
+   const start = (pageNum - 1) * limitNum;
+   const paginated = sorted.slice(start, start + limitNum);
 
-  const total = grouped.length;
-  const start = (pageNum - 1) * limitNum;
-  const paginated = sorted.slice(start, start + limitNum);
+   const items = paginated.map((p) => ({
+     id: p.id,
+     name: p.name,
+     category: p.category,
+     image: p.image,
+     rating: p.rating,
+     reviews: p.reviews,
+     isBestPrice: p.isBestPrice,
+     prices: p.prices,
+     bestPrice: p.bestPrice,
+     canonicalName: p.canonicalName,
+   }));
 
-  const items = paginated.map((p) => ({
-    id: p.id,
-    name: p.name,
-    category: p.category,
-    image: p.image,
-    rating: p.rating,
-    reviews: p.reviews,
-    isBestPrice: p.isBestPrice,
-    prices: p.prices,
-    bestPrice: p.bestPrice,
-  }));
-
-  const response = {
-    items,
-    pagination: {
-      page: pageNum,
-      limit: limitNum,
-      total,
-      totalPages: Math.ceil(total / limitNum),
-      hasMore: start + limitNum < total,
-    },
-  };
+   const response = {
+     items,
+     pagination: {
+       page: pageNum,
+       limit: limitNum,
+       total,
+       totalPages: Math.ceil(total / limitNum),
+       hasMore: start + limitNum < total,
+     },
+   };
 
   await redisSet(cacheKey, response, CACHE_TTL_SEARCH);
   return response;
@@ -358,7 +379,8 @@ export async function recommendedProducts() {
     limit: 50,
   });
 
-  const grouped = groupProductsByCanonical(rows);
+  const productToGroup = await getCanonicalGroupsMap(rows.map((p) => p.id));
+  const grouped = groupProducts(rows, productToGroup);
   const sorted = sortGroupedProducts(grouped, "popularity");
   return sorted.slice(0, 12);
 }

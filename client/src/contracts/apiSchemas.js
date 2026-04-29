@@ -104,6 +104,7 @@ export const productSchema = z
     isBestPrice: z.boolean().optional(),
     prices: z.array(priceEntrySchema),
     bestPrice: priceEntrySchema.nullable(),
+    canonicalName: z.string().nullable().optional(),
   })
   .passthrough();
 
