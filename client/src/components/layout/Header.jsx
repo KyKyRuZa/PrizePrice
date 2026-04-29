@@ -71,7 +71,7 @@ const Header = ({ onSearch, showSearch = true }) => {
   };
 
   const handleSearchChange = (event) => {
-    setSearchQuery(normalizeSearchQuery(event.target.value));
+    setSearchQuery(normalizeSearchQuery(event.target.value, { trim: false }));
   };
 
   return (
@@ -99,6 +99,8 @@ const Header = ({ onSearch, showSearch = true }) => {
             <input
               className={styles.searchInput}
               type="search"
+              id="header-search-input"
+              name="search"
               placeholder="Найти товар..."
               value={searchQuery}
               maxLength={INPUT_LIMITS.SEARCH_QUERY}
@@ -195,15 +197,17 @@ const Header = ({ onSearch, showSearch = true }) => {
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="m21 21-4.35-4.35"></path>
               </svg>
-              <input
-                className={styles.searchInput}
-                type="search"
-                placeholder="Найти товар..."
-                value={searchQuery}
-                maxLength={INPUT_LIMITS.SEARCH_QUERY}
-                onChange={handleSearchChange}
-                aria-label="Поиск товаров (мобильное меню)"
-              />
+               <input
+                 className={styles.searchInput}
+                 type="search"
+                 id="mobile-search-input"
+                 name="search"
+                 placeholder="Найти товар..."
+                 value={searchQuery}
+                 maxLength={INPUT_LIMITS.SEARCH_QUERY}
+                 onChange={handleSearchChange}
+                 aria-label="Поиск товаров (мобильное меню)"
+               />
             </form>
           </div>
           )}

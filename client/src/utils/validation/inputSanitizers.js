@@ -18,7 +18,7 @@ function clampMaxLength(value, maxLength) {
   return String(value ?? "").slice(0, limit);
 }
 
-export function sanitizeTextInput(value, { maxLength = 256, stripHtml = true } = {}) {
+export function sanitizeTextInput(value, { maxLength = 256, stripHtml = true, trim = true } = {}) {
   let text = String(value ?? "");
   text = text.normalize("NFKC");
   text = text.replace(CONTROL_CHARS_RE, " ");
@@ -26,14 +26,18 @@ export function sanitizeTextInput(value, { maxLength = 256, stripHtml = true } =
     text = text.replace(HTML_TAG_RE, " ");
   }
   text = text.replace(/[<>]/g, " ");
-  text = text.replace(/\s+/g, " ").trim();
+  text = text.replace(/\s+/g, " ");
+  if (trim) {
+    text = text.trim();
+  }
   return clampMaxLength(text, maxLength);
 }
 
-export function normalizeSearchQuery(value) {
+export function normalizeSearchQuery(value, { trim = true } = {}) {
   return sanitizeTextInput(value, {
     maxLength: INPUT_LIMITS.SEARCH_QUERY,
     stripHtml: true,
+    trim,
   });
 }
 
